@@ -1,0 +1,110 @@
+#!/usr/bin/make -f
+
+#
+# \brief  Download, verify, and extract depot archives
+# \author Norman Feske
+# \date   2017-03-23
+#
+
+export GENODE_DIR := $(realpath $(dir $(MAKEFILE_LIST))/../../..)
+
+PUBLIC_DIR     ?= $(GENODE_DIR)/public
+DEPOT_DIR      ?= $(GENODE_DIR)/depot
+DEPOT_TOOL_DIR ?= $(GENODE_DIR)/tool/depot
+
+define HELP_MESSAGE
+
+  Download, verify, and extract depot archives
+
+  usage:
+
+    $(firstword $(MAKEFILE_LIST)) <archive-path>...
+
+endef
+
+include $(DEPOT_TOOL_DIR)/mk/front_end.inc
+
+TARGETS := $(addprefix $(DEPOT_DIR)/,$(MAKECMDGOALS))
+
+
+#
+# Unpack after checking signature against public key as stored in the depot
+#
+# Unfortunately, gpg does not allow us to specify the armored public-key
+# file directly as keyring for the verify operation. So we need to create a
+# temporary dearmored version.
+#
+
+ARCHIVES := $(MAKECMDGOALS)
+
+include $(DEPOT_TOOL_DIR)/mk/gpg.inc
+
+$(DEPOT_DIR)/% : $(PUBLIC_DIR)/%.tar.xz $(PUBLIC_DIR)/%.tar.xz.sig
+	$(VERBOSE)pubkey_file=$(DEPOT_DIR)/$(call archive_user,$*)/pubkey; \
+	          $(GPG) --yes -o $$pubkey_file.dearmored --dearmor $$pubkey_file; \
+	          ( $(GPG) --no-tty --no-default-keyring \
+	                --keyring $$pubkey_file.dearmored \
+	                --verify $(PUBLIC_DIR)/$*.tar.xz.sig 2> /dev/null; retval=$$?; \
+	            rm -f $$pubkey_file.dearmored; \
+	            exit $$retval \
+	          ) || ( echo -e "Error: could not verify '$*', signature does not match\n" \
+	                          "      public key '$$pubkey_file'"; \
+	                 false )
+	$(VERBOSE)mkdir -p $(dir $@)
+	$(VERBOSE)tar xfJ $(PUBLIC_DIR)/$*.tar.xz -C $(dir $@)
+
+DOWNLOADED_FILES := $(addprefix $(PUBLIC_DIR)/,$(MAKECMDGOALS:=.tar.xz)) \
+                    $(addprefix $(PUBLIC_DIR)/,$(MAKECMDGOALS:=.tar.xz.sig))
+
+.PRECIOUS: $(DOWNLOADED_FILES)
+
+ifneq ($(MISSING_PUBKEY_FILES),)
+$(DOWNLOADED_FILES): missing_pubkey_files
+endif
+
+
+#
+# Determine download URLs of all origins of the specified archives
+#
+# The 'ORIGINS' variable contains all users found in the arguments. The
+# URL information is obtained from the despective depot/<user>/download
+# file and cached in the 'URL(<user>)' variable. The 'file_url' function
+# assesses the 'URL' variables to return the complete URL for a given
+# relative archive (or signature file) path.
+#
+
+ORIGINS := $(sort $(foreach A,$(ARCHIVES),$(call archive_user,$A)))
+
+quotation_sanitized = $(subst ',,$(strip $1))
+
+$(foreach O,$(ORIGINS),\
+   $(eval URL($O) := \
+      $(call quotation_sanitized,\
+         $(call file_content,$(DEPOT_DIR)/$O/download))))
+
+MISSING_DOWNLOAD_LOCATIONS := $(sort $(foreach O,$(ORIGINS),\
+                                        $(if ${URL($O)},,$(DEPOT_DIR)/$O/download)))
+
+ifneq ($(MISSING_DOWNLOAD_LOCATIONS),)
+$(DOWNLOADED_FILES): missing_download_locations
+endif
+
+missing_download_locations:
+	@echo "Error: missing or invalid download location:";\
+	 for i in $(MISSING_DOWNLOAD_LOCATIONS); do echo "       $$i"; done; false
+
+file_url = '${URL($(call archive_user,$1))}/$1'
+
+
+#
+# Download rule that is invoked per file
+#
+
+$(PUBLIC_DIR)/%:
+	@$(ECHO) "$(DARK_COL)download$(DEFAULT_COL) $*"
+	$(VERBOSE)mkdir -p $(dir $@)
+	$(VERBOSE)wget --quiet --no-check-certificate $(call file_url,$*) -O $@ ||\
+		(echo "Error: failed to download $(call file_url,$*)"; rm -f $@; false)
+
+$(MAKECMDGOALS): $(TARGETS)
+	@true

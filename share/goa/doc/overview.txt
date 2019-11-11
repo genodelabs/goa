@@ -1,0 +1,135 @@
+
+                                   Overview
+
+
+                                 Norman Feske
+
+
+Goa is a tool for streamlining the development of application software for the
+Genode OS Framework. The work flow is project-centered. A project is a
+directory that may contain source code, data, instructions how to download
+source codes from a 3rd party, descriptions of system scenarios, or
+combinations thereof. Goa is independent from Genode's regular build system.
+It combines Genode's package management (depot) with commodity build systems
+such a CMake. In addition to building and test-driving application software
+directly on a Linux-based development system, Goa is able to aid the process
+of exporting and packaging the software in the format expected by Genode
+systems like Sculpt OS.
+
+
+PROJECT
+#######
+
+A project is named after its directory.
+
+It can have the following ingredients:
+
+:import: A file that describes how 3rd-party software is downloaded and
+  patched for the use with Genode. It follows the lines of Genode's
+  time-tested 'ports' tool described at
+  https://genode.org/documentation/developer-resources/porting.
+
+:src/: A directory containing source code and build instructions. Goa
+  automatically detects the kind of build system used. In particular,
+  if the src/ directory contains a CMakeLists.txt file, CMake is used.
+  If a plain Makefile is encountered, Goa assumes the use of GNU Make.
+
+:used_apis: A file containing a list of APIs used by the project.
+
+:raw/: A directory containing raw data such as images or configurations.
+
+:artifacts: A file that describes the build artifacts to be taken from
+  the build directory after a successful build.
+
+:pkg/: A directory containing descriptions of runtime scenarios for
+  test-driving the project.
+
+:var/: A directory that contains files generated during the operation
+  of Goa, e.g., the build directory.
+
+:version: A file containing the current version string of the project.
+
+:LICENSE: A file denoting the project's licensing terms, which is
+  supplemented whenever a source-archive is exported from the project
+  via the 'export' or 'publish' commands.
+
+!
+
+Any given project may feature a subset of those files or directories.
+For example, a plain port of a 3rd-party software package may contain
+only 'import', 'used_apis', 'artifacts', 'version' and LICENSE files.
+As another extreme, a project may only feature a 'pkg/' directory with
+scenarios that plug existing Genode components together.
+
+
+USAGE
+#####
+
+:goa help [<topic>]:
+  Show the documentation about the specified topic.
+  Available topics are 'overview' (this document), 'config', 'artifacts',
+  'add-depot-user'
+
+:goa update-goa [<version>]:
+  Update the Goa tool to the latest minor version if called without
+  argument, or switch to the major version specified as argument.
+
+:goa --version:
+  Print current major version of the Goa tool.
+
+:goa import:
+  Download and patch 3rd-party source code according to the rules given by
+  an 'import' file.
+
+:goa diff:
+  Show local modifications of the imported 3rd-party software.
+
+:goa build-dir:
+  Create a build directory.
+
+  If an 'import' file exists, this command automatically invokes the 'import'
+  command.
+
+:goa build:
+  Invoke the build system and extract the resulting build artifacts
+  according to an 'artifacts' file. See 'goa help artifacts' for more
+  information about the syntax of an 'artifacts' file.
+
+  This command implies the 'build-dir' command.
+
+:goa run [<pkg-name>]:
+  Execute a system scenario defined at pkg/<pkg-name>. If no argument
+  is supplied, <pkg-name> is assumed to correspond to the name of the
+  project directory.
+
+  This command implies the 'build' command.
+
+:goa export:
+  Export project to a Genode depot.
+
+  This command implies the 'build' command.
+
+:goa publish:
+  Archive and sign depot archives generated via the 'export' command.
+
+  This command implies the 'export' command.
+
+:goa add-depot-user <name> --depot-url <url> --pubkey-file <file>:
+  Make a new depot user known at a Genode depot as software source
+  by specifying a URL and the public key as an ASCII-armored file.
+
+:goa add-depot-user <name> --depot-url <url> --gpg-user-id <id>:
+  Make a new depot user known at a Genode depot as software source
+  by specifying a URL and the public key as GPG key ID, i.e., the
+  email address. This command works only if the GPG keyring already
+  contains the specified user ID.
+
+:goa archive-versions:
+  Print information about known depot-archive versions.
+
+OPTIONAL ARGUMENTS
+##################
+
+:--verbose:
+  Print diagnostic information about the operation of Goa.
+

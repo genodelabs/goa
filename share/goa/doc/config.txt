@@ -1,0 +1,154 @@
+
+                                 Configuration
+
+
+                                 Norman Feske
+
+
+Goa can be configured using configuration files called '.goarc' or via
+command-line arguments.
+
+
+Configuration files
+###################
+
+Upon startup, Goa includes all files named '.goarc' found in the directory
+hierarchy up to the project directory, starting with the root directory.
+This way, different aspects of Goa can be configured at different scopes.
+For example, settings that should be applied to any project of a given
+user can be defined at the user's home directory at '~/.goarc', settings
+shared by multiple Goa projects can be defined at the common parent directory
+of those projects, and project-specific settings can live local to the
+project directory.
+
+Goa configuration files follow the syntax of Tcl. A configuration value
+is defined as follows:
+
+! set <variable-name> <value>
+
+If <value> is a path name, the path can be specified relative to the location
+of the '.goarc' file or relative to the user's home directory '~'.
+
+
+Settings
+########
+
+Goa evaluates the following configuration variables.
+
+:project_name:
+  This variable overrides the default project name, which is the name of the
+  project directory.
+
+:arch:
+  The CPU architecture used for building the software.
+  The default value is "x86_64".
+
+:cross_dev_prefix:
+  The tool-chain prefix for the Genode cross compiler.
+  The default value is "/usr/local/genode/tool/current/bin/genode-x86-".
+
+:rebuild:
+  If set to 1 or if the command line argument '--rebuild' is specified,
+  a complete rebuild of the software is enforced each time Goa invokes the
+  build system. With the default value 0, Goa triggers partial builds.
+
+:jobs:
+  The amount of parallelism while building. If not defined, Goa determines
+  a reasonable value that corresponds to the number of CPU cores according
+  to the information of '/proc/cpuinfo'. This built-in heuristics can be
+  overridden by assigning a number to the 'jobs' variable by specifying the
+  number to the '--jobs <N>' command-line argument.
+
+:ld_march:
+  Architecture-specific linker arguments.
+  The default value is "-melf_x86_64".
+
+:olevel:
+  Optimization level as passed to the compiler.
+  The default value is "-O2".
+
+:depot_dir: The location of the Genode depot. The default is var/depot
+  within the project directory. If no such directory exists, Goa creates
+  a new directory taking the content of 'share/goa/default_depot/' as
+  starting point.
+
+:public_dir: The location of the public directory used for downloading
+  and publishing depot archives. The default is var/public within the
+  project directory.
+
+:contrib_dir: The location where 3rd-party software imported via the 'import'
+  command should be installed. The default is var/contrib within the
+  project directory.
+
+:build_dir: The build directory used by the build system. The default
+  is var/build/<arch>/ within the project directory.
+
+:abi_dir: The directory where Goa creates ABI stubs for any shared libraries
+  used by the project. The default is var/abi/<arch>/ within the project
+  directory.
+
+:bin_dir: The directory containing the final build artifacts extracted from
+  the build directory upon the completion of the build process. The
+  default is var/bin/<arch>/ within the project directory.
+
+:run_dir: The directory where Genode test scenarios are assembled when
+  executing the 'run' command. The default is var/run/ within the project
+  directory.
+
+:common_var_dir:
+  If defined, Goa places all generated files in the specified directory
+  instead of creating a 'var' directory inside the project directory.
+  Within the common var directory, the content of each project is created
+  in a sub directory named after the project.
+
+  This option is useful to keep the source code of a project completely
+  separate from any generated files.
+
+:depot_overwrite:
+  Whenever Goa encounters the situation where a 'goa export' or 'goa publish'
+  command would overwrite existing depot content, it aborts the command.
+  Usually, this is an indicator that the project version is due for an
+  update. However, while iteratively testing a new version, it is often useful
+  to overwrite existing depot content. This can be achieved by setting the
+  value to 1 or by specifying the '--depot-overwrite' command-line argument.
+
+:depot_user:
+  Depot user name to use when exporting or publishing the project via the
+  'export' or 'publish' commands. In order to be able to publish software,
+  the GPG keyring must contain a private key that matches the specified
+  depot user's pubkey.
+
+:license:
+  When exporting a source archive to a depot, Goa supplements a license
+  file to the source archive, which is expected to be located as a file
+  named LICENSE in the project directory. If many Goa projects share the same
+  license, it would be cumbersome to spill LICENSE files everywhere.
+  In this case, a path to a license file can be supplied via the 'license'
+  configuration variable, or the '--license' command-line argument.
+
+:strict_warnings:
+  If set to 1, Goa passes Genode's default strict C++ warning flags to the
+  build system. It is implicitly enabled whenever a project uses the Genode
+  'base' API. By explicitly defining the value, strict warnings can be
+  disabled for a Genode-API-using project, or enabled for any non-Genode-API
+  project. Alternatively to defining the configuration variable, the
+  strict warnings can be enabled or disabled via the '--warn-strict' and
+  '--no-warn-strict' command-line arguments.
+
+:version(<user>/<type>/<name>):
+  The version array is indexed with a depot-archive path and contains the
+  version to be assumed for this archive.
+  The <user> corresponds to a depot user (a software source).
+  The <type> can be 'src', 'raw', 'api', or 'pkg'.
+  The <name> is the name of the archive.
+  Goa comes with a data base of default versions, which can be found at
+  share/goa/goarc.
+  It is possible to instruct Goa to obtain version information directly
+  from a Genode source tree by using the 'versions_from_genode_dir' variable.
+  To display Goa's currently known version information, you may use the
+  'goa archive-versions' command.
+
+:versions_from_genode_dir:
+  If set to the root of a Genode source tree, Goa determines the package
+  versions from the depot recipes stored in the Genode source tree.
+

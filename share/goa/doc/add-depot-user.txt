@@ -1,0 +1,34 @@
+
+                                Add depot user
+
+
+                                 Norman Feske
+
+
+The 'goa add-depot-user' command adds a new software source to the Genode
+depot.
+
+USAGE
+#####
+
+:goa add-depot-user <name> --depot-url <url> --pubkey-file <file>:
+
+:goa add-depot-user <name> --depot-url <url> --gpg-user-id <id>:
+
+
+ARGUMENTS
+#########
+
+:--depot-url: The URL where the depot content can be downloaded from.
+
+:--pubkey-file: A local file containing the ASCII-armored public key of the
+  software provider.
+
+:--gpg-user-id: A GPG user ID - such as an email address or a key ID - of
+  the software provider. This is an alternative to the '--pubkey-file'
+  argument.
+
+:--depot-overwrite: By default, the command aborts if the depot already
+  contains a software provider with the specified <name>. By specifying
+  this argument, the existing depot-user directory can be overwritten.
+

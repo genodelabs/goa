@@ -1,0 +1,124 @@
+#!/usr/bin/make -f
+
+#
+# \brief  Tool for assembling a package archive
+# \author Norman Feske
+# \date   2017-03-17
+#
+
+define HELP_MESSAGE
+
+  Compress and sign depot content for publishing
+
+  usage:
+
+    $(firstword $(MAKEFILE_LIST)) <archive-path> {PUBLIC_DIR=<public>}
+
+  The <archive-path> denotes the archives (and implicitly their
+  dependencies) to publish from the depot to the public directory.
+  It must be given including the version number of the package archive.
+
+  This tool does not touch any Genode source repository. It solely
+  reads from the depot and writes to the public directory.
+
+  The optional 'PUBLIC_DIR' argument defines the location of the public
+  directory. If not specified, '<genode-dir>/public/' is used.
+
+endef
+
+export GENODE_DIR := $(realpath $(dir $(MAKEFILE_LIST))/../..)
+
+PUBLIC_DIR     ?= $(GENODE_DIR)/public
+DEPOT_TOOL_DIR ?= $(GENODE_DIR)/tool/depot
+
+XZ_THREADS ?= 1
+
+include $(DEPOT_TOOL_DIR)/mk/front_end.inc
+
+
+#
+# Determine dependencies, check for completeness
+#
+
+ifneq ($(MAKECMDGOALS),)
+DEPENDENCIES_CMD := $(DEPOT_TOOL_DIR)/dependencies DEPOT_DIR="$(DEPOT_DIR)" \
+                                                   DEPOT_TOOL_DIR="$(DEPOT_TOOL_DIR)" \
+                                                   $(MAKECMDGOALS)
+DEPENDENCIES_RESULT := $(shell $(DEPENDENCIES_CMD) 2> /dev/null || true)
+endif
+
+DEPENDENCIES_MISSING := $(sort $(foreach A, $(DEPENDENCIES_RESULT),\
+                                  $(if $(wildcard $(PUBLIC_DIR)/$A.tar.xz.sig),,$A)))
+
+ifeq ($(filter Error:,$(DEPENDENCIES_RESULT)),)
+ARCHIVES := $(DEPENDENCIES_MISSING)
+else
+ARCHIVES :=
+$(MAKECMDGOALS): dependencies_error
+endif
+
+# re-execute the dependencies command to present the error to the user
+dependencies_error:
+	@$(DEPENDENCIES_CMD)
+
+TARGETS += $(addsuffix .tar.xz.sig,$(addprefix $(PUBLIC_DIR)/,$(ARCHIVES)))
+
+
+#
+# Determine to-be-published index files from MAKECMDGOALS
+#
+
+INDEX_FILES := $(foreach A,$(MAKECMDGOALS),\
+  $(if $(call archive_has_type,$A,index),$A,))
+
+INDEX_FILES_MISSING := $(sort $(foreach I, $(INDEX_FILES),\
+                          $(if $(wildcard $(DEPOT_DIR)/$I),,$I)))
+
+ifneq ($(INDEX_FILES_MISSING),)
+$(MAKECMDGOALS): index_missing_error
+else
+TARGETS += $(addsuffix .xz.sig,$(addprefix $(PUBLIC_DIR)/,$(INDEX_FILES)))
+endif
+
+index_missing_error:
+	@echo "Error: missing depot content: $(INDEX_FILES_MISSING)"; false
+
+
+#
+# Generate compressed and signed archives and index files
+#
+
+include $(DEPOT_TOOL_DIR)/mk/gpg.inc
+
+MISSING_PUBKEY_FILES := $(sort \
+                           $(foreach A,$(ARCHIVES),\
+                              $(if $(call pubkey_path,$A),,\
+                                 $(DEPOT_DIR)/$(call pubkey_filename,$A))))
+
+$(PUBLIC_DIR)/%.xz.sig : $(PUBLIC_DIR)/%.xz
+	$(VERBOSE)$(GPG) --detach-sign --digest-algo SHA256 --no-tty --use-agent \
+	              --local-user $(call pubkey_id,$*) - < $< > $@ || \
+	              ( rm -f $@; false )
+
+.PRECIOUS: $(TARGETS:.xz.sig=.xz)
+
+# archive
+$(PUBLIC_DIR)/%.tar.xz: $(DEPOT_DIR)/%
+	@$(ECHO) "$(DARK_COL)publish$(DEFAULT_COL) $@"
+	$(VERBOSE)test -e $(dir $@) || mkdir -p $(dir $@)
+	$(VERBOSE)tar cf - -C $(dir $<) $(notdir $<) | \
+	          xz --threads=$(XZ_THREADS) > $@
+
+# index file
+$(PUBLIC_DIR)/%.xz: $(DEPOT_DIR)/%
+	@$(ECHO) "$(DARK_COL)publish$(DEFAULT_COL) $@"
+	$(VERBOSE)test -e $(dir $@) || mkdir -p $(dir $@)
+	$(VERBOSE)xz --threads=$(XZ_THREADS) <$< >$@
+
+ifneq ($(MISSING_PUBKEY_FILES),)
+$(MAKECMDGOALS) $(TARGETS): missing_pubkey_files
+endif
+
+$(MAKECMDGOALS): $(TARGETS)
+	@true
+

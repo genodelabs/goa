@@ -1,0 +1,232 @@
+
+#######################
+#                     #
+# MANUAL PAGE BACKEND #
+#                     #
+#######################
+
+proc man_mkboldline {string} {
+	# Collapse multiple style changes in one line
+
+	# First, delete all boldness.
+	regsub -all -lineanchor -linestop \
+	       {^\.B (.*)$} $string {\1} string
+
+	# Collapse non-italic lines.
+	regsub -all -lineanchor -linestop \
+	       {^([^.].*)\n([^.].*)$} $string {\1 \2} string
+
+	# Now, we should have only roman and italic lines left.
+	# Trim whitespace
+	regsub -all \
+	       { *\n *} $string "\n" string
+
+	# Collapse.
+	regsub -all  \
+	       {\n(\.I )?} [string trimright $string] \
+	       {" " } string
+	
+	regsub {^\.I } $string {.IB "} string
+	regsub {^([^.])} $string {.BI "\1} string
+	append string {"}
+
+        return $string
+}
+
+### FILTER TEXTUAL OUTPUT ###
+proc out_man {string} {
+
+	set string " $string "
+	
+	# italic style #
+	while {[regexp {([ \"\(])_(.+?)_([ \)\.\",!?])} $string dummy head_char emph_text tail_char]} {
+		regsub -all {_} $emph_text " " emph_text
+		regsub " " $tail_char "" tail_char
+		regsub {\.} $tail_char {\\\\\\\&.} tail_char
+		regsub {([ \"\(])_(.+?)_([ \)\.\",!?])} $string "$head_char\n.I $emph_text\n$tail_char" string
+	}
+
+	# bold style #
+	while {[regexp {([ \"\(])\*(.+?)\*([ \)\.\",!?])} $string dummy head_char bf_text tail_char]} {
+		regsub -all {\*} $bf_text " " bf_text
+		regsub " " $tail_char "" tail_char
+		regsub {\.} $tail_char {\\\\\\\&.} tail_char
+		regsub {([ \"\(])\*(.+?)\*([ \)\.\",!?])} $string "$head_char\n.B $bf_text\n$tail_char" string
+	}
+	
+	# monospace style #
+#	while {[regexp {([ \(])\'(.+?)\'([ \)\.,!?])} $string dummy head_char code_text tail_char]} {
+#		regsub {([ \(])\'(.+?)\'([ \)\.,!?])} $string "$head_char\\texttt{$code_text}$tail_char" string
+#	}
+	
+	regsub -all {"} $string "\"" string
+	regsub {^ } $string "" string
+	regsub { $} $string "" string
+
+	regsub {^\.} $string {\\\&.} string
+	regsub -lineanchor {^'} $string {\(cq} string
+
+	return $string
+}
+
+### FILTER LABEL ###
+proc label_man {string} {
+	regsub -all {"} $string "" string
+	return $string
+}
+
+### WRITE HEADER ###
+proc produce_head_man {} {
+	global title authors
+
+	puts ".TH Goa \"$title\""
+	puts ".SH SUMMARY"
+}
+
+### WRITE TAIL OF TEX FILE ###
+proc produce_tail_man {} {
+	global authors
+	puts ".SH AUTHOR"
+	puts "$authors"
+}
+
+### VERBATIM  ###
+proc process_verbatim_man {txtblock} {
+	while {[lindex $txtblock end] == ""} {
+		set txtblock [lrange $txtblock 0 [expr [llength $txtblock]-2]]
+	}
+	puts ".PP"
+	puts ".ll +1i"
+	foreach txtline $txtblock {
+		set txt [linetxt $txtline]
+		regsub {^!} $txt "" txt
+	        regsub {\\} $txt {\\\\} txt
+	        regsub {^([.'])} $txt {\\\&\1} txt
+		puts "$txt\n.br"
+	}
+	puts ".ll"
+	puts ".PP"
+}
+
+### ITEMIZE ###
+proc process_itemize_man {txtblock} {
+	handle_txtblock itemize $txtblock
+}
+
+### ITEM ###
+proc process_item_man {itemtxtblock} {
+	puts ".IP \"  *\""
+#	puts ".IP \"\\(bu\""
+	set txtline [lindex $itemtxtblock 0]
+	set txtline [lineregsub {^\*\ } $txtline ""]
+	lappend txtblock $txtline
+	foreach txtline [lrange $itemtxtblock 1 end] {
+		set txtline [lineregsub {^\ \ } $txtline ""]
+		lappend txtblock $txtline
+	}
+	handle_txtblock item $txtblock
+}
+
+### DESCRIPTION ###
+proc process_description_man {txtblock} {
+	puts ".RS 0.0"
+	handle_txtblock description $txtblock
+	puts ".RE"
+#	puts ""
+}
+
+### DESCRIPTION ITEM ###
+proc process_descitem_man {itemtxtblock} {
+	set txtline [lindex $itemtxtblock 0]
+	set desc_name ""
+	regexp {^\:(.+)\:} [linetxt $txtline] dummy desc_name
+	set txtline [lineregsub {^\:(.+)\: *} $txtline ""]
+	puts ".TP\n[man_mkboldline [out_man $desc_name]]"
+	lappend txtblock $txtline
+	foreach txtline [lrange $itemtxtblock 1 end] {
+		set txtline [lineregsub {^\ \ } $txtline ""]
+		lappend txtblock $txtline
+	}
+	handle_txtblock descitem $txtblock
+}
+
+
+set enum_level 0
+
+### ENUMERATION ###
+proc process_enumeration_man {txtblock} {
+	global enum_level enum_cnt
+	incr enum_level
+	set enum_cnt($enum_level) 0
+	puts ".RS"
+	handle_txtblock enumeration $txtblock
+	puts ".RE"
+	puts ""
+	incr enum_level -1
+}
+
+### ENUM ITEM ###
+proc process_enum_man {itemtxtblock} {
+	global enum_level enum_cnt
+	puts ".TP"
+	incr enum_cnt($enum_level)
+	puts ".B $enum_cnt($enum_level)."
+	set txtline [lindex $itemtxtblock 0]
+	set txtline [lineregsub {^\#\ } $txtline ""]
+	lappend txtblock $txtline
+	foreach txtline [lrange $itemtxtblock 1 end] {
+		set txtline [lineregsub {^\ \ } $txtline ""]
+		lappend txtblock $txtline
+	}
+	handle_txtblock item $txtblock
+}
+
+### PLAIN ###
+proc process_plain_man {plaintxtblock} {
+	while {[lindex $plaintxtblock end] == ""} {
+		set plaintxtblock [lrange $plaintxtblock 0 [expr [llength $plaintxtblock]-2]]
+	}
+	foreach txtline $plaintxtblock {
+		puts [out_man [linetxt $txtline]]
+	}
+}
+
+### ABSTRACT ###
+proc process_abstract_man {txtblock} {
+	set title [linetxt [lindex $txtblock 0]]
+	puts ".SH \"[out_man [string toupper $title]]\""
+	handle_txtblock abstract [lrange $txtblock 2 end]
+}
+
+### CHAPTER ###
+proc process_chapter_man {txtblock} {
+	set title  [linetxt [lindex $txtblock 0]]
+	puts ".SH \"[out_man [string toupper $title]]\""
+	handle_txtblock chapter [lrange $txtblock 2 end]
+}
+
+### SECTION ###
+proc process_section_man {txtblock} {
+	set title [linetxt [lindex $txtblock 0]]
+	puts ".SS \"[out_man $title]\""
+	handle_txtblock section [lrange $txtblock 2 end]
+}
+
+### SUBSECTION ###
+proc process_subsection_man {txtblock} {
+	set title [linetxt [lindex $txtblock 0]]
+	puts ".PP\n[man_mkboldline [out_man $title]]\n.br"
+	handle_txtblock subsection [lrange $txtblock 2 end]
+}
+
+### PARAGRAPH ###
+proc process_paragraph_man {txtblock} {
+	set title [linetxt [lindex $txtblock 0]]
+	puts ".PP\n[man_mkboldline [out_man $title.]]"
+	handle_txtblock paragraph [lrange $txtblock 2 end]
+}
+
+
+set config_man_no_date [regexp {\--man-no-date} $argv dummy]
+
+set outmode man

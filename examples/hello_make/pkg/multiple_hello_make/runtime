@@ -1,0 +1,31 @@
+<runtime ram="10M" caps="1000" binary="init">
+
+	<content>
+		<rom label="init"/>
+		<rom label="hello"/>
+	</content>
+
+	<config>
+		<parent-provides>
+			<service name="ROM"/>
+			<service name="LOG"/>
+			<service name="CPU"/>
+			<service name="PD"/>
+		</parent-provides>
+
+		<default-route> <any-service> <parent/> </any-service> </default-route>
+
+		<start name="one" caps="100">
+			<binary name="hello"/>
+			<resource name="RAM" quantum="1M"/>
+			<config/>
+		</start>
+
+		<start name="two" caps="100">
+			<binary name="hello"/>
+			<resource name="RAM" quantum="1M"/>
+			<config/>
+		</start>
+	</config>
+
+</runtime>
