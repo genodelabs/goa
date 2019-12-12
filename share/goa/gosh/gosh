@@ -1,4 +1,4 @@
-#!/usr/bin/tclsh
+#!/usr/bin/env tclsh
 
 ##                                                                          ##
 ## GOSH - a script by Norman Feske written in July'2003                     ##
