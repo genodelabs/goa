@@ -22,7 +22,7 @@ set tool_dir  [file join [_find_tool_dir] "share" "goa"]
 
 # assist the user a bit
 if {[llength $argv] == 0} {
-	puts stderr "\n  usage: $tool_name --help\n"
+	puts stderr "\n  usage: $tool_name help\n"
 	exit 1
 }
 
