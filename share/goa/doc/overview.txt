@@ -104,12 +104,12 @@ USAGE
 
   This command implies the 'build' command.
 
-:goa export:
+:goa export [--depot-user <name>]:
   Export project to a Genode depot.
 
   This command implies the 'build' command.
 
-:goa publish:
+:goa publish [--depot-user <name>]:
   Archive and sign depot archives generated via the 'export' command.
 
   This command implies the 'export' command.

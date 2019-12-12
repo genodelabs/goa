@@ -659,7 +659,10 @@ proc versioned_project_archive { type { pkg_name ""} } {
 		set name $pkg_name }
 
 	if {![info exists depot_user]} {
-		exit_with_error "missing definition of depot user" }
+		exit_with_error "missing definition of depot user\n" \
+		                "\n You can define your depot user name by setting the 'depot_user'" \
+		                "\n variable in a .goarc file, or by specifing the '--depot-user <name>'"\
+		                "\n command-line argument.\n"}
 
 	set version_file [file join $project_dir version]
 	if {[file exists $version_file]} {

@@ -116,7 +116,9 @@ Goa evaluates the following configuration variables.
   Depot user name to use when exporting or publishing the project via the
   'export' or 'publish' commands. In order to be able to publish software,
   the GPG keyring must contain a private key that matches the specified
-  depot user's pubkey.
+  depot user's pubkey. Alternatively to setting the 'depot_user' variable,
+  the name can be specified for the 'export' or 'publish' commands
+  via the '--depot-user <name>' argument.
 
 :license:
   When exporting a source archive to a depot, Goa supplements a license

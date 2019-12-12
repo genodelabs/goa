@@ -114,6 +114,7 @@ set versions_from_genode_dir ""
 set common_var_dir           ""
 set depot_overwrite          0
 set license                  ""
+set depot_user               ""
 
 # if /proc/cpuinfo exists, use number of CPUs as 'jobs'
 if {[file exists /proc/cpuinfo]} {
@@ -330,6 +331,8 @@ if {$perform(export)} {
 	if {[consume_optional_cmdline_switch "--depot-overwrite"]} {
 		set depot_overwrite 1 }
 
+	set depot_user [consume_optional_cmdline_arg "--depot-user" $depot_user]
+
 	set license [consume_optional_cmdline_arg "--license" $license]
 }
 
@@ -343,6 +346,9 @@ if {$versions_from_genode_dir == ""} {
 
 if {$license == ""} {
 	unset license }
+
+if {$depot_user == ""} {
+	unset depot_user }
 
 set var_dir [file join $project_dir var]
 if {$common_var_dir != ""} {
