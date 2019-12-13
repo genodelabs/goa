@@ -354,7 +354,7 @@ proc prepare_depot_with_archives { archive_list } {
 			                "there is no depot at $depot_dir" }
 
 		# create default depot local to the project at var/depot/
-		file mkdir var
+		file mkdir [file dirname $depot_dir]
 		file copy [file join $tool_dir default_depot] $depot_dir
 	}
 
