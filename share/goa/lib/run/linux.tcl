@@ -1,10 +1,12 @@
 
 proc generate_runtime_config { } {
-	global runtime_archives runtime_file project_name rom_modules run_dir
+	global runtime_archives runtime_file project_name rom_modules run_dir config_valid
 
 	set ram    [try_query_attr_from_runtime ram]
 	set caps   [try_query_attr_from_runtime caps]
 	set binary [try_query_attr_from_runtime binary]
+
+	set config_valid 0
 
 	set config ""
 	catch {
@@ -24,6 +26,9 @@ proc generate_runtime_config { } {
 			exit_with_error "runtime config is ambiguous,"
 			                "specified as 'config' attribute as well as '<config>' node" }
 	}
+
+	if {$config != "" || $config_route != ""} {
+		set config_valid 1 }
 
 	set gui_config_nodes ""
 	set gui_route        ""

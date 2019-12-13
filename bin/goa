@@ -641,6 +641,11 @@ if {$perform(run)} {
 	# add content found in the project's raw/ subdirectory
 	symlink_directory_content $rom_modules [file join $project_dir raw] $run_dir
 
+	if {!$config_valid} {
+		exit_with_error "runtime lacks a configuration\n" \
+		                "\n You may declare a 'config' attribute in the <runtime> node, or" \
+		                "\n define a <config> node inside the <runtime> node.\n" }
+
 	run_genode
 }
 
