@@ -264,9 +264,12 @@ proc api_archive_dir { api_name } {
 #
 proc content_rom_modules { runtime_file } {
 
-	set attributes [query_node "/runtime/content/rom/attribute::label" $runtime_file]
+	set attributes { }
+	catch {
+		set attributes [query_node "/runtime/content/rom/attribute::label" $runtime_file]
+	}
 
-	set rom_names {}
+	set rom_names { }
 	foreach attr $attributes {
 		regexp {"(.*)"} $attr dummy rom_name
 		lappend rom_names $rom_name
