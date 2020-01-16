@@ -870,6 +870,13 @@ if {$perform(publish)} {
 
 	set archives { }
 
+	set pubkey_file [file join $depot_dir $depot_user pubkey]
+	if {![file exists $pubkey_file]} {
+		exit_with_error "missing public key at $pubkey_file\n" \
+		                "\n You may use the 'goa add-depot-user' command." \
+		                "\n To learn more about this command:\n" \
+		                "\n   goa help add-depot-user\n" }
+
 	set raw_dir [file join $project_dir raw]
 	if {[file exists $raw_dir] && [file isdirectory $raw_dir]} {
 		lappend archives [versioned_project_archive raw] }
