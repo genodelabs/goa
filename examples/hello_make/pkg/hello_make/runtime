@@ -1,4 +1,5 @@
 <runtime ram="1M" caps="1000" binary="hello">
+	<config/>
 	<content>
 		<rom label="hello"/>
 	</content>
