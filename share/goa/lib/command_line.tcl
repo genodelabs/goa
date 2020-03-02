@@ -336,6 +336,8 @@ if {$perform(export)} {
 	set license [consume_optional_cmdline_arg "--license" $license]
 }
 
+if {$perform(archive-versions)} {
+	set depot_user [consume_optional_cmdline_arg "--depot-user" $depot_user] }
 
 # back out if there is any unhandled argument
 if {[llength $argv] > 0} {
