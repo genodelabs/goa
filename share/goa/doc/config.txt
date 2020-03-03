@@ -154,3 +154,8 @@ Goa evaluates the following configuration variables.
   If set to the root of a Genode source tree, Goa determines the package
   versions from the depot recipes stored in the Genode source tree.
 
+SEE ALSO
+########
+
+add-depot-user, artifacts, overview
+
