@@ -133,3 +133,6 @@ OPTIONAL ARGUMENTS
 :--verbose:
   Print diagnostic information about the operation of Goa.
 
+:-C <dir>:
+  Change to project directory dir before executing the command.
+
