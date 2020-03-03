@@ -11,7 +11,17 @@ proc _find_tool_dir { } {
 
 	set path $argv0
 	if {[file type $path] == "link"} {
-		set path [file readlink $path] }
+
+		set link_target [file readlink $path]
+
+		# resolve relative symlink used as symlink target
+		if {[file pathtype $link_target] == "relative"} {
+			set path [file join [file dirname $argv0] $link_target]
+			set path [file normalize $path]
+		} else {
+			set path $link_target
+		}
+	}
 
 	# strip binary name and 'bin/' path
 	return [file dirname [file dirname $path]]
