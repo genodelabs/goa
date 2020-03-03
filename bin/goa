@@ -354,6 +354,17 @@ proc depot_exists { } {
 proc depot_user { archive } { return [lindex [split $archive "/"] 0] }
 
 
+##
+# Set writeable permission for specified path and its subdirectories
+#
+proc make_writeable { path } {
+	file attributes $path -permissions "+w"
+	if {[file isdirectory $path]} {
+		foreach entry [glob [file join $path "*"]] {
+			make_writeable $entry } }
+}
+
+
 proc prepare_depot_with_archives { archive_list } {
 	global depot_dir public_dir tool_dir jobs
 
@@ -366,6 +377,7 @@ proc prepare_depot_with_archives { archive_list } {
 		# create default depot local to the project at var/depot/
 		file mkdir [file dirname $depot_dir]
 		file copy [file join $tool_dir default_depot] $depot_dir
+		make_writeable $depot_dir
 	}
 
 	# create list of depot users without duplicates
