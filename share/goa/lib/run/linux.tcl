@@ -34,7 +34,6 @@ proc generate_runtime_config { } {
 	set gui_route        ""
 	catch {
 		set nitpicker_node [query_node /runtime/requires/nitpicker $runtime_file]
-		puts "nitpicker_node: $nitpicker_node"
 		append gui_config_nodes {
 
 			<start name="drivers" caps="1000">
