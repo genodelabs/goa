@@ -65,4 +65,8 @@ archive.
 The executable binaries 'ls' and 'cp' are archived within 'coreutils.tar'.
 The archive contains two entries '/usr/local/bin/ls' and '/usr/local/bin/cp'.
 
+SEE ALSO
+########
+
+add-depot-user, config, overview
 

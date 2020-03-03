@@ -136,3 +136,7 @@ OPTIONAL ARGUMENTS
 :-C <dir>:
   Change to project directory dir before executing the command.
 
+SEE ALSO
+########
+
+add-depot-user, artifacts, config
