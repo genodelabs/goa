@@ -14,6 +14,7 @@ set  version(nfeske/src/nitpicker)                   2020-02-27
 set  version(nfeske/src/posix)                       2020-02-27
 set  version(nfeske/src/report_rom)                  2020-02-27
 set  version(nfeske/src/rom_filter)                  2020-02-27
+set  version(nfeske/src/sdl)                         2020-03-08
 set  version(nfeske/src/stdcxx)                      2020-02-19
 set  version(nfeske/src/terminal)                    2020-02-27
 set  version(nfeske/src/vfs)                         2020-02-27
@@ -40,6 +41,7 @@ set  version(nfeske/api/os)                          2020-02-27
 set  version(nfeske/api/posix)                       2019-02-25
 set  version(nfeske/api/report_session)              2019-02-25
 set  version(nfeske/api/rtc_session)                 2019-08-20
+set  version(nfeske/api/sdl)                         2019-07-06
 set  version(nfeske/api/so)                          2019-02-25
 set  version(nfeske/api/stdcxx)                      2019-12-18
 set  version(nfeske/api/terminal_session)            2019-02-25
