@@ -267,12 +267,15 @@ if {$perform(import)} {
 		if {[catch { exec {*}$cmd >@ stdout 2>@ stdout }]} {
 			exit_with_error "import failed" }
 
-		set src_dir [file join $project_dir src]
+		foreach subdir [list src raw] {
 
-		if {[file exists $src_dir]} {
-			file delete -force $src_dir }
+			set dst_dir [file join $project_dir $subdir]
 
-		file copy -force [file join $contrib_dir src] $src_dir
+			if {[file exists $dst_dir]} {
+				file delete -force $dst_dir }
+
+			file copy -force [file join $contrib_dir $subdir] $dst_dir
+		}
 
 		file delete -force $build_dir
 	}
@@ -297,7 +300,9 @@ proc show_diff { subdir } {
 		# output. Those lines would show the diff command and the absolute path
 		# to 'contrib_dir'.
 		#
-		exec -ignorestderr diff -u -r --exclude=.git --exclude=*~ $dir_a $dir_b \
+		# The argument -N is specified o show the content new files.
+		#
+		exec -ignorestderr diff -N -u -r --exclude=.git --exclude=*~ $dir_a $dir_b \
 		                 | tail -n +3 >@ stdout
 	}
 }
