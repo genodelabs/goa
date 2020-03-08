@@ -53,6 +53,9 @@ It can have the following ingredients:
   supplemented whenever a source-archive is exported from the project
   via the 'export' or 'publish' commands.
 
+:cmake_args: A file containing a list of project-specific arguments
+  passed to CMake.
+
 !
 
 Any given project may feature a subset of those files or directories.
