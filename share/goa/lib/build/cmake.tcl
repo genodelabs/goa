@@ -49,7 +49,10 @@ proc build { } {
 	set cmd [list make -C $build_dir "-j$jobs"]
 
 	if {$verbose == 0} {
-		lappend cmd "-s" }
+		lappend cmd "-s"
+	} else {
+		lappend cmd "VERBOSE=1"
+	}
 
 	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:cmake\] /" >@ stdout} msg]} {
 		exit_with_error "build via cmake failed:\n" $msg }
