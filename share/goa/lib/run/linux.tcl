@@ -1,6 +1,6 @@
 
 proc generate_runtime_config { } {
-	global runtime_archives runtime_file project_name rom_modules run_dir config_valid
+	global runtime_archives runtime_file project_name rom_modules run_dir var_dir config_valid
 
 	set ram    [try_query_attr_from_runtime ram]
 	set caps   [try_query_attr_from_runtime caps]
@@ -153,6 +153,39 @@ proc generate_runtime_config { } {
 			{<service name="Nic"> <child name="nic_drv"/> </service>}
 	}
 
+	set fs_config_nodes ""
+	set fs_routes       ""
+	foreach {label writeable} [required_file_systems $runtime_file] {
+		set label_fs "${label}_fs"
+
+		append fs_config_nodes {
+			<start name="} "$label_fs" {" caps="100" ld="no">
+				<binary name="lx_fs"/>
+				<resource name="RAM" quantum="1M"/>
+				<provides> <service name="File_system"/> </provides>
+				<config>
+					<default-policy root="/fs/} $label {" writeable="} $writeable {" />
+				</config>
+				<route>
+					<service name="PD">  <parent/> </service>
+					<service name="CPU"> <parent/> </service>
+					<service name="LOG"> <parent/> </service>
+					<service name="ROM"> <parent/> </service>
+				</route>
+			</start>}
+
+		append fs_routes "\n\t\t\t\t\t" \
+			"<service name=\"File_system\" label=\"$label\"> " \
+			"<child name=\"$label_fs\"/> " \
+			"</service>"
+
+		set fs_dir "$var_dir/fs/$label"
+		if {![file isdirectory $fs_dir]} {
+			log "creating file-system directory $fs_dir"
+			file mkdir $fs_dir
+		}
+	}
+
 	install_config {
 		<config>
 			<parent-provides>
@@ -175,12 +208,12 @@ proc generate_runtime_config { } {
 				</route>
 			</start>
 
-			} $gui_config_nodes $nic_config_nodes {
+			} $gui_config_nodes $nic_config_nodes $fs_config_nodes {
 
 			<start name="} $project_name {" caps="} $caps {">
 				<resource name="RAM" quantum="} $ram {"/>
 				<binary name="} $binary {"/>
-				<route>} $config_route $gui_route $nic_route {
+				<route>} $config_route $gui_route $nic_route $fs_routes {
 					<service name="ROM">   <parent/> </service>
 					<service name="PD">    <parent/> </service>
 					<service name="RM">    <parent/> </service>
@@ -220,6 +253,14 @@ proc generate_runtime_config { } {
 		lappend rom_modules linux_nic_drv
 
 		lappend runtime_archives "nfeske/src/linux_nic_drv"
+	}
+
+	if {$fs_config_nodes != ""} {
+		lappend rom_modules lx_fs
+
+		lappend runtime_archives "nfeske/src/lx_fs"
+
+		file link -symbolic "$run_dir/fs" "$var_dir/fs"
 	}
 
 	lappend runtime_archives "nfeske/src/init"

@@ -279,6 +279,45 @@ proc content_rom_modules { runtime_file } {
 
 
 ##
+# Return list of required file systems (pair of label/writeable) declared in a
+# runtime file's <requires> node
+#
+proc required_file_systems { runtime_file } {
+
+	set num_fs [exec xmllint --xpath "count(/runtime/requires/file_system)"  $runtime_file]
+
+	# Request attribute value from nth <file_system> node
+	proc file_system_attr { runtime_file n attr_name default_value } {
+
+		set value [exec xmllint \
+		                --xpath "string(/runtime/requires/file_system\[$n\]/@$attr_name)" \
+		                $runtime_file]
+		if {$value != ""} {
+			return $value }
+
+		return $default_value
+	}
+
+	set file_systems { }
+
+	# iterate over <file_system> nodes
+	for {set i 1} {$i <= $num_fs} {incr i} {
+
+		set label     [file_system_attr $runtime_file $i "label"     ""]
+		set writeable [file_system_attr $runtime_file $i "writeable" "no"]
+
+		if {$label == ""} {
+			puts stderr "Warning: file systems without labels will be ignored"
+		} else {
+			lappend file_systems $label $writeable
+		}
+	}
+
+	return $file_systems
+}
+
+
+##
 # Create symlinks for each file found at 'from_dir' in 'to_dir'
 #
 proc symlink_directory_content { file_whitelist from_dir to_dir } {
