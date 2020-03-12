@@ -126,6 +126,33 @@ proc generate_runtime_config { } {
 		                 "</service>"
 	}
 
+	set nic_config_nodes ""
+	set nic_route        ""
+	catch {
+		set nic_node [query_node /runtime/requires/nic $runtime_file]
+		set nic_label ""
+		catch {
+			set nic_label [query_node string(/runtime/requires/nic/@label) $runtime_file]
+		}
+
+		append nic_config_nodes "\n" {
+			<start name="nic_drv" caps="100" ld="no">
+				<binary name="linux_nic_drv"/>
+				<resource name="RAM" quantum="4M"/>
+				<provides> <service name="Nic"/> </provides>}
+		if {$nic_label != ""} {
+			append nic_config_nodes {
+				<config> <nic tap="} $nic_label {"/> </config>}
+		}
+		append nic_config_nodes {
+				<route> <any-service> <parent/> </any-service> </route>
+			</start>
+		}
+
+		append nic_route "\n\t\t\t\t\t" \
+			{<service name="Nic"> <child name="nic_drv"/> </service>}
+	}
+
 	install_config {
 		<config>
 			<parent-provides>
@@ -148,12 +175,12 @@ proc generate_runtime_config { } {
 				</route>
 			</start>
 
-			} $gui_config_nodes {
+			} $gui_config_nodes $nic_config_nodes {
 
 			<start name="} $project_name {" caps="} $caps {">
 				<resource name="RAM" quantum="} $ram {"/>
 				<binary name="} $binary {"/>
-				<route>} $config_route $gui_route {
+				<route>} $config_route $gui_route $nic_route {
 					<service name="ROM">   <parent/> </service>
 					<service name="PD">    <parent/> </service>
 					<service name="RM">    <parent/> </service>
@@ -187,6 +214,12 @@ proc generate_runtime_config { } {
 		lappend runtime_archives "nfeske/src/rom_filter"
 		lappend runtime_archives "nfeske/pkg/drivers_interactive-linux"
 
+	}
+
+	if {$nic_config_nodes != ""} {
+		lappend rom_modules linux_nic_drv
+
+		lappend runtime_archives "nfeske/src/linux_nic_drv"
 	}
 
 	lappend runtime_archives "nfeske/src/init"
