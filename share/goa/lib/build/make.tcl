@@ -11,7 +11,7 @@ proc create_or_update_build_dir { } {
 	set saved_pwd [pwd]
 	cd src
 	set dirs  [exec find . -type d]
-	set files [exec find . -not -type d -and -not -name "*~"]
+	set files [split [exec find . -not -type d -and -not -name "*~"] "\n"]
 	cd $saved_pwd
 
 	foreach dir $dirs {
