@@ -36,3 +36,10 @@ if {[using_api sdl]} {
 	lappend cmake_quirk_args "-DCMAKE_SYSTEM_LIBRARY_PATH='$abi_dir'"
 	lappend cmake_quirk_args "-DSDL_LIBRARY:STRING=':sdl.lib.so'"
 }
+
+if {[using_api curl]} {
+
+	if {$arch == "x86_64"} {
+		lappend include_dirs [file join [api_archive_dir curl] src lib curl spec 64bit curl]
+	}
+}
