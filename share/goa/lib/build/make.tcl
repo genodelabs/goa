@@ -45,7 +45,7 @@ proc create_or_update_build_dir { } {
 
 proc build { } {
 
-	global build_dir cross_dev_prefix verbose project_name jobs
+	global build_dir cross_dev_prefix verbose project_name jobs project_dir
 	global cppflags cflags cxxflags ldflags ldlibs
 
 	set cmd { }
@@ -62,6 +62,10 @@ proc build { } {
 
 	if {$verbose == 0} {
 		lappend cmd "-s" }
+
+	# add project-specific arguments read from 'make_args' file
+	foreach arg [read_file_content_as_list [file join $project_dir make_args]] {
+		lappend cmd $arg }
 
 	diag "build via command" {*}$cmd
 
