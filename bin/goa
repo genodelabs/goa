@@ -463,6 +463,9 @@ proc detect_build_system { } {
 	if {[file exists [file join src CMakeLists.txt]]} {
 		return cmake }
 
+	if {[file exists [file join src configure]]} {
+		return autoconf }
+
 	if {[file exists [file join src Makefile]]} {
 		return make }
 

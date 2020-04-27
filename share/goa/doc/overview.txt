@@ -56,6 +56,12 @@ It can have the following ingredients:
 :cmake_args: A file containing a list of project-specific arguments
   passed to CMake.
 
+:make_args: A file containing a list of project-specific arguments
+  passed to Make when using a plain Makefile project or an Autoconf
+  project.
+
+:configure_args: A file containing a list of project-specific arguments
+  passed to the configure script of an Autoconf project.
 !
 
 Any given project may feature a subset of those files or directories.

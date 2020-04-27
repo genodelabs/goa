@@ -345,6 +345,54 @@ proc symlink_directory_content { file_whitelist from_dir to_dir } {
 
 
 ##
+# Create symlink-based mirror of the source-directory structure at the build
+# directory
+#
+proc mirror_source_dir_to_build_dir { } {
+
+	global build_dir
+	global project_dir
+
+	#
+	# Mirror structure of source dir in build dir using symbolic links
+	#
+
+	set saved_pwd [pwd]
+	cd src
+	set dirs  [exec find . -type d]
+	set files [split [exec find . -not -type d -and -not -name "*~"] "\n"]
+	cd $saved_pwd
+
+	foreach dir $dirs {
+		regsub {^\./?} $dir "" dir
+		file mkdir [file join "$build_dir" $dir]
+	}
+
+	set symlinks { }
+	foreach file $files {
+		regsub {^\./?} $file "" file
+		lappend symlinks $file
+	}
+
+	foreach symlink $symlinks {
+		set target [file join $project_dir src $symlink]
+		set path   [file join $build_dir $symlink]
+
+		if {[file exists $path]} {
+			file delete $path }
+
+		file link -symbolic $path $target
+	}
+
+	#
+	# Delete broken symlinks in the build directory.
+	# This can happen whenever a file in the source directory is renamed.
+	#
+	exec find -L $build_dir -type l -delete
+}
+
+
+##
 # Install Genode config into run directory
 #
 proc install_config { args } {
