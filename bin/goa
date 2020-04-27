@@ -816,10 +816,9 @@ if {$perform(export)} {
 		set used_apis [apply_versions [read_file_content_as_list used_apis]]
 
 		set files { }
-		lappend files [license_file]
 		lappend files "src"
 
-		foreach optional_file { artifacts import } {
+		foreach optional_file { artifacts import make_args cmake_args configure_args } {
 			if {[file exists $optional_file]} {
 				lappend files $optional_file } }
 
@@ -827,6 +826,8 @@ if {$perform(export)} {
 
 		foreach file $files {
 			file copy $file [file join $dst_dir [file tail $file]] }
+
+		file copy [license_file] [file join $dst_dir LICENSE]
 
 		exec find $dst_dir ( -name "*~" \
 		                     -or -name "*.rej" \
