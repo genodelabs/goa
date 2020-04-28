@@ -555,13 +555,18 @@ proc extract_artifacts_from_build_dir { } {
 
 		regsub {\s*:$} $container "" container
 
+		# accept files and directories for archives, but only files for ROM modules
+		set selected_types "f d"
+		if {$container == ""} {
+			set selected_types "f" }
+
 		# determine list of selected files
 		set files { }
 		if {[regexp {/$} $selector dummy]} {
 			# selector refers to the content of a directory
 			regsub {/$} $selector "" selector
 			set selected_dir [file join $build_dir $selector]
-			set files [glob -directory $selected_dir -nocomplain -types f *]
+			set files [glob -directory $selected_dir -nocomplain -types $selected_types *]
 		} else {
 			# selector refers to single file
 			set files [list [file join $build_dir $selector]]
