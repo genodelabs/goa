@@ -251,4 +251,5 @@ _extract_function = $(call _assert,\
 	@$(MSG_EXTRACT)"$(ARCHIVE) ($*)"
 	$(VERBOSE)\
 		mkdir -p $(DIR);\
-		$(call _extract_function,$*)
+		$(call _extract_function,$*);\
+		chmod -R a+w $(DIR)
