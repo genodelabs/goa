@@ -43,3 +43,22 @@ if {[using_api curl]} {
 		lappend include_dirs [file join [api_archive_dir curl] src lib curl spec 64bit curl]
 	}
 }
+
+if {[using_api posix]} {
+
+	#
+	# Genode's fork mechanism relies on a specific order of the linked
+	# shared libraries libc, vfs, libm, and posix. Since the order of apis
+	# listed in the 'used_apis' file can be arbitrary, we ensure the
+	# link oder by reordering 'ldlibs'.
+	#
+
+	# remove critical entries
+	foreach lib [list libc libm posix] {
+		set idx [lsearch -exact $ldlibs "-l:$lib.lib.so"]
+		if {$idx != -1} { set ldlibs [lreplace $ldlibs $idx $idx] }
+	}
+
+	# prepend known-good link order of the critical libaries
+    set ldlibs [linsert $ldlibs 0 "-l:libc.lib.so" "-l:libm.lib.so" "-l:posix.lib.so"]
+}
