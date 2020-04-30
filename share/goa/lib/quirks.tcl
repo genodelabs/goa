@@ -9,6 +9,9 @@ if {[using_api libc]} {
 		lappend include_dirs [file join $libc_include_dir spec x86    libc]
 		lappend include_dirs [file join $libc_include_dir spec x86_64 libc]
 	}
+
+	# trigger include of 'sys/signal.h' to make NSIG visible
+	lappend cppflags "-D__BSD_VISIBLE"
 }
 
 if {[using_api stdcxx]} {
