@@ -7,7 +7,7 @@ set  version(nfeske/src/fb_sdl)                      2020-02-27
 set  version(nfeske/src/fs_rom)                      2020-02-27
 set  version(nfeske/src/init)                        2020-02-27
 set  version(nfeske/src/input_filter)                2020-02-27
-set  version(nfeske/src/libc)                        2020-02-27
+set  version(nfeske/src/libc)                        2020-03-18
 set  version(nfeske/src/ncurses)                     2020-02-19
 set  version(nfeske/src/nit_fb)                      2020-02-27
 set  version(nfeske/src/nitpicker)                   2020-02-27
