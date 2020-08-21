@@ -39,6 +39,6 @@ $(ABI_DIR)/%.symbols.o: $(ABI_DIR)/%.symbols.s
 	$(CROSS_DEV_PREFIX)gcc -c $< -o $@
 
 $(ABI_DIR)/%.lib.so: $(ABI_DIR)/%.symbols.o
-	$(CROSS_DEV_PREFIX)ld -o $@ -shared --eh-frame-hdr $(LD_OPT) \
+	$(CROSS_DEV_PREFIX)ld -o $@ -soname $(notdir $@) -shared --eh-frame-hdr $(LD_OPT) \
 	                      -T $(TOOL_DIR)/ld/genode_rel.ld \
 	                      $<

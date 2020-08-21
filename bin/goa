@@ -457,7 +457,6 @@ proc detect_build_system { } {
 	# XXX autoconf (configure.ac)
 	# XXX autoconf (configure.ac configure), e.g., bash
 	# XXX custom configure (no configure.ac configure), e.g., Vim
-	# XXX qmake
 	# XXX Genode build system (src dir, any target.mk)
 
 	if {[file exists [file join src CMakeLists.txt]]} {
@@ -465,6 +464,9 @@ proc detect_build_system { } {
 
 	if {[file exists [file join src configure]]} {
 		return autoconf }
+
+	if {[file exists [glob -nocomplain [file join src *.pro]]]} {
+		return qmake }
 
 	if {[file exists [file join src Makefile]]} {
 		return make }
