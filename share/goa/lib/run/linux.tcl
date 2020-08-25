@@ -33,7 +33,7 @@ proc generate_runtime_config { } {
 	set gui_config_nodes ""
 	set gui_route        ""
 	catch {
-		set nitpicker_node [query_node /runtime/requires/nitpicker $runtime_file]
+		set gui_node [query_node /runtime/requires/gui $runtime_file]
 		append gui_config_nodes {
 
 			<start name="drivers" caps="1000">
@@ -41,12 +41,11 @@ proc generate_runtime_config { } {
 				<binary name="init"/>
 				<route>
 					<service name="ROM" label="config"> <parent label="drivers.config"/> </service>
-					<service name="Timer"> <child name="timer"/> </service>
+					<service name="Timer">   <child name="timer"/> </service>
+					<service name="Capture"> <child name="nitpicker"/> </service>
+					<service name="Event">   <child name="nitpicker"/> </service>
 					<any-service> <parent/> </any-service>
 				</route>
-				<provides>
-					<service name="Input"/> <service name="Framebuffer"/>
-				</provides>
 			</start>
 
 			<start name="report_rom" caps="100">
@@ -86,18 +85,20 @@ proc generate_runtime_config { } {
 
 			<start name="nitpicker" caps="100">
 				<resource name="RAM" quantum="4M"/>
-				<provides><service name="Nitpicker"/></provides>
+				<provides>
+					<service name="Gui"/> <service name="Capture"/> <service name="Event"/>
+				</provides>
 				<route>
 					<service name="ROM" label="focus"> <child name="focus_rom"/> </service>
 					<service name="PD">  <parent/> </service>
 					<service name="CPU"> <parent/> </service>
 					<service name="LOG"> <parent/> </service>
 					<service name="ROM"> <parent/> </service>
-					<service name="Framebuffer"> <child name="drivers"/> </service>
-					<service name="Input">       <child name="drivers"/> </service>
-					<service name="Report">      <child name="report_rom"/> </service>
+					<service name="Timer">  <child name="timer"/> </service>
+					<service name="Report"> <child name="report_rom"/> </service>
 				</route>
 				<config focus="rom">
+					<capture/> <event/>
 					<report hover="yes"/>
 					<domain name="pointer" layer="1" content="client" label="no" origin="pointer" />
 					<domain name="default" layer="2" content="client" label="no" hover="always"/>
@@ -114,14 +115,14 @@ proc generate_runtime_config { } {
 					<service name="CPU"> <parent/> </service>
 					<service name="LOG"> <parent/> </service>
 					<service name="ROM"> <parent/> </service>
-					<service name="Nitpicker"> <child name="nitpicker"/> </service>
+					<service name="Gui"> <child name="nitpicker"/> </service>
 				</route>
 				<config/>
 			</start>
 		}
 
 		append gui_route "\n\t\t\t\t\t" \
-		                 "<service name=\"Nitpicker\"> " \
+		                 "<service name=\"Gui\"> " \
 		                 "<child name=\"nitpicker\"/> " \
 		                 "</service>"
 	}
@@ -234,9 +235,9 @@ proc generate_runtime_config { } {
 		lappend rom_modules nitpicker \
 		                    pointer \
 		                    fb_sdl \
-		                    input_filter \
+		                    event_filter \
 		                    drivers.config \
-		                    input_filter.config \
+		                    event_filter.config \
 		                    en_us.chargen \
 		                    special.chargen \
 		                    report_rom \
