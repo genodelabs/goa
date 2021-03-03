@@ -73,3 +73,29 @@ Usage
 Once installed, obtain further information about the use of Goa via
 the 'goa help' command.
 
+
+Step-by-step tutorials
+----------------------
+
+The following article series gets you started with using Goa.
+
+:Streamlining the development of Genode applications:
+
+  [https://genodians.org/nfeske/2019-11-25-goa]
+
+:Sticking together a little Unix (part 1):
+
+  [https://genodians.org/nfeske/2019-12-13-goa-unix-bash]
+
+:Sticking together a little Unix (part 2):
+
+  [https://genodians.org/nfeske/2019-12-19-goa-unix-terminal]
+
+:Sticking together a little Unix (part 3):
+
+  [https://genodians.org/nfeske/2019-12-22-goa-unix-pipes]
+
+:Publishing packages:
+
+  [https://genodians.org/nfeske/2020-01-16-goa-publish]
+
