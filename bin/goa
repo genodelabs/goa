@@ -943,6 +943,23 @@ if {$perform(publish)} {
 	foreach pkg $pkgs {
 		lappend archives [versioned_project_archive pkg $pkg] }
 
+	# first, download missing dependencies
+	if {[llength $archives] > 0} {
+		set cmd "[file join $tool_dir depot download]"
+		set cmd [concat $cmd $archives]
+		lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
+		lappend cmd "DEPOT_DIR=$depot_dir"
+		lappend cmd "PUBLIC_DIR=$public_dir"
+		lappend cmd "REPOSITORIES="
+
+		diag "install depot archives via command: $cmd"
+
+		if {[catch { exec {*}$cmd >@ stdout }]} {
+			exit_with_error "failed to download dependencies of the following depot archives:\n" \
+			                [join $archives "\n "] }
+	}
+
+	# second, try to publish archives
 	if {[llength $archives] > 0} {
 		set cmd "[file join $tool_dir depot publish]"
 		set cmd [concat $cmd $archives]
