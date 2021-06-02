@@ -312,12 +312,8 @@ if {$perform(build-dir)} {
 }
 
 # unless given as additional argument, run the pkg named after the project
-set run_pkg $project_name
 if {$perform(run)} {
-	if {[llength $argv] == 1} {
-		set run_pkg [lindex $argv 0]
-		set argv [lrange $argv 1 end]
-	}
+	set run_pkg [consume_optional_cmdline_arg "--pkg" $project_name]
 }
 
 if {$perform(build)} {
@@ -334,6 +330,8 @@ if {$perform(export)} {
 	set depot_user [consume_optional_cmdline_arg "--depot-user" $depot_user]
 
 	set license [consume_optional_cmdline_arg "--license" $license]
+
+	set publish_pkg [consume_optional_cmdline_arg "--pkg" ""]
 }
 
 if {$perform(archive-versions)} {

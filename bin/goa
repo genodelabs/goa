@@ -939,9 +939,13 @@ if {$perform(publish)} {
 	if {[file exists $bin_dir] && [file isdirectory $bin_dir]} {
 		lappend archives [versioned_project_archive bin] }
 
-	set pkgs [glob -nocomplain -directory pkg -tail * -type d]
-	foreach pkg $pkgs {
-		lappend archives [versioned_project_archive pkg $pkg] }
+	if {$publish_pkg != ""} {
+		lappend archives [versioned_project_archive pkg $publish_pkg]
+	} else {
+		set pkgs [glob -nocomplain -directory pkg -tail * -type d]
+		foreach pkg $pkgs {
+			lappend archives [versioned_project_archive pkg $pkg] }
+	}
 
 	# first, download missing dependencies
 	if {[llength $archives] > 0} {
