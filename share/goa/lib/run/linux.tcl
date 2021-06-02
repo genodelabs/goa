@@ -33,7 +33,17 @@ proc generate_runtime_config { } {
 	set gui_config_nodes ""
 	set gui_route        ""
 	catch {
-		set gui_node [query_node /runtime/requires/gui $runtime_file]
+		set capture_node ""
+		set event_node ""
+		catch {
+			set capture_node [query_node /runtime/requires/capture $runtime_file]
+		}
+		catch {
+			set event_node   [query_node /runtime/requires/event $runtime_file]
+		}
+		if {$capture_node == "" && $event_node == ""} {
+			set gui_node [query_node /runtime/requires/gui $runtime_file] }
+
 		append gui_config_nodes {
 
 			<start name="drivers" caps="1000">
@@ -127,6 +137,26 @@ proc generate_runtime_config { } {
 		                 "</service>"
 	}
 
+	set capture_route ""
+	catch {
+		set capture_node [query_node /runtime/requires/capture $runtime_file]
+
+		append capture_route "\n\t\t\t\t\t" \
+		                     "<service name=\"Capture\"> " \
+		                     "<child name=\"nitpicker\"/> " \
+		                     "</service>"
+	}
+
+	set event_route ""
+	catch {
+		set event_route [query_node /runtime/requires/event $runtime_file]
+
+		append event_route "\n\t\t\t\t\t" \
+		                     "<service name=\"Event\"> " \
+		                     "<child name=\"nitpicker\"/> " \
+		                     "</service>"
+	}
+
 	set nic_config_nodes ""
 	set nic_route        ""
 	catch {
@@ -214,7 +244,9 @@ proc generate_runtime_config { } {
 			<start name="} $project_name {" caps="} $caps {">
 				<resource name="RAM" quantum="} $ram {"/>
 				<binary name="} $binary {"/>
-				<route>} $config_route $gui_route $nic_route $fs_routes {
+				<route>} $config_route $gui_route \
+				         $capture_route $event_route \
+				         $nic_route $fs_routes {
 					<service name="ROM">   <parent/> </service>
 					<service name="PD">    <parent/> </service>
 					<service name="RM">    <parent/> </service>
