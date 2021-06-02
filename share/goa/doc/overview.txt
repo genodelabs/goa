@@ -106,19 +106,20 @@ USAGE
 
   This command implies the 'build-dir' command.
 
-:goa run [<pkg-name>]:
+:goa run [--pkg <pkg-name>]:
   Execute a system scenario defined at pkg/<pkg-name>. If no argument
   is supplied, <pkg-name> is assumed to correspond to the name of the
   project directory.
 
   This command implies the 'build' command.
 
-:goa export [--depot-user <name>]:
-  Export project to a Genode depot.
+:goa export [--depot-user <name>] [--pkg <pkg-name>]:
+  Export entire project to a Genode depot. If <pkg-name> is supplied,
+  only the scenario defined at pkg/<pkg-name> is exported.
 
   This command implies the 'build' command.
 
-:goa publish [--depot-user <name>]:
+:goa publish [--depot-user <name>] [--pkg <pkg-name>]:
   Archive and sign depot archives generated via the 'export' command.
 
   This command implies the 'export' command.
