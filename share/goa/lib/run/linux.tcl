@@ -173,7 +173,7 @@ proc generate_runtime_config { } {
 				<provides> <service name="Nic"/> </provides>}
 		if {$nic_label != ""} {
 			append nic_config_nodes {
-				<config> <nic tap="} $nic_label {"/> </config>}
+				<config mode="nic_server"> <nic tap="} $nic_label {"/> </config>}
 		}
 		append nic_config_nodes {
 				<route> <any-service> <parent/> </any-service> </route>
@@ -182,6 +182,35 @@ proc generate_runtime_config { } {
 
 		append nic_route "\n\t\t\t\t\t" \
 			{<service name="Nic"> <child name="nic_drv"/> </service>}
+	}
+
+	set uplink_config_nodes ""
+	set uplink_provides     ""
+	catch {
+		set uplink_node [query_node /runtime/requires/uplink $runtime_file]
+		set uplink_label ""
+		catch {
+			set uplink_label [query_node string(/runtime/requires/uplink/@label) $runtime_file]
+		}
+
+		append uplink_config_nodes "\n" {
+			<start name="nic_drv" caps="100" ld="no">
+				<binary name="linux_nic_drv"/>
+				<resource name="RAM" quantum="4M"/>
+				<provides> <service name="Uplink"/> </provides>}
+		if {$uplink_label != ""} {
+			append uplink_config_nodes {
+				<config mode="uplink_client"> <nic tap="} $uplink_label {"/> </config>}
+		}
+		append uplink_config_nodes {
+				<route>
+					<service name="Uplink"> <child name="} $project_name {"/> </service>
+					<any-service> <parent/> </any-service>
+				</route>
+			</start>
+		}
+		append uplink_provides "\n\t\t\t\t\t" \
+			{<service name="Uplink"/>}
 	}
 
 	set fs_config_nodes ""
@@ -239,11 +268,12 @@ proc generate_runtime_config { } {
 				</route>
 			</start>
 
-			} $gui_config_nodes $nic_config_nodes $fs_config_nodes {
+			} $gui_config_nodes $nic_config_nodes $uplink_config_nodes $fs_config_nodes {
 
 			<start name="} $project_name {" caps="} $caps {">
 				<resource name="RAM" quantum="} $ram {"/>
 				<binary name="} $binary {"/>
+				<provides>} $uplink_provides {</provides>
 				<route>} $config_route $gui_route \
 				         $capture_route $event_route \
 				         $nic_route $fs_routes {
@@ -282,7 +312,7 @@ proc generate_runtime_config { } {
 
 	}
 
-	if {$nic_config_nodes != ""} {
+	if {$nic_config_nodes != "" || $uplink_config_nodes != ""} {
 		lappend rom_modules linux_nic_drv
 
 		lappend runtime_archives "nfeske/src/linux_nic_drv"
