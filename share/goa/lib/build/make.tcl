@@ -5,7 +5,7 @@ proc create_or_update_build_dir { } { mirror_source_dir_to_build_dir }
 proc build { } {
 
 	global build_dir cross_dev_prefix verbose project_name jobs project_dir
-	global cppflags cflags cxxflags ldflags ldlibs
+	global cppflags cflags cxxflags ldflags ldlibs lib_src
 
 	set cmd { }
 
@@ -17,6 +17,7 @@ proc build { } {
 	lappend cmd "LDLIBS=$ldlibs"
 	lappend cmd "CXX=$cross_dev_prefix\g++"
 	lappend cmd "CC=$cross_dev_prefix\gcc"
+	lappend cmd "LIB_SRC=$lib_src"
 	lappend cmd "-j$jobs"
 
 	if {$verbose == 0} {

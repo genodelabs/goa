@@ -491,6 +491,7 @@ if {![file exists src]} {
 
 
 set include_dirs { }
+set lib_src { }
 
 if {$perform(build-dir)} {
 

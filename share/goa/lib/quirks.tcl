@@ -65,3 +65,15 @@ if {[using_api posix]} {
 	# prepend known-good link order of the critical libaries
     set ldlibs [linsert $ldlibs 0 "-l:libc.lib.so" "-l:libm.lib.so" "-l:posix.lib.so"]
 }
+
+if {[using_api blit]} {
+
+	set blit_dir [file join [api_archive_dir blit] src lib blit]
+
+	if {$arch == "x86_64"} {
+		lappend include_dirs [file join $blit_dir spec x86]
+		lappend include_dirs [file join $blit_dir spec x86_64]
+	}
+
+	lappend lib_src [file join $blit_dir blit.cc]
+}
