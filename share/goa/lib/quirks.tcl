@@ -12,6 +12,8 @@ if {[using_api libc]} {
 
 	# trigger include of 'sys/signal.h' to make NSIG visible
 	lappend cppflags "-D__BSD_VISIBLE"
+	# prevent gcc headers from defining __size_t
+	lappend cppflags "-D__FreeBSD__=8"
 }
 
 if {[using_api stdcxx]} {
