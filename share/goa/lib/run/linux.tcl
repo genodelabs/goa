@@ -246,6 +246,25 @@ proc generate_runtime_config { } {
 		}
 	}
 
+	set rtc_config_nodes ""
+	set rtc_route        ""
+	catch {
+		set rtc_node [query_node /runtime/requires/rtc $runtime_file]
+
+		append rtc_config_nodes "\n" {
+			<start name="rtc_drv" caps="100" ld="no">
+				<binary name="linux_rtc_drv"/>
+				<resource name="RAM" quantum="1M"/>
+				<provides> <service name="Rtc"/> </provides>
+				<route> <any-service> <parent/> </any-service> </route>
+			</start>}
+
+		append rtc_route "\n\t\t\t\t\t" \
+		                     "<service name=\"Rtc\"> " \
+		                     "<child name=\"rtc_drv\"/> " \
+		                     "</service>"
+	}
+
 	install_config {
 		<config>
 			<parent-provides>
@@ -268,7 +287,11 @@ proc generate_runtime_config { } {
 				</route>
 			</start>
 
-			} $gui_config_nodes $nic_config_nodes $uplink_config_nodes $fs_config_nodes {
+			} $gui_config_nodes \
+			  $nic_config_nodes \
+			  $uplink_config_nodes \
+			  $fs_config_nodes \
+			  $rtc_config_nodes {
 
 			<start name="} $project_name {" caps="} $caps {">
 				<resource name="RAM" quantum="} $ram {"/>
@@ -276,7 +299,7 @@ proc generate_runtime_config { } {
 				<provides>} $uplink_provides {</provides>
 				<route>} $config_route $gui_route \
 				         $capture_route $event_route \
-				         $nic_route $fs_routes {
+				         $nic_route $fs_routes $rtc_route {
 					<service name="ROM">   <parent/> </service>
 					<service name="PD">    <parent/> </service>
 					<service name="RM">    <parent/> </service>
@@ -321,9 +344,15 @@ proc generate_runtime_config { } {
 	if {$fs_config_nodes != ""} {
 		lappend rom_modules lx_fs
 
-		lappend runtime_archives "nfeske/src/lx_fs"
+		lappend runtime_archives "jschlatow/src/lx_fs"
 
 		file link -symbolic "$run_dir/fs" "$var_dir/fs"
+	}
+
+	if {$rtc_config_nodes != ""} {
+		lappend rom_modules linux_rtc_drv
+
+		lappend runtime_archives "jschlatow/src/linux_rtc_drv"
 	}
 
 	lappend runtime_archives "nfeske/src/init"
