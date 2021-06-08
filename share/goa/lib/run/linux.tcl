@@ -344,7 +344,7 @@ proc generate_runtime_config { } {
 	if {$fs_config_nodes != ""} {
 		lappend rom_modules lx_fs
 
-		lappend runtime_archives "jschlatow/src/lx_fs"
+		lappend runtime_archives "nfeske/src/lx_fs"
 
 		file link -symbolic "$run_dir/fs" "$var_dir/fs"
 	}
@@ -352,7 +352,7 @@ proc generate_runtime_config { } {
 	if {$rtc_config_nodes != ""} {
 		lappend rom_modules linux_rtc_drv
 
-		lappend runtime_archives "jschlatow/src/linux_rtc_drv"
+		lappend runtime_archives "nfeske/src/linux_rtc_drv"
 	}
 
 	lappend runtime_archives "nfeske/src/init"
