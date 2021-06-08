@@ -9,6 +9,8 @@ set  version(nfeske/src/fs_rom)                      2021-02-22
 set  version(nfeske/src/gui_fb)                      2021-02-22
 set  version(nfeske/src/init)                        2021-02-22
 set  version(nfeske/src/libc)                        2021-02-22
+set  version(nfeske/src/linux_nic_drv)               2021-06-08
+set  version(nfeske/src/lx_fs)                       2021-06-08
 set  version(nfeske/src/ncurses)                     2021-02-22
 set  version(nfeske/src/nitpicker)                   2021-02-22
 set  version(nfeske/src/posix)                       2021-02-22
