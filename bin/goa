@@ -272,7 +272,7 @@ if {$perform(import)} {
 			set src_dir [file join $contrib_dir $subdir]
 			set dst_dir [file join $project_dir $subdir]
 
-			if {[file exists $dst_dir]} {
+			if {[file exists $src_dir] && [file exists $dst_dir]} {
 				file delete -force $dst_dir }
 
 			if {[file exists $src_dir]} {
