@@ -28,6 +28,8 @@ It can have the following ingredients:
   patched for the use with Genode. It follows the lines of Genode's
   time-tested 'ports' tool described at
   https://genode.org/documentation/developer-resources/porting.
+  Note, import may populate 'src/' and 'raw/'. It will therefore overwrite
+  any existing content in these directories.
 
 :src/: A directory containing source code and build instructions. Goa
   automatically detects the kind of build system used. In particular,
@@ -69,6 +71,8 @@ For example, a plain port of a 3rd-party software package may contain
 only 'import', 'used_apis', 'artifacts', 'version' and LICENSE files.
 As another extreme, a project may only feature a 'pkg/' directory with
 scenarios that plug existing Genode components together.
+Be aware, that a project must not contain a 'src/' or 'raw/' directory
+along with an 'import' file and vice versa.
 
 
 USAGE
