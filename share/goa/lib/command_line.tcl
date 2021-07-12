@@ -105,7 +105,7 @@ set project_name [file tail $project_dir]
 
 # defaults, potentially being overwritten by '.goarc' files
 set arch                     "x86_64"
-set cross_dev_prefix         "/usr/local/genode/tool/current/bin/genode-x86-"
+set cross_dev_prefix         "/usr/local/genode/tool/19.05/bin/genode-x86-"
 set rebuild                  0
 set jobs                     1
 set ld_march                 "-melf_x86_64"
