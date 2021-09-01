@@ -1,5 +1,4 @@
 set  version(nfeske/pkg/drivers_interactive-linux)   2021-06-08
-set  version(nfeske/pkg/terminal)                    2021-02-22
 set  version(nfeske/src/base-linux)                  2021-06-08
 set  version(nfeske/src/bash)                        2021-02-22
 set  version(nfeske/src/coreutils)                   2021-02-22
