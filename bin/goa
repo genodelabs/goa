@@ -258,6 +258,7 @@ if {$perform(import)} {
 		lappend cmd "PORT=[file join $project_dir import]"
 		lappend cmd "REP_DIR=$project_dir"
 		lappend cmd "PORTS_TOOL_DIR=[file join $tool_dir ports]"
+		lappend cmd "GENODE_CONTRIB_CACHE=$import_dir"
 
 		if {$verbose} {
 			lappend cmd "VERBOSE=" }

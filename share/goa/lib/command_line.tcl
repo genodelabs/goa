@@ -105,7 +105,7 @@ set project_name [file tail $project_dir]
 
 # defaults, potentially being overwritten by '.goarc' files
 set arch                     "x86_64"
-set cross_dev_prefix         "/usr/local/genode/tool/19.05/bin/genode-x86-"
+set cross_dev_prefix         "/usr/local/genode/tool/21.05/bin/genode-x86-"
 set rebuild                  0
 set jobs                     1
 set ld_march                 "-melf_x86_64"
@@ -367,6 +367,7 @@ proc set_if_undefined { var_name value } {
 set_if_undefined depot_dir   [file join $var_dir depot]
 set_if_undefined public_dir  [file join $var_dir public]
 set_if_undefined contrib_dir [file join $var_dir contrib]
+set_if_undefined import_dir  [file join $var_dir import]
 set_if_undefined build_dir   [file join $var_dir build $arch]
 set_if_undefined abi_dir     [file join $var_dir abi   $arch]
 set_if_undefined bin_dir     [file join $var_dir bin   $arch]
