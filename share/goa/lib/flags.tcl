@@ -5,8 +5,13 @@ set include_dirs { }
 foreach api $used_apis {
 	set dir [file join $depot_dir $api include]
 
-	lappend include_dirs [file join $dir spec x86_64]
-	lappend include_dirs [file join $dir spec x86]
+	if {$arch == "x86_64"} {
+		lappend include_dirs [file join $dir spec x86_64]
+		lappend include_dirs [file join $dir spec x86]
+	}
+	if {$arch == "arm_v8a"} {
+		lappend include_dirs [file join $dir spec arm_64]
+	}
 	lappend include_dirs [file join $dir spec 64bit]
 	lappend include_dirs $dir
 }
@@ -30,7 +35,9 @@ lappend cppflags "-nostdinc"
 set cflags { }
 lappend cflags -fPIC
 lappend cflags $olevel
-lappend cflags -m64
+
+if {$cc_march != ""} {
+	lappend cflags $cc_march }
 
 if {[info exists warn_strict] && $warn_strict} {
 	lappend cflags -Wall }
@@ -51,7 +58,6 @@ if {[info exists warn_strict] && $warn_strict} {
 set ld_script_dir [file join $tool_dir ld]
 
 set     ldflags { }
-lappend ldflags $ld_march
 lappend ldflags -gc-sections
 lappend ldflags -z max-page-size=0x1000
 lappend ldflags -Ttext=0x01000000
@@ -59,6 +65,9 @@ lappend ldflags --dynamic-linker=ld.lib.so
 lappend ldflags --dynamic-list=[file join $ld_script_dir genode_dyn.dl]
 lappend ldflags --eh-frame-hdr -rpath-link=.
 lappend ldflags -T [file join $ld_script_dir genode_dyn.ld]
+
+if {$ld_march != ""} {
+	lappend ldflags $ld_march }
 
 # apply linker-argument prefix -Wl, to each flag
 set prefixed_flags { }

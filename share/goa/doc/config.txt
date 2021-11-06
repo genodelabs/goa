@@ -41,7 +41,10 @@ Goa evaluates the following configuration variables.
 
 :arch:
   The CPU architecture used for building the software.
-  The default value is "x86_64".
+  Supported values are 'x86_64' and 'arm_v8a'.
+  It can be given via the optional '--arch' command-line argument.
+  If not specified, Goa targets the CPU architecture of the host machine by
+  default, probed via the 'uname -m' command.
 
 :cross_dev_prefix:
   The tool-chain prefix for the Genode cross compiler.

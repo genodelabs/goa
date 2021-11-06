@@ -429,7 +429,7 @@ proc prepare_depot_with_archives { archive_list } {
 
 
 proc prepare_abi_stubs { used_apis } {
-	global tool_dir depot_dir abi_dir cross_dev_prefix ld_march verbose project_name arch
+	global tool_dir depot_dir abi_dir cross_dev_prefix ld_march cc_march verbose project_name arch
 
 	set     cmd "make -f $tool_dir/lib/gen_abi_stubs.mk"
 	lappend cmd "TOOL_DIR=$tool_dir"
@@ -438,7 +438,8 @@ proc prepare_abi_stubs { used_apis } {
 	lappend cmd "APIS=[join $used_apis { }]"
 	lappend cmd "ABI_DIR=$abi_dir"
 	lappend cmd "ARCH=$arch"
-	lappend cmd "LDFLAGS=[join $ld_march { }]"
+	lappend cmd "LD_MARCH=[join $ld_march { }]"
+	lappend cmd "CC_MARCH=[join $cc_march { }]"
 	if {$verbose == 0} {
 		lappend cmd "-s" }
 

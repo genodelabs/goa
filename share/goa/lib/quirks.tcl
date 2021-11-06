@@ -9,6 +9,9 @@ if {[using_api libc]} {
 		lappend include_dirs [file join $libc_include_dir spec x86    libc]
 		lappend include_dirs [file join $libc_include_dir spec x86_64 libc]
 	}
+	if {$arch == "arm_v8a"} {
+		lappend include_dirs [file join $libc_include_dir spec arm_64 libc]
+	}
 
 	# trigger include of 'sys/signal.h' to make NSIG visible
 	lappend cppflags "-D__BSD_VISIBLE"
@@ -75,6 +78,9 @@ if {[using_api blit]} {
 	if {$arch == "x86_64"} {
 		lappend include_dirs [file join $blit_dir spec x86]
 		lappend include_dirs [file join $blit_dir spec x86_64]
+	}
+	if {$arch == "arm_v8a"} {
+		lappend include_dirs [file join $blit_dir spec arm_64]
 	}
 
 	lappend lib_src [file join $blit_dir blit.cc]

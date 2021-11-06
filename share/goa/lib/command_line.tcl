@@ -104,11 +104,12 @@ set project_dir [pwd]
 set project_name [file tail $project_dir]
 
 # defaults, potentially being overwritten by '.goarc' files
-set arch                     "x86_64"
-set cross_dev_prefix         "/usr/local/genode/tool/21.05/bin/genode-x86-"
+set arch                     ""
+set cross_dev_prefix         ""
 set rebuild                  0
 set jobs                     1
-set ld_march                 "-melf_x86_64"
+set ld_march                 ""
+set cc_march                 ""
 set olevel                   "-O2"
 set versions_from_genode_dir ""
 set common_var_dir           ""
@@ -210,6 +211,7 @@ foreach var_name $path_var_names {
 }
 
 set jobs [consume_optional_cmdline_arg "--jobs" $jobs]
+set arch [consume_optional_cmdline_arg "--arch" $arch]
 
 
 #
@@ -327,11 +329,9 @@ if {$perform(export)} {
 	if {[consume_optional_cmdline_switch "--depot-overwrite"]} {
 		set depot_overwrite 1 }
 
-	set depot_user [consume_optional_cmdline_arg "--depot-user" $depot_user]
-
-	set license [consume_optional_cmdline_arg "--license" $license]
-
-	set publish_pkg [consume_optional_cmdline_arg "--pkg" ""]
+	set depot_user  [consume_optional_cmdline_arg "--depot-user" $depot_user]
+	set license     [consume_optional_cmdline_arg "--license"    $license]
+	set publish_pkg [consume_optional_cmdline_arg "--pkg"        ""]
 }
 
 if {$perform(archive-versions)} {
@@ -341,14 +341,43 @@ if {$perform(archive-versions)} {
 if {[llength $argv] > 0} {
 	exit_with_error "invalid argument: [join $argv { }]" }
 
-if {$versions_from_genode_dir == ""} {
-	unset versions_from_genode_dir }
+if {$versions_from_genode_dir == ""} { unset versions_from_genode_dir }
+if {$license                  == ""} { unset license }
+if {$depot_user               == ""} { unset depot_user }
+if {$arch                     == ""} { unset arch }
+if {$cross_dev_prefix         == ""} { unset cross_dev_prefix }
+if {$ld_march                 == ""} { unset ld_march }
+if {$cc_march                 == ""} { unset cc_march }
 
-if {$license == ""} {
-	unset license }
+if {![info exists arch]} {
+	switch [exec uname -m] {
+	aarch64 { set arch "arm_v8a" }
+	x86_64  { set arch "x86_64"  }
+	default { exit_with_error "CPU architecture is not defined" }
+	}
+}
 
-if {$depot_user == ""} {
-	unset depot_user }
+if {![info exists cross_dev_prefix]} {
+	switch $arch {
+	arm_v8a { set cross_dev_prefix "/usr/local/genode/tool/21.05/bin/genode-aarch64-" }
+	x86_64  { set cross_dev_prefix "/usr/local/genode/tool/21.05/bin/genode-x86-"  }
+	default { exit_with_error "tool-chain prefix is not defined" }
+	}
+}
+
+if {![info exists ld_march]} {
+	switch $arch {
+	x86_64  { set ld_march "-melf_x86_64"  }
+	default { set ld_march "" }
+	}
+}
+
+if {![info exists cc_march]} {
+	switch $arch {
+	x86_64  { set cc_march "-m64"  }
+	default { set cc_march "" }
+	}
+}
 
 set var_dir [file join $project_dir var]
 if {$common_var_dir != ""} {

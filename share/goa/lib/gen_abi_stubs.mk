@@ -6,8 +6,9 @@
 # APIS             - list of API archives
 # ABI_DIR          - destination directory
 # CROSS_DEV_PREFIX - tool-chain prefix
-# LDFLAGS          - architecture-specific linker arguments
-# ARCH             - architecture
+# ARCH             - CPU architecture
+# LD_MARCH         - architecture-specific linker arguments
+# CC_MARCH         - architecture-specific compiler arguments
 #
 
 SYMBOL_FILES := $(wildcard $(addsuffix /lib/symbols/*,$(addprefix $(DEPOT_DIR)/,$(APIS))))
@@ -22,7 +23,10 @@ default: $(ABIS)
 # make symbols.s files depend on the symbols files of the depot
 $(foreach S,$(SYMBOL_FILES),$(eval $(ABI_DIR)/$(notdir $S).symbols.s: $S))
 
+ASM_SYM_DEPENDENCY := .long \1
+ifeq ($(ARCH),x86_64)
 ASM_SYM_DEPENDENCY := movq \1@GOTPCREL(%rip), %rax
+endif
 
 $(ABI_DIR)/%.symbols.s:
 	mkdir -p $(dir $@)
@@ -36,9 +40,9 @@ $(ABI_DIR)/%.symbols.s:
 	    ${SYMBOL_FILE($*)} > $@
 
 $(ABI_DIR)/%.symbols.o: $(ABI_DIR)/%.symbols.s
-	$(CROSS_DEV_PREFIX)gcc -c $< -o $@
+	$(CROSS_DEV_PREFIX)gcc $(CC_MARCH) -c $< -o $@
 
 $(ABI_DIR)/%.lib.so: $(ABI_DIR)/%.symbols.o
-	$(CROSS_DEV_PREFIX)ld -o $@ -soname $(notdir $@) -shared --eh-frame-hdr $(LD_OPT) \
+	$(CROSS_DEV_PREFIX)ld -o $@ -soname $(notdir $@) -shared --eh-frame-hdr $(LD_MARCH) \
 	                      -T $(TOOL_DIR)/ld/genode_rel.ld \
 	                      $<
