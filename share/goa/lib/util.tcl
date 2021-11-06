@@ -429,11 +429,7 @@ proc install_config { args } {
 #
 proc have_installed { program } {
 
-	if {![catch { exec which $program                  }]} { return true; }
-	if {![catch { exec which "/sbin/$program"          }]} { return true; }
-	if {![catch { exec which "/usr/sbin/$program"      }]} { return true; }
-	if {![catch { exec which "/usr/local/bin/$program" }]} { return true; }
-
+	if {[auto_execok "$program"] != ""} { return true; }
 	return false;
 }
 
