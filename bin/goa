@@ -497,6 +497,16 @@ set lib_src { }
 if {$perform(build-dir)} {
 
 	#
+	# Check for availability of the Genode tool chain
+	#
+	if {![have_installed ${cross_dev_prefix}gcc]} {
+		exit_with_error "the tool chain ${cross_dev_prefix}" \
+		                "is required but not installed." \
+		                "Please refer to https://genode.org/download/tool-chain" \
+		                "for more information."
+	}
+
+	#
 	# Prepare depot content for the used APIs and generate ABI stubs
 	#
 	# This must happen before assembling the compile flags and creating /
