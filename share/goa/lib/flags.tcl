@@ -11,7 +11,7 @@ foreach api $used_apis {
 	lappend include_dirs $dir
 }
 
-set libgcc_path      [exec $cross_dev_prefix\gcc -print-libgcc-file-name]
+set libgcc_path      [file normalize [eval "exec $cross_dev_prefix\gcc $cc_march -print-libgcc-file-name"]]
 set libgcc_include   [file join [file dirname $libgcc_path] include]
 lappend include_dirs [file normalize $libgcc_include]
 
@@ -71,8 +71,7 @@ set ldflags $prefixed_flags
 # Library arguments for the linker
 #
 set     ldlibs { }
-lappend ldlibs -nostdlib
-lappend ldlibs [file normalize [exec $cross_dev_prefix\gcc -m64 -print-libgcc-file-name]]
+lappend ldlibs -nostartfiles -nolibc -static-libgcc
 lappend ldlibs -L$abi_dir
 
 # determine ABIs to link against the executable
@@ -84,4 +83,3 @@ foreach api $used_apis {
 
 foreach abi $abis {
 	lappend ldlibs "-l:$abi.lib.so" }
-

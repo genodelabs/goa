@@ -22,7 +22,7 @@ proc create_or_update_build_dir { } {
 	lappend cmd "-DCMAKE_CXX_COMPILER=${cross_dev_prefix}g++"
 	lappend cmd "-DCMAKE_C_FLAGS='$cflags $cppflags'"
 	lappend cmd "-DCMAKE_CXX_FLAGS='$cxxflags $cppflags'"
-	lappend cmd "-DCMAKE_EXE_LINKER_FLAGS='-nostdlib $ldflags $ldlibs'"
+	lappend cmd "-DCMAKE_EXE_LINKER_FLAGS='$ldflags $ldlibs'"
 
 	if {[info exists cmake_quirk_args]} {
 		foreach arg $cmake_quirk_args {
