@@ -26,6 +26,13 @@ if {[using_api stdcxx]} {
 	lappend include_dirs [file join $stdcxx_include_dir stdcxx]
 	lappend include_dirs [file join $stdcxx_include_dir stdcxx std]
 	lappend include_dirs [file join $stdcxx_include_dir stdcxx c_global]
+
+	if {$arch == "x86_64"} {
+		lappend include_dirs [file join $stdcxx_include_dir spec x86_64 stdcxx]
+	}
+	if {$arch == "arm_v8a"} {
+		lappend include_dirs [file join $stdcxx_include_dir spec arm_64 stdcxx]
+	}
 }
 
 if {[using_api sdl]} {
