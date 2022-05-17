@@ -56,7 +56,7 @@ set  version(nfeske/api/pcre)                        2019-02-25
 set  version(nfeske/api/posix)                       2020-05-17
 set  version(nfeske/api/report_session)              2020-03-25
 set  version(nfeske/api/rtc_session)                 2020-03-25
-set  version(nfeske/api/sdl)                         2019-07-06
+set  version(nfeske/api/sdl)                         2022-05-17
 set  version(nfeske/api/so)                          2020-05-17
 set  version(nfeske/api/stdcxx)                      2021-12-16
 set  version(nfeske/api/terminal_session)            2020-04-16
