@@ -12,6 +12,9 @@ proc create_or_update_build_dir { } {
 	set orig_pwd [pwd]
 	cd $build_dir
 
+	lappend ldflags "-Wl,--whole-archive"
+	lappend ldlibs  "-lgcc"
+
 	set ::env(LDFLAGS) "$ldflags $ldlibs"
 
 	set cmd { }
