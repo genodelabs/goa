@@ -396,8 +396,7 @@ proc prepare_depot_with_archives { archive_list } {
 
 	# check if all depot users are present in the depot
 	foreach user $depot_users {
-		if {![file exists [file join $depot_dir $user pubkey]] ||\
-		    ![file exists [file join $depot_dir $user download]]} {
+		if {![file exists [file join $depot_dir $user]]} {
 			exit_with_error "depot user '$user' is not known" \
 			                "in depot at $depot_dir" } }
 
