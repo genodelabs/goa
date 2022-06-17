@@ -10,6 +10,28 @@ proc create_or_update_build_dir { } {
 	if {[file exists [file join $build_dir config.status]]} {
 		return }
 
+	set orig_pwd [pwd]
+
+	#
+	# If the configure script doesn't exist yet, it has to be
+	# generated first via the configure.ac file using autoreconf.
+	#
+	if {[expr ![file exists [file join src configure]]]} {
+
+		set cmd { }
+
+		lappend cmd "autoreconf"
+		lappend cmd "--install"
+
+		diag "create build system via command:" {*}$cmd
+
+		cd $build_dir
+		if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:autoconf\] /" >@ stdout} msg]} {
+			exit_with_error "build-system creation via autoconf failed:\n" $msg
+		}
+		cd $orig_pwd
+	}
+
 	set cmd { }
 
 	lappend cmd "./configure"
@@ -32,7 +54,6 @@ proc create_or_update_build_dir { } {
 
 	diag "create build directory via command:" {*}$cmd
 
-	set orig_pwd [pwd]
 	cd $build_dir
 
 	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:autoconf\] /" >@ stdout} msg]} {

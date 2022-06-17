@@ -466,6 +466,14 @@ proc detect_build_system { } {
 	if {[file exists [file join src configure]]} {
 		return autoconf }
 
+	#
+	# If there is only the configure.ac file, it's an autoconf project
+	# but autoreconf has to be called first in order to generate the
+	# configure file.
+	#
+	if {[file exists [file join src configure.ac]]} {
+		return autoconf }
+
 	if {[file exists [glob -nocomplain [file join src *.pro]]]} {
 		return qmake }
 
