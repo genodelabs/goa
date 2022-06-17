@@ -48,6 +48,13 @@ proc create_or_update_build_dir { } {
 	lappend cmd "STRIP=${cross_dev_prefix}strip"
 	lappend cmd "RANLIB=${cross_dev_prefix}ranlib"
 
+	#
+	# Some autoconf projects (e.g. OnpenSC) unconditionally do checks
+	# on the C/C++ preprocessors and therefore need these variables.
+	#
+	lappend cmd "CPP=${cross_dev_prefix}cpp"
+	lappend cmd "CXXCPP=${cross_dev_prefix}cpp"
+
 	# add project-specific arguments read from 'configure_args' file
 	foreach arg [read_file_content_as_list [file join $project_dir configure_args]] {
 		lappend cmd $arg }
