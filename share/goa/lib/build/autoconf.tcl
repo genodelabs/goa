@@ -82,8 +82,17 @@ proc build { } {
 	lappend cmd "DESTDIR=[file join $build_dir install]"
 	lappend cmd "-j$jobs"
 
-	if {$verbose == 0} {
-		lappend cmd "-s" }
+	#
+	# Autoconf adds consideration of the variable 'V' to generated Makefiles
+	# in order to control make verbosity. There are only two values: '0'
+	# means less verbosity and '1' more verbosity.
+	#
+	if {$verbose == 1} {
+		lappend cmd "V=1"
+	} else {
+		lappend cmd "-s"
+		lappend cmd "V=0"
+	}
 
 	# add project-specific arguments read from 'make_args' file
 	foreach arg [read_file_content_as_list [file join $project_dir make_args]] {
