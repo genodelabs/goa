@@ -483,6 +483,9 @@ proc detect_build_system { } {
 	if {[file exists [file join src makefile]]} {
 		return make }
 
+	if {[file exists [file join src vivado.tcl]]} {
+		return vivado }
+
 	exit_with_error "unable to determine build system for [pwd]"
 }
 
