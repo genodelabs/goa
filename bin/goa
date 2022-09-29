@@ -871,13 +871,11 @@ if {$perform(export)} {
 		                     -or -name "*.swp" ) -delete
 
 		# generate 'used_apis' file with specific versions
-		if {[llength $used_apis] > 0} {
-			set fh [open [file join $dst_dir used_apis] "WRONLY CREAT TRUNC"]
-			foreach api $used_apis {
-				puts $fh [regsub {^.*?/.*?/} $api ""]
-			}
-			close $fh
+		set fh [open [file join $dst_dir used_apis] "WRONLY CREAT TRUNC"]
+		foreach api $used_apis {
+			puts $fh [regsub {^.*?/.*?/} $api ""]
 		}
+		close $fh
 		log "exported $dst_dir"
 	}
 
