@@ -1,0 +1,69 @@
+
+                                Build systems
+
+
+                              Johannes Schlatow
+
+Goa automatically detects the kind of build system used based on the content of
+the src/ directory. E.g. if the directory contains a plain Makefile, Goa
+assumes the use of GNU Make. Other options are listed below.
+
+ALTERNATIVE BUILD SYSTEMS
+#########################
+
+autoconf
+========
+
+If Goa encounters a configure or a configure.ac file, it follows the usual
+'./configure; make; make install' procedure. Project-specific configure
+arguments can be supplied via the configure_args file. The install prefix is
+set to '<build-dir>/install'.
+
+The out-of-tree build is realized by following the symlink-based mirroring
+approach (as used by Goa for plain make) because autoconf-based out-of-tree
+builds do not always work.
+
+The configure step is taken only once when creating the build directory and the
+generated config.status file does not yet exist.
+
+If a project has no configure script but only a configure.ac file, autoconf has
+to generate a configure script from that file first. The appropriate way to
+trigger this is by calling autoreconf
+
+
+CMake
+=====
+
+CMake is used, if Goa encounters a CMakeList.txt file in the src/ directory.
+Project-specific CMake configuration arguments are read from the cmake_args
+file.
+
+
+qmake (Qt)
+==========
+
+If Goa detects the presence of any .pro file in the src/ directory, it assumes
+the use of qmake.
+
+
+Xilinx Vivado
+=============
+
+If Goa finds a vivado.tcl file in the src/ directory, it uses Xilinx Vivado to
+re-create a bitstream project as specified in the vivado.tcl file. This file
+must be created in Vivado with the following command:
+
+*write_project_tcl -paths_relative_to /path/to/workspace/dir vivado.tcl*
+
+The '-paths_relative_to' argument is essential because it converts the paths of
+the source files into relative paths. Furthermore, the required source files
+(as referenced in the checkRequiredFiles procedure in the tcl file) must be
+manually copied into the src/ directory with their unmodified relative paths.
+
+Note that Goa writes the bistream to a <project_name>.bit file.
+
+
+SEE ALSO
+########
+
+add-depot-user, artifacts, config, overview

@@ -81,7 +81,7 @@ USAGE
 :goa help [<topic>]:
   Show the documentation about the specified topic.
   Available topics are 'overview' (this document), 'config', 'artifacts',
-  'add-depot-user'
+  'add-depot-user', 'build-systems'
 
 :goa update-goa [<version>]:
   Update the Goa tool to the latest minor version if called without
@@ -153,4 +153,4 @@ OPTIONAL ARGUMENTS
 SEE ALSO
 ########
 
-add-depot-user, artifacts, config
+add-depot-user, artifacts, build-systems, config
