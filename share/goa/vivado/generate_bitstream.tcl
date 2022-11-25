@@ -38,11 +38,11 @@ if {[string equal [get_runs -quiet $runs] ""]} {
 }
 
 foreach run $runs { reset_run $run }
+set last_run [lindex $runs [llength $runs]-1]
 
 puts "Generating bitstream"
-launch_runs $runs -jobs $jobs -quiet
+launch_runs $last_run -jobs $jobs -quiet -to_step write_bitstream
 
-set last_run [lindex $runs [llength $runs]-1]
 while { [get_property PROGRESS [get_runs $last_run]] != "100%" } {
 	set error 0
 
@@ -56,8 +56,13 @@ while { [get_property PROGRESS [get_runs $last_run]] != "100%" } {
 	wait_on_run $last_run -timeout 1
 }
 
-# export bitstream
+# export hardware platform (including bitstream)
+set xsa_file [file rootname $target].xsa
 open_impl_design $last_run
-write_bitstream -force $target
+write_hw_platform -fixed -force -include_bit $xsa_file
 close_project
+
+# extract bitstream
+exec unzip $xsa_file *.bit
+
 exit 0
