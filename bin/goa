@@ -555,17 +555,11 @@ if {$perform(build-dir)} {
 }
 
 
-proc extract_artifacts_from_build_dir { } {
-	global project_dir arch build_dir bin_dir
+proc artifact_file_list_from_list_file { list_file_path artifact_path } {
 
-	set artifacts_file_path [file join $project_dir artifacts]
-	set artifacts [read_file_content_as_list $artifacts_file_path]
+	set artifact_files { }
+	set artifacts [read_file_content_as_list $list_file_path]
 
-	# remove artifacts from last build
-	if {[file exists $bin_dir]} {
-		file delete -force $bin_dir }
-
-	file mkdir $bin_dir
 	foreach artifact $artifacts {
 
 		# strip comments and empty lines
@@ -575,7 +569,7 @@ proc extract_artifacts_from_build_dir { } {
 			continue }
 
 		if {![regexp {^(.+:)?\s*(.+)$} $artifact dummy container selector]} {
-			exit_with_error "invalid artifact declaration in $artifacts_file_path:\n" \
+			exit_with_error "invalid artifact declaration in $list_file_path:\n" \
 			                "$artifact" }
 
 		regsub {\s*:$} $container "" container
@@ -586,15 +580,14 @@ proc extract_artifacts_from_build_dir { } {
 			set selected_types "f" }
 
 		# determine list of selected files
-		set files { }
 		if {[regexp {/$} $selector dummy]} {
 			# selector refers to the content of a directory
 			regsub {/$} $selector "" selector
-			set selected_dir [file join $build_dir $selector]
+			set selected_dir [file join $artifact_path $selector]
 			set files [glob -directory $selected_dir -nocomplain -types $selected_types *]
 		} else {
 			# selector refers to single file
-			set files [list [file join $build_dir $selector]]
+			set files [list [file join $artifact_path $selector]]
 		}
 
 		# ROM module(s)
@@ -610,16 +603,55 @@ proc extract_artifacts_from_build_dir { } {
 			}
 
 			if {[llength $missing_files] > 0} {
-				exit_with_error "build artifact does not exist at $build_dir:" \
+				exit_with_error "build artifact does not exist at $artifact_path:" \
 				                "$missing_files" }
 
 			if {[llength $invalid_files] > 0} {
 				exit_with_error "build artifact is not a file: $invalid_files" }
 
 			foreach file $files {
-				set symlink_path [file join $bin_dir [file tail $file]]
-				file link $symlink_path $file
+				lappend artifact_files $file
 			}
+		}
+	}
+
+	return $artifact_files
+}
+
+
+proc create_artifact_containers_from_list_file { list_file_path artifact_path tar_path } {
+
+	set artifact_files { }
+	set artifacts [read_file_content_as_list $list_file_path]
+
+	foreach artifact $artifacts {
+
+		# strip comments and empty lines
+		regsub "#.*"   $artifact "" artifact
+		regsub {^\s*$} $artifact "" artifact
+		if {$artifact == ""} {
+			continue }
+
+		if {![regexp {^(.+:)?\s*(.+)$} $artifact dummy container selector]} {
+			exit_with_error "invalid artifact declaration in $list_file_path:\n" \
+			                "$artifact" }
+
+		regsub {\s*:$} $container "" container
+
+		# accept files and directories for archives, but only files for ROM modules
+		set selected_types "f d"
+		if {$container == ""} {
+			set selected_types "f" }
+
+		# determine list of selected files
+		if {[regexp {/$} $selector dummy]} {
+			# selector refers to the content of a directory
+			regsub {/$} $selector "" selector
+			set selected_dir [file join $artifact_path $selector]
+			set files [glob -directory $selected_dir -nocomplain -types $selected_types *]
+		} else {
+			# selector refers to single file
+			set files [list [file join $artifact_path $selector]]
 		}
 
 		# tar archive
@@ -628,7 +660,7 @@ proc extract_artifacts_from_build_dir { } {
 			# strip leading slash from archive sub directory
 			regsub {^/} $archive_sub_dir "" archive_sub_dir
 
-			set archive_path [file join $bin_dir "$archive_name"]
+			set archive_path [file join $tar_path "$archive_name"]
 
 			diag "create $archive_path"
 
@@ -643,6 +675,27 @@ proc extract_artifacts_from_build_dir { } {
 			}
 		}
 	}
+}
+
+
+proc extract_artifacts_from_build_dir { } {
+	global project_dir build_dir bin_dir
+
+	set artifacts_file_path [file join $project_dir artifacts]
+	set artifacts [read_file_content_as_list $artifacts_file_path]
+
+	# remove artifacts from last build
+	if {[file exists $bin_dir]} {
+		file delete -force $bin_dir }
+
+	file mkdir $bin_dir
+
+	foreach file [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
+		set symlink_path [file join $bin_dir [file tail $file]]
+		file link $symlink_path $file
+	}
+
+	create_artifact_containers_from_list_file $artifacts_file_path $build_dir $bin_dir
 }
 
 
