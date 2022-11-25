@@ -42,7 +42,7 @@ proc create_or_update_build_dir { } {
 
 
 proc build { } {
-	global build_dir jobs project_name verbose tool_dir
+	global build_dir jobs project_name verbose tool_dir project_dir
 
 	set target "$project_name.bit"
 	if {[file exists [file join $build_dir $target]]} {
@@ -73,6 +73,22 @@ proc build { } {
 
 	if {[catch {exec {*}$cmd | sed "/^#.*/d" | sed "s/^/\[$project_name:vivado\] /" >@ stdout} msg]} {
 		exit_with_error "build via vivado failed:\n" $msg }
+
+	# generate device_manager.config if src/devices exists
+	set devices_file [file join $project_dir src devices]
+	if [file exists $devices_file] {
+		set xsa_file [file rootname $target].xsa
+		set cmd { }
+		lappend cmd [file join $tool_dir vivado generate_devices_config.tcl]
+		lappend cmd "--template"
+		lappend cmd $devices_file
+		lappend cmd "--xsa"
+		lappend cmd $xsa_file
+		lappend cmd "--output"
+		lappend cmd "devices_manager.config"
+
+		exec {*}$cmd
+	}
 
 	cd $orig_pwd
 }

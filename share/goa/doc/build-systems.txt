@@ -60,6 +60,20 @@ the source files into relative paths. Furthermore, the required source files
 (as referenced in the checkRequiredFiles procedure in the tcl file) must be
 manually copied into the src/ directory with their unmodified relative paths.
 
+Furthermore, if Goa finds a devices file in the src/ directory, it generates a
+devices_manager.config. The devices file is an XML file that has the following
+structure:
+
+*<devices> <device name="axi_dma_0" type="axi_dma"/> </devices>*
+
+Each device node must at least contain a name or a type attribute. These
+attributes are used for module lookup in the hardware design. Goa automatically
+adds io_mem nodes if the corresponding module has a memory-mapped register
+interface. Contained irq nodes are copies whereas property nodes may be used
+for specifying XPAR_ parameter definitions for Xilinx standalone drivers.
+Missing property values are supplemented by definitions found in the hardware
+design.
+
 Note that Goa writes the bistream to a <project_name>.bit file.
 
 
