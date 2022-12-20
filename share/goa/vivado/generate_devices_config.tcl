@@ -21,7 +21,9 @@ if { $::argc > 0 } {
 
 
 set bit_name     [file tail [file rootname $xsa].bit]
-set xsa_doc      [dom parse [exec unzip -p $xsa *.hwh]]
+set sysdef_doc   [dom parse [exec unzip -p $xsa sysdef.xml]]
+set default_bd   [[$sysdef_doc selectNodes //File\[@BD_TYPE="DEFAULT_BD"\]] @Name]
+set xsa_doc      [dom parse [exec unzip -p $xsa $default_bd]]
 set template_doc [dom parse [exec cat $template]]
 
 set out_xml "
