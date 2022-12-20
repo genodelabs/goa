@@ -62,6 +62,21 @@ foreach device [$template_doc selectNodes //device] {
 			$node appendXML [$irq asXML]
 		}
 
+		# copy reserved_memory nodes
+		foreach reserved_mem [$device selectNodes .//reserved_memory] {
+			$node appendXML [$reserved_mem asXML]
+		}
+
+		# copy reset-domain nodes
+		foreach reset [$device selectNodes .//reset-domain] {
+			$node appendXML [$reset asXML]
+		}
+
+		# copy power-domain nodes
+		foreach power [$device selectNodes .//power-domain] {
+			$node appendXML [$power asXML]
+		}
+
 		# find clocks
 		set clocklist [list]
 		foreach clk [$module selectNodes .//PORT\[@CLKFREQUENCY\]] {
