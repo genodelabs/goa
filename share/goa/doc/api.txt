@@ -1,0 +1,32 @@
+
+                                      API
+
+
+                                  Pirmin Duss
+
+
+The 'api' file defines the include paths required by users of a project that
+produces a library.
+
+
+Syntax
+######
+
+The file consists of an arbitrary number of lines where each line refers to a
+path relative to the build directory. The paths select the files and
+directories to be featured in the api archive of the library.
+If a path refers to a directory, all contained files are included.
+
+
+Examples
+########
+
+*include/spdlog.h*
+
+The file 'include/spdlog.h' form the build directory is added as a single
+header file.
+
+*include/spdlog/*
+
+All files found in the direcory 'include/spdlog' below the build directory are
+added as artifacts. The relative directory structure is kept intact.
