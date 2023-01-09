@@ -2,7 +2,7 @@
 proc create_or_update_build_dir { } {
 
 	global build_dir project_dir abi_dir tool_dir cross_dev_prefix include_dirs
-	global cppflags cflags cxxflags ldflags ldlibs project_name
+	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe ldlibs_so project_name
 	global cmake_quirk_args
 	global env
 
@@ -13,9 +13,9 @@ proc create_or_update_build_dir { } {
 	cd $build_dir
 
 	lappend ldflags "-Wl,--whole-archive"
-	lappend ldlibs  "-lgcc"
+	lappend ldlibs_common  "-lgcc"
 
-	set ::env(LDFLAGS) "$ldflags $ldlibs"
+	set ::env(LDFLAGS) "$ldflags $ldlibs_common $ldlibs_exe"
 
 	set cmd { }
 	lappend cmd cmake
@@ -25,7 +25,8 @@ proc create_or_update_build_dir { } {
 	lappend cmd "-DCMAKE_CXX_COMPILER=${cross_dev_prefix}g++"
 	lappend cmd "-DCMAKE_C_FLAGS='$cflags $cppflags'"
 	lappend cmd "-DCMAKE_CXX_FLAGS='$cxxflags $cppflags'"
-	lappend cmd "-DCMAKE_EXE_LINKER_FLAGS='$ldflags $ldlibs'"
+	lappend cmd "-DCMAKE_EXE_LINKER_FLAGS='$ldflags $ldlibs_common $ldlibs_exe'"
+	lappend cmd "-DCMAKE_SHARED_LINKER_FLAGS='$ldflags $ldlibs_common $ldlibs_so'"
 
 	if {[info exists cmake_quirk_args]} {
 		foreach arg $cmake_quirk_args {

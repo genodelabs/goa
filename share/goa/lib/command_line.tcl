@@ -222,7 +222,8 @@ if {[llength $argv] == 0} {
 	exit_with_error "missing command argument" }
 
 set avail_commands [list update-goa archive-versions import diff build-dir \
-                         build run export publish add-depot-user help]
+                         build run export publish add-depot-user \
+                         extract-abi-symbols help]
 
 foreach command $avail_commands {
 	set perform($command) 0 }

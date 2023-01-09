@@ -711,8 +711,18 @@ proc create_artifact_containers_from_list_file { list_file_path artifact_path ta
 }
 
 
+proc artifact_is_library { artifact } {
+
+	set so_extension ".lib.so"
+	set so_pattern "*$so_extension"
+
+	return [string match $so_pattern $artifact];
+}
+
+
 proc extract_artifacts_from_build_dir { } {
 	global project_dir build_dir bin_dir
+	global library_artifacts
 
 	set artifacts_file_path [file join $project_dir artifacts]
 	set artifacts [read_file_content_as_list $artifacts_file_path]
@@ -723,18 +733,120 @@ proc extract_artifacts_from_build_dir { } {
 
 	file mkdir $bin_dir
 
+	set library_artifacts { }
 	foreach file [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
 		set symlink_path [file join $bin_dir [file tail $file]]
 		file link $symlink_path $file
+
+		if {[artifact_is_library $file]} {
+			lappend library_artifacts $file
+		}
 	}
 
 	create_artifact_containers_from_list_file $artifacts_file_path $build_dir $bin_dir
 }
 
 
+proc check_abis { } {
+	global arch project_dir tool_dir library_artifacts
+
+	source [file join $tool_dir abi check_abi]
+
+	foreach library $library_artifacts {
+
+		set so_extension ".lib.so"
+		regsub $so_extension [file tail $library] "" symbol_file
+		set symbol_file_name [file join $project_dir symbols $symbol_file]
+
+		check_abi_symbols  $library $symbol_file_name
+	}
+}
+
+
+proc extract_api_artifacts { } {
+	global project_dir build_dir
+
+	set api_file_path [file join $project_dir api]
+	set artifacts [read_file_content_as_list $api_file_path]
+	set api_dir [file join $project_dir var api]
+
+	# remove artifacts from last build
+	if {[file exists $api_dir]} {
+		file delete -force $api_dir }
+
+	file mkdir $api_dir
+
+	foreach file [artifact_file_list_from_list_file $api_file_path $build_dir] {
+		regsub "$build_dir/" $file "" link_src
+		set dir [file dirname $link_src]
+		set target_dir [file join $api_dir $dir]
+		set link_target [file join $target_dir [file tail $file]]
+
+		if {![file exists $target_dir]} {
+			file mkdir $target_dir
+		}
+		file link $link_target $file
+	}
+}
+
+
+proc extract_library_symbols { } {
+	global build_dir project_dir tool_dir
+
+	source [file join $tool_dir abi abi_symbols.inc]
+
+	set artifacts_file_path [file join $project_dir artifacts]
+	set artifacts [read_file_content_as_list $artifacts_file_path]
+
+	set so_extension ".lib.so"
+	set symbols_dir [file join $project_dir symbols]
+
+	set libraries { }
+	foreach artifact [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
+
+		if {[artifact_is_library $artifact]} {
+
+			# remove library extension
+			regsub $so_extension $artifact "" symbol_file_name
+
+			set symbol_file_name [file tail $symbol_file_name]
+			set library_file_path [file join $build_dir $artifact]
+			if {![file exists $library_file_path]} {
+				exit_with_error "build artifact does not exist $artifact"}
+
+			file mkdir $symbols_dir
+			set symbols_file_paht [file join $symbols_dir $symbol_file_name]
+			set symbols_file_fd [open $symbols_file_paht "w+"]
+			abi_symbols_from_library $library_file_path $symbols_file_fd
+			close $symbols_file_fd
+
+			lappend libraries $symbol_file_name
+		}
+	}
+	return $libraries
+}
+
+
 if {$perform(build)} {
 	build
 	extract_artifacts_from_build_dir
+	check_abis
+	extract_api_artifacts
+}
+
+
+if {$perform(extract-abi-symbols)} {
+
+	set libraries [extract_library_symbols]
+	if {[llength $libraries] > 0} {
+
+		puts "The following library symbols file(s) were created:"
+		foreach library $libraries {
+			puts "  > `symbols/$library" }
+
+		puts "Please review the symbols files(s) and add them to your reporsitory."
+	} else {
+		exit_with_error "No libraries listed in the artifacts." }
 }
 
 
@@ -920,6 +1032,10 @@ if {$perform(export)} {
 
 	assert_definition_of_depot_user
 
+	set api_dir [file join $project_dir var api]
+	if {![file exists $api_dir] || ![file isdirectory $api_dir]} {
+		unset api_dir }
+
 	# create raw archive
 	set raw_dir [file join $project_dir raw]
 	if {![file exists $raw_dir] || ![file isdirectory $raw_dir]} {
@@ -928,6 +1044,45 @@ if {$perform(export)} {
 	set src_dir [file join $project_dir src]
 	if {![file exists $src_dir] || ![file isdirectory $src_dir]} {
 		unset src_dir }
+
+	if {[info exists api_dir]} {
+		set dst_dir [prepare_project_archive_directory api]
+		set files [exec find $api_dir -not -type d -and -not -name "*~"]
+		foreach file $files {
+			regsub "$api_dir/" $file "" file_dir
+			set dir [file dirname $file_dir]
+
+			# sanity check for include path
+			set out_dir $dir
+			set dir_parts [file split $dir]
+			if { [llength $dir_parts] > 1 && \
+			     [lindex $dir_parts 0] != "include" } {
+				set idx 0
+				set found 0
+				foreach part $dir_parts {
+					if {$part == "include"} {
+						set found $idx
+					}
+					incr idx
+				}
+				if {$found == 0} {
+					exit_with_error "no valid include path found in api artifacts."
+				}
+				set out_dir [file join [lrange $dir_parts $found [llength $dir_parts]]]
+			}
+			set target_dir [file join $dst_dir $out_dir]
+			if {![file exists $target_dir]} {
+				file mkdir $target_dir
+			}
+			file copy $file [file join $target_dir [file tail $file]]
+		}
+
+		file mkdir [file join $dst_dir lib]
+		if {[file exists [file join $project_dir "symbols"]]} {
+			file copy [file join $project_dir "symbols"] [file join $dst_dir lib]
+		}
+		log "exported $dst_dir"
+	}
 
 	if {[info exists raw_dir]} {
 		set dst_dir [prepare_project_archive_directory raw]
@@ -1030,6 +1185,18 @@ if {$perform(export)} {
 			set file [file normalize $file]
 			catch { set file [file link  $file] }
 			file copy $file [file join $dst_dir [file tail $file]] }
+		log "exported $dst_dir"
+	}
+
+	# create api archive
+	if {[file exists $build_dir/api] && [file isdirectory $build_dir/api]} {
+		set dst_dir [prepare_project_archive_directory api]
+		set files [glob -nocomplain -directory $build_dir/api *]
+		foreach file $files {
+			set file [file normalize $file]
+			catch { set file [file link  $file] }
+			file copy $file [file join $dst_dir [file tail $file]]
+		}
 		log "exported $dst_dir"
 	}
 }

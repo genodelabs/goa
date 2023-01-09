@@ -36,6 +36,7 @@ lappend cppflags "-nostdinc"
 set cflags { }
 lappend cflags -fPIC
 lappend cflags $olevel
+lappend cflags -D__GENODE__
 
 if {$cc_march != ""} {
 	lappend cflags $cc_march }
@@ -62,10 +63,7 @@ set     ldflags { }
 lappend ldflags -gc-sections
 lappend ldflags -z max-page-size=0x1000
 lappend ldflags -Ttext=0x01000000
-lappend ldflags --dynamic-linker=ld.lib.so
-lappend ldflags --dynamic-list=[file join $ld_script_dir genode_dyn.dl]
 lappend ldflags --eh-frame-hdr -rpath-link=.
-lappend ldflags -T [file join $ld_script_dir genode_dyn.ld]
 
 if {$ld_march != ""} {
 	lappend ldflags $ld_march }
@@ -80,9 +78,18 @@ set ldflags $prefixed_flags
 #
 # Library arguments for the linker
 #
-set     ldlibs { }
-lappend ldlibs -nostartfiles -nodefaultlibs -static-libgcc
-lappend ldlibs -L$abi_dir
+set     ldlibs_common { }
+lappend ldlibs_common -nostartfiles -nodefaultlibs -static-libgcc
+lappend ldlibs_common -L$abi_dir
+
+set     ldlibs_exe    { }
+lappend ldlibs_exe   -Wl,--dynamic-linker=ld.lib.so
+lappend ldlibs_exe    -T [file join $ld_script_dir genode_dyn.ld]
+
+set     ldlibs_so     { }
+lappend ldlibs_so     -Wl,-shared
+lappend ldlibs_so     -l:ldso_so_support.lib.a
+lappend ldlibs_so     -T [file join $ld_script_dir genode_rel.ld]
 
 # determine ABIs to link against the executable
 set abis { }
@@ -91,5 +98,12 @@ foreach api $used_apis {
 	foreach symbol_file $symbol_files {
 		lappend abis [file tail $symbol_file] } }
 
+source [file join $tool_dir lib util.tcl]
+
 foreach abi $abis {
-	lappend ldlibs "-l:$abi.lib.so" }
+	set abi_name [archive_name $api]
+	if {$abi_name != "ld" && $abi_name != "so"} {
+		lappend ldlibs_exe "-l:$abi.lib.so"
+		lappend ldlibs_so "-l:$abi.lib.so"
+	}
+}
