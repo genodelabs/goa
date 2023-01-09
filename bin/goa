@@ -450,6 +450,38 @@ proc prepare_abi_stubs { used_apis } {
 }
 
 
+proc prepare_ldso_support_stub { used_apis } {
+	global tool_dir depot_dir abi_dir cross_dev_prefix cc_march verbose project_name arch
+
+	set so_api { }
+	foreach api_path $used_apis {
+		set parts [file split $api_path]
+		set api [lindex $parts 2]
+		if {[string compare $api "base"] == 0} {
+			lappend so_api $api_path
+		}
+	}
+
+	if {[llength $so_api] == 0} {
+		return }
+
+	set     cmd "make -f $tool_dir/lib/gen_ldso_support.mk"
+	lappend cmd "TOOL_DIR=$tool_dir"
+	lappend cmd "DEPOT_DIR=$depot_dir"
+	lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
+	lappend cmd "APIS=[join $so_api { }]"
+	lappend cmd "ABI_DIR=$abi_dir"
+	lappend cmd "CC_MARCH=[join $cc_march { }]"
+	if {$verbose == 0} {
+		lappend cmd "-s" }
+
+	diag "generate ldso_support.lib.a via command: [join $cmd { }]"
+
+	if {[catch { exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:abi\] /" >@ stdout }]} {
+		exit_with_error "failed to generate ldso_support.lib.a "] }
+}
+
+
 ##
 # Return type of build system used in the source directory
 #
@@ -538,6 +570,7 @@ if {$perform(build-dir)} {
 		file delete -force $build_dir }
 
 	prepare_abi_stubs $used_apis
+	prepare_ldso_support_stub $used_apis
 
 	source [file join $tool_dir lib quirks.tcl]
 
