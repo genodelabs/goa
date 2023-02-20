@@ -765,6 +765,19 @@ if {$perform(run)} {
 }
 
 
+proc assert_definition_of_depot_user { } {
+
+	global depot_user
+	if {[info exists depot_user]} {
+		return }
+
+	exit_with_error "missing definition of depot user\n" \
+	                "\n You can define your depot user name by setting the 'depot_user'" \
+	                "\n variable in a .goarc file, or by specifing the '--depot-user <name>'"\
+	                "\n command-line argument.\n"
+}
+
+
 ##
 # Return versioned archive path for a project's archive of the specified type
 # (raw, src, pkg, bin)
@@ -778,11 +791,7 @@ proc versioned_project_archive { type { pkg_name ""} } {
 	if {$type == "pkg" && $pkg_name != ""} {
 		set name $pkg_name }
 
-	if {![info exists depot_user]} {
-		exit_with_error "missing definition of depot user\n" \
-		                "\n You can define your depot user name by setting the 'depot_user'" \
-		                "\n variable in a .goarc file, or by specifing the '--depot-user <name>'"\
-		                "\n command-line argument.\n"}
+	assert_definition_of_depot_user
 
 	set version_file [file join $project_dir version]
 	if {[file exists $version_file]} {
@@ -875,6 +884,8 @@ proc license_file { } {
 
 
 if {$perform(export)} {
+
+	assert_definition_of_depot_user
 
 	# create raw archive
 	set raw_dir [file join $project_dir raw]
