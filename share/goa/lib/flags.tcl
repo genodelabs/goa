@@ -98,11 +98,8 @@ foreach api $used_apis {
 	foreach symbol_file $symbol_files {
 		lappend abis [file tail $symbol_file] } }
 
-source [file join $tool_dir lib util.tcl]
-
 foreach abi $abis {
-	set abi_name [archive_name $api]
-	if {$abi_name != "ld" && $abi_name != "so"} {
+	if {$abi != "ld" && $abi != "so"} {
 		lappend ldlibs_exe "-l:$abi.lib.so"
 		lappend ldlibs_so "-l:$abi.lib.so"
 	}
