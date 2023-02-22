@@ -1,0 +1,4 @@
+
+set license src/LICENSE
+
+# vim: ft=tcl
