@@ -26,8 +26,6 @@ following topics:
 
 * Integration of complete Genode systems,
 
-* Development of libraries and APIs,
-
 * Test automation,
 
 * Continuous testing and integration (CI).
