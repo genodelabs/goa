@@ -584,6 +584,10 @@ if {$perform(build-dir)} {
 	foreach dir $include_dirs {
 		lappend cppflags "-I$dir" }
 
+	# supplement 'cflags' with include directories too
+	foreach dir $include_dirs {
+		lappend cflags "-I$dir" }
+
 	create_or_update_build_dir
 }
 
