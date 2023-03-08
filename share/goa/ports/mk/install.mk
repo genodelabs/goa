@@ -166,6 +166,22 @@ _git_dir = $(call _assert,$(DIR($1)),Missing declaration of DIR($*))
 		$(MSG_UPDATE)$$dir; \
 		cd $$dir && $(GIT) fetch && $(GIT) reset -q --hard HEAD && $(GIT) checkout -q $(REV($*))
 
+%.sparse-git:
+	$(VERBOSE)test -n "$(REV($*))" ||\
+		($(ECHO) "Error: Undefined revision for $*"; false);
+	$(VERBOSE)test -n "$(URL($*))" ||\
+		($(ECHO) "Error: Undefined URL for $*"; false);
+	$(VERBOSE)test -n "$(SPARSE_PATH($*))" ||\
+		($(ECHO) "Error: Undefined SPARSE_PATH for $*"; false);
+	$(VERBOSE)dir=$(call _git_dir,$*);\
+		sparse_sane=$$(echo $(SPARSE_PATH($*)) |  sed -e 's-^/--') ;\
+		test -d $$dir || ( $(MSG_DOWNLOAD)$(URL($*)); \
+			tmp=$$(mktemp -d); \
+			git clone --depth 1 --filter=blob:none --sparse $(URL($*)) $$tmp &> >(sed 's/^/$(MSG_GIT)/'); \
+			$(GIT) -C $$tmp sparse-checkout set $$sparse_sane && \
+			$(GIT) -C $$tmp checkout -q $(REV($*)); \
+			mv $$tmp/$$sparse_sane $$dir; rm -rf $$tmp )
+
 
 ##
 ## Obtain source codes from Subversion repository

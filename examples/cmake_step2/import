@@ -1,8 +1,8 @@
 LICENSE   := BSD
 VERSION   := master
-DOWNLOADS := cmake_step2.svn
+DOWNLOADS := cmake_step2.sparse-git
 
-URL(cmake_step2) := https://github.com/Kitware/CMake/trunk/Help/guide/tutorial/Step2
+URL(cmake_step2) := https://github.com/Kitware/CMake
 REV(cmake_step2) := HEAD
 DIR(cmake_step2) := src
-
+SPARSE_PATH(cmake_step2) := Help/guide/tutorial/Step2
