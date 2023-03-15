@@ -2,7 +2,7 @@
 proc create_or_update_build_dir { } {
 
 	global build_dir project_dir abi_dir cross_dev_prefix arch
-	global cppflags cxxflags ldflags project_name
+	global cppflags cxxflags ldflags ldlibs_exe project_name
 	global env
 
 	set qt5_tool_dir "/usr/local/genode/qt5/20.08/bin"
@@ -46,6 +46,7 @@ proc create_or_update_build_dir { } {
 	lappend qmake_ldlibs -l:libm.lib.so
 	lappend qmake_ldlibs -l:stdcxx.lib.so
 	lappend qmake_ldlibs -l:qt5_component.lib.so
+	lappend qmake_ldlibs -l:qt5_component.lib.so
 	lappend qmake_ldlibs [file normalize [exec $cross_dev_prefix\gcc -m64 -print-libgcc-file-name]]
 
 	set ::env(GENODE_QMAKE_CC)         "${cross_dev_prefix}gcc"
@@ -56,7 +57,7 @@ proc create_or_update_build_dir { } {
 	set ::env(GENODE_QMAKE_NM)         "${cross_dev_prefix}nm"
 	set ::env(GENODE_QMAKE_STRIP)      "${cross_dev_prefix}strip"
 	set ::env(GENODE_QMAKE_CFLAGS)     "$qmake_cflags"
-	set ::env(GENODE_QMAKE_LFLAGS_APP) "-nostdlib $ldflags $qmake_ldlibs"
+	set ::env(GENODE_QMAKE_LFLAGS_APP) "-nostdlib $ldflags $ldlibs_exe $qmake_ldlibs"
 
 	set qt_conf "qmake_root/mkspecs/$qmake_platform/qt.conf"
 	set cmd [list [file join $qt5_tool_dir qmake] -qtconf $qt_conf [file join $project_dir src]]
