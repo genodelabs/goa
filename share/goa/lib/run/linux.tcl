@@ -265,6 +265,16 @@ proc generate_runtime_config { } {
 		                     "</service>"
 	}
 
+	set mesa_route ""
+	catch {
+		set gpu_node [query_node /runtime/requires/gpu $runtime_file]
+
+		append mesa_route "\n\t\t\t\t\t" \
+			"<service name=\"ROM\" label=\"mesa_gpu_drv.lib.so\"> " \
+			"<parent label=\"mesa_gpu-softpipe.lib.so\"/> " \
+			"</service>"
+	}
+
 	install_config {
 		<config>
 			<parent-provides>
@@ -299,7 +309,8 @@ proc generate_runtime_config { } {
 				<provides>} $uplink_provides {</provides>
 				<route>} $config_route $gui_route \
 				         $capture_route $event_route \
-				         $nic_route $fs_routes $rtc_route {
+				         $nic_route $fs_routes $rtc_route \
+				         $mesa_route {
 					<service name="ROM">   <parent/> </service>
 					<service name="PD">    <parent/> </service>
 					<service name="RM">    <parent/> </service>
@@ -357,6 +368,10 @@ proc generate_runtime_config { } {
 
 	lappend runtime_archives "genodelabs/src/init"
 	lappend runtime_archives "genodelabs/src/base-linux"
+
+	if {$mesa_route != ""} {
+		lappend rom_modules mesa_gpu-softpipe.lib.so
+	}
 }
 
 
