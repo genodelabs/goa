@@ -84,6 +84,11 @@ lappend ldlibs_common -L$abi_dir
 
 set     ldlibs_exe    { }
 lappend ldlibs_exe   -Wl,--dynamic-linker=ld.lib.so
+#
+# this is neeed so "main", "Component::construct" are dynamic symbols
+# and ld.lib.so can find them
+#
+lappend ldlibs_exe    -Wl,--dynamic-list=[file join $ld_script_dir genode_dyn.dl]
 lappend ldlibs_exe    -T [file join $ld_script_dir genode_dyn.ld]
 
 set     ldlibs_so     { }
