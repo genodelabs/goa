@@ -104,8 +104,10 @@ foreach api $used_apis {
 		lappend abis [file tail $symbol_file] } }
 
 foreach abi $abis {
-	if {$abi != "ld" && $abi != "so"} {
+	if {$abi != "so"} {
 		lappend ldlibs_exe "-l:$abi.lib.so"
+	}
+	if {$abi != "ld" && $abi != "so"} {
 		lappend ldlibs_so "-l:$abi.lib.so"
 	}
 }
