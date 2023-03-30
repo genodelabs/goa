@@ -462,13 +462,24 @@ proc check_xml_syntax { xml_file } {
 
 
 proc query_attr { node_path attr_name xml_file }  {
-
 	set xpath "$node_path/attribute::$attr_name"
-	set attr_value [exec xmllint --xpath $xpath $xml_file]
-
+        set attr_value [exec xmllint --xpath $xpath $xml_file]
 	# in the presence of multiple matching xpaths, return only the first
 	regexp {"(.*)"} [lindex $attr_value 0] dummy value
 	return $value
+}
+
+
+proc query_attrs { node_path attr_name xml_file }  {
+        set xpath "$node_path/attribute::$attr_name"
+        set attr_value [exec xmllint --xpath $xpath $xml_file]
+        # in the presence of multiple matching xpaths, return only the first
+        set matches [regexp -all -inline {"([^"]*)"} $attr_value]
+        set values {}
+        foreach {match capture} $matches {
+            lappend values $capture
+        }
+        return $values
 }
 
 

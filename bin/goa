@@ -886,8 +886,13 @@ if {$perform(run)} {
 	foreach config_file [glob -nocomplain [file join raw *.config]] {
 		check_xml_syntax $config_file }
 
-	set rom_modules { }
-	generate_runtime_config
+        # validate runtime config file contents
+        Build::Linux::validate $runtime_file
+        # assert runtime dependencies and install runtime config file
+        Build::Linux::bind $runtime_file $project_name $run_dir $var_dir
+        install_config $Build::Linux::runtime_config
+        set rom_modules $Build::Linux::rom_modules
+        set runtime_archives [concat $runtime_archives $Build::Linux::runtime_archives]
 
 	set binary_archives [binary_archives [apply_versions $runtime_archives]]
 	prepare_depot_with_archives $binary_archives
@@ -905,12 +910,7 @@ if {$perform(run)} {
 	# add content found in the project's raw/ subdirectory
 	symlink_directory_content $rom_modules [file join $project_dir raw] $run_dir
 
-	if {!$config_valid} {
-		exit_with_error "runtime lacks a configuration\n" \
-		                "\n You may declare a 'config' attribute in the <runtime> node, or" \
-		                "\n define a <config> node inside the <runtime> node.\n" }
-
-	run_genode
+        Build::Linux::execute $run_dir
 }
 
 
