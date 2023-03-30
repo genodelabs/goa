@@ -9,6 +9,8 @@ proc create_or_update_build_dir { } {
 
 	if {$arch == "x86_64"} {
 		set qmake_platform "genode-x86_64-g++"
+	} elseif {$arch == "arm_v8a"} {
+		set qmake_platform "genode-aarch64-g++"
 	} else {
 		exit_with_error "build via qmake failed: unsupported architecture: $arch\n"
 	}
@@ -47,7 +49,12 @@ proc create_or_update_build_dir { } {
 	lappend qmake_ldlibs -l:stdcxx.lib.so
 	lappend qmake_ldlibs -l:qt5_component.lib.so
 	lappend qmake_ldlibs -l:qt5_component.lib.so
-	lappend qmake_ldlibs [file normalize [exec $cross_dev_prefix\gcc -m64 -print-libgcc-file-name]]
+
+	if {$arch == "x86_64"} {
+		lappend qmake_ldlibs [file normalize [exec $cross_dev_prefix\gcc -m64 -print-libgcc-file-name]]
+	} else {
+		lappend qmake_ldlibs [file normalize [exec $cross_dev_prefix\gcc -print-libgcc-file-name]]
+	}
 
 	set ::env(GENODE_QMAKE_CC)         "${cross_dev_prefix}gcc"
 	set ::env(GENODE_QMAKE_CXX)        "${cross_dev_prefix}g++"
