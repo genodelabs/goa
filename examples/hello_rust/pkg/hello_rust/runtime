@@ -1,0 +1,18 @@
+ <runtime ram="10M" caps="1000" binary="hello-rust">
+   <config>
+     <libc stdout="/dev/log" stderr="/dev/log"/>
+     <vfs>
+       <dir name="dev">
+         <log/>
+       </dir>
+     </vfs>
+     <arg value="hello-rust"/>
+   </config>
+   <content>
+     <rom label="hello-rust"/>
+     <rom label="posix.lib.so"/>
+     <rom label="libc.lib.so"/>
+     <rom label="vfs.lib.so"/>
+     <rom label="libunwind.lib.so"/>
+   </content>
+ </runtime>

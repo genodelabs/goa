@@ -550,6 +550,9 @@ proc detect_build_system { } {
 	if {[file exists [file join src Makefile]]} {
 		return make }
 
+	if {[file exists [file join src Cargo.toml]]} {
+		return cargo }
+
 	if {[file exists [file join src makefile]]} {
 		return make }
 
