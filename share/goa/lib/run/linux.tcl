@@ -328,23 +328,23 @@ proc generate_runtime_config { } {
 		                    report_rom \
 		                    rom_filter
 
-		lappend runtime_archives "nfeske/src/nitpicker"
-		lappend runtime_archives "nfeske/src/report_rom"
-		lappend runtime_archives "nfeske/src/rom_filter"
-		lappend runtime_archives "nfeske/pkg/drivers_interactive-linux"
+		lappend runtime_archives "genodelabs/src/nitpicker"
+		lappend runtime_archives "genodelabs/src/report_rom"
+		lappend runtime_archives "genodelabs/src/rom_filter"
+		lappend runtime_archives "genodelabs/pkg/drivers_interactive-linux"
 
 	}
 
 	if {$nic_config_nodes != "" || $uplink_config_nodes != ""} {
 		lappend rom_modules linux_nic_drv
 
-		lappend runtime_archives "nfeske/src/linux_nic_drv"
+		lappend runtime_archives "genodelabs/src/linux_nic_drv"
 	}
 
 	if {$fs_config_nodes != ""} {
 		lappend rom_modules lx_fs
 
-		lappend runtime_archives "nfeske/src/lx_fs"
+		lappend runtime_archives "genodelabs/src/lx_fs"
 
 		file link -symbolic "$run_dir/fs" "$var_dir/fs"
 	}
@@ -352,11 +352,11 @@ proc generate_runtime_config { } {
 	if {$rtc_config_nodes != ""} {
 		lappend rom_modules linux_rtc_drv
 
-		lappend runtime_archives "nfeske/src/linux_rtc_drv"
+		lappend runtime_archives "genodelabs/src/linux_rtc_drv"
 	}
 
-	lappend runtime_archives "nfeske/src/init"
-	lappend runtime_archives "nfeske/src/base-linux"
+	lappend runtime_archives "genodelabs/src/init"
+	lappend runtime_archives "genodelabs/src/base-linux"
 }
 
 

@@ -1,4 +1,4 @@
-nfeske/api/posix
-nfeske/api/libc
-nfeske/api/stdcxx
-nfeske/api/base
+genodelabs/api/posix
+genodelabs/api/libc
+genodelabs/api/stdcxx
+genodelabs/api/base

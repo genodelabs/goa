@@ -1,4 +1,4 @@
-nfeske/src/posix
-nfeske/src/libc
-nfeske/src/vfs
-nfeske/src/stdcxx
+genodelabs/src/posix
+genodelabs/src/libc
+genodelabs/src/vfs
+genodelabs/src/stdcxx
