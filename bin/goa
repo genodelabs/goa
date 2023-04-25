@@ -161,9 +161,9 @@ if {![looks_like_goa_project_dir $project_dir]} {
 
 if {$perform(archive-versions)} {
 
-	puts "#\n# depot-archive versions for $project_dir\n#"
-
 	if {[info exists versions_from_genode_dir] && [info exists depot_user]} {
+
+		puts "#\n# depot-archive versions from $versions_from_genode_dir\n#"
 		set repos [glob -nocomplain [file join $versions_from_genode_dir repos *]]
 		foreach rep_dir $repos {
 			set hash_files [glob -nocomplain [file join $rep_dir recipes * * hash]]
@@ -184,10 +184,24 @@ if {$perform(archive-versions)} {
 		}
 	}
 
-	puts "\n# goarc"
+	puts "\n#\n# depot-archive versions referenced by $project_dir\n#"
+	set archives [read_file_content_as_list used_apis]
+	set archive_files [glob -nocomplain [file join $project_dir pkg * archives]]
+	foreach file $archive_files {
+		set archives [concat $archives [read_file_content_as_list $file]] }
+
+	set archives [lsort -unique $archives]
+	set versioned_archives [apply_versions $archives]
+	foreach a $archives v $versioned_archives {
+		set vers [lindex [split $v "/"] end]
+		puts "set version($a) $vers"
+	}
+
+	puts "\n#\n# additional depot-archive versions from goarc\n#"
 	if {[info exists version]} {
 		foreach archive [array names version] {
-			puts "set version($archive) $version($archive)" } }
+			if {[lsearch -exact $archives $archive] < 0} {
+				puts "set version($archive) $version($archive)" } } }
 	puts ""
 }
 
