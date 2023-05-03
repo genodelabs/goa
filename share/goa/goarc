@@ -10,6 +10,7 @@ set  version(genodelabs/api/gui_session)                 2023-03-12
 set  version(genodelabs/api/input_session)               2023-03-12
 set  version(genodelabs/api/libc)                        2023-01-23
 set  version(genodelabs/api/libssh)                      2021-10-13
+set  version(genodelabs/api/mesa)                        2021-08-28
 set  version(genodelabs/api/ncurses)                     2019-02-25
 set  version(genodelabs/api/nitpicker_gfx)               2022-02-14
 set  version(genodelabs/api/noux)                        2023-02-26
@@ -17,6 +18,8 @@ set  version(genodelabs/api/openssl)                     2023-04-16
 set  version(genodelabs/api/os)                          2023-04-16
 set  version(genodelabs/api/pcre)                        2019-02-25
 set  version(genodelabs/api/posix)                       2020-05-17
+set  version(genodelabs/api/qt5)                         2023-04-16
+set  version(genodelabs/api/qt5_component)               2023-04-16
 set  version(genodelabs/api/report_session)              2023-03-12
 set  version(genodelabs/api/rtc_session)                 2023-03-12
 set  version(genodelabs/api/sdl)                         2023-04-26
