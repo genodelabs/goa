@@ -441,6 +441,22 @@ proc prepare_depot_with_archives { archive_list } {
 }
 
 
+#
+# set roms found in depot runtime files
+#
+proc update_depot_roms { archive_list } {
+	global depot_dir rom_modules
+
+	# append rom modules of runtimes
+	foreach archive [apply_versions $archive_list] {
+		set archive_runtime [file join $depot_dir $archive runtime]
+		if {[file exists $archive_runtime]} {
+			append rom_modules " " [content_rom_modules $archive_runtime]
+		}
+	}
+}
+
+
 proc prepare_abi_stubs { used_apis } {
 	global tool_dir depot_dir abi_dir cross_dev_prefix ld_march cc_march verbose project_name arch
 
@@ -905,6 +921,8 @@ if {$perform(run)} {
 
 	set binary_archives [binary_archives [apply_versions $runtime_archives]]
 	prepare_depot_with_archives $binary_archives
+
+	update_depot_roms $runtime_archives
 
 	# update 'binary_archives' with information available after installation
 	set binary_archives [binary_archives [apply_versions $runtime_archives]]
