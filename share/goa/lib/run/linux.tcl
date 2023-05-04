@@ -200,7 +200,7 @@ proc generate_runtime_config { } {
 				<provides> <service name="Uplink"/> </provides>}
 		if {$uplink_label != ""} {
 			append uplink_config_nodes {
-				<config mode="uplink_client"> <nic tap="} $uplink_label {"/> </config>}
+				<config tap="} $uplink_label {"/>}
 		}
 		append uplink_config_nodes {
 				<route>
