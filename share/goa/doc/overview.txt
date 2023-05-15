@@ -90,6 +90,9 @@ USAGE
   Update the Goa tool to the latest minor version if called without
   argument, or switch to the major version specified as argument.
 
+:goa versions:
+  Print available versions of the Goa tool.
+
 :goa --version:
   Print current major version of the Goa tool.
 

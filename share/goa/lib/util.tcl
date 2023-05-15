@@ -510,3 +510,14 @@ proc current_goa_branch { } {
 	if {![have_installed git]} { return "unknown" }
 	return [lindex [goa_git  rev-parse --abbrev-ref HEAD] end]
 }
+
+
+proc avail_goa_branches { } {
+	if {![have_installed git]} { return "unknown" }
+
+	set git_branch_output [goa_git branch --list -r |\
+	                         sed "s/^..//" | grep "^origin" |\
+	                         grep -v " -> " | sed "s#^origin/##"]
+
+	return [split $git_branch_output "\n"]
+}

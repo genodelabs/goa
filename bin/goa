@@ -82,11 +82,8 @@ if {$perform(update-goa)} {
 		exit_with_error "Goa update could not fetch new version:\n$msg" }
 
 	if {[info exists switch_to_goa_branch]} {
-		set git_branch_output [goa_git branch --list -r |\
-		                         sed "s/^..//" | grep "^origin" |\
-		                         grep -v " -> " | sed "s#^origin/##"]
 
-		set remote_branches [split $git_branch_output "\n"]
+		set remote_branches [avail_goa_branches]
 
 		if {[lsearch $remote_branches $switch_to_goa_branch] == -1} {
 			exit_with_error "Goa version $switch_to_goa_branch does not exist\n" \
@@ -104,6 +101,17 @@ if {$perform(update-goa)} {
 	}
 
 	goa_git merge --ff-only origin/[current_goa_branch]
+	exit
+}
+
+
+##
+## List goa versions
+##
+
+if {$perform(versions)} {
+
+	puts [avail_goa_branches]
 	exit
 }
 

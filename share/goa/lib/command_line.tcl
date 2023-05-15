@@ -223,7 +223,7 @@ if {[llength $argv] == 0} {
 
 set avail_commands [list update-goa archive-versions import diff build-dir \
                          build run export publish add-depot-user \
-                         extract-abi-symbols help]
+                         extract-abi-symbols help versions]
 
 foreach command $avail_commands {
 	set perform($command) 0 }
