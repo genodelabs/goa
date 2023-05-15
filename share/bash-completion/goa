@@ -1,0 +1,90 @@
+# vim: ts=4 sw=4 et
+
+__goa()
+{
+    local cur prev second globalopts fileopts diropts stropts commands help_commands pkgopts archvals depot_opts depot_commands run_opts user_opts olevelvals numopts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions"
+    help_commands="config api build-systems artifacts add-depot-user"
+    depot_commands="export|publish"
+    depot_opts="--depot-user --depot-overwrite --pkg"
+    run_opts="--pkg"
+    user_opts="--depot-url --gpg-user-id --pubkey-file"
+
+    globalopts="--arch --rebuild --warn-strict --no-warn-strict -C --license --versions-from-genode-dir --depot-dir --public-dir --project-name --contrib-dir --build-dir --abi-dir --bin-dir --run-dir --common-var-dir --verbose --jobs --cross-dev-prefix --ld-march --olevel"
+
+    stropts="--depot-url|--gpg-user-id|--depot-user|--ld-march"
+    fileopts="--license|--pubkey-file|--cross-dev-prefix"
+    diropts="-C|--versions-from-genode-dir|--depot-dir|--public-dir|--project-name|--contrib-dir|--build-dir|--abi-dir|--bin-dir|--run-dir|--common-var-dir"
+    pkgopts="--pkg"
+    archvals="x86_64 arm_v8a"
+    olevelvals="-O0 -O1 -O2 -O3 -Ofast -Os"
+    numopts="--jobs"
+
+    # perform command completion if it's the first word
+    if [[ ${COMP_CWORD} -eq 1 ]]; then
+        COMPREPLY=( $(compgen -W "${commands}" -- ${cur}) )
+        return 0
+    fi
+
+    # complete option values
+    if [[ ${prev} =~ ${fileopts} ]]; then
+        compopt -o filenames 2>/dev/null
+        COMPREPLY=( $(compgen -f -- ${cur}) )
+        return 0
+    elif [[ ${prev} =~ ${diropts} ]]; then
+        compopt -o filenames 2>/dev/null
+        COMPREPLY=( $(compgen -d -- ${cur}) )
+        return 0
+    elif [[ ${prev} =~ ${stropts} ]]; then
+        return 0
+    elif [[ ${prev} =~ ${numopts} ]]; then
+        COMPREPLY=( $(compgen -W "1 2 3 4 5 6 7 8 9" -- ${cur}) )
+        return 0
+    elif [[ ${prev} == "--arch" ]]; then
+        COMPREPLY=( $(compgen -W "${archvals}" -- ${cur}) )
+        return 0
+    elif [[ ${prev} == "--pkg" ]]; then
+        for j in $( compgen -d -- "pkg/${cur}" ); do
+            COMPREPLY[k++]=${j#pkg/}        # cut off directory
+        done
+        return 0
+    elif [[ ${prev} == "--olevel" ]]; then
+        COMPREPLY=( $(compgen -W "${olevelvals}" -- ${cur}) )
+        return 0
+    fi
+
+    second="${COMP_WORDS[1]}"
+    # perform command-specific completion (subcommands, options)
+    if [[ ${second} == "help" ]]; then
+        COMPREPLY=( $(compgen -W "${help_commands}" -- ${cur}) )
+        return 0
+    elif [[ ${second} == "update-goa" ]]; then
+        COMPREPLY=( $(compgen -W "$(goa versions)" -- ${cur}) )
+        return 1
+    elif [[ ${second} =~ ${depot_commands} ]]; then
+        COMPREPLY=( $(compgen -W "${depot_opts} ${globalopts}" -- ${cur}) )
+        return 0
+    elif [[ ${second} == "--version" ]]; then
+        return 0
+    elif [[ ${second} == "run" ]]; then
+        COMPREPLY=( $(compgen -W "${run_opts} ${globalopts}" -- ${cur}) )
+        return 0
+    elif [[ ${second} == "add-depot-user" ]]; then
+        if [[ ${COMP_CWORD} -gt 2 ]]; then
+            COMPREPLY=( $(compgen -W "${user_opts} ${globalopts}" -- ${cur}) )
+        fi
+        return 0
+    fi
+
+    # complete global options
+    if [[ ${cur} =~ -* ]] ; then
+        COMPREPLY=( $(compgen -W "${globalopts}" -- ${cur}) )
+        return 0
+    fi
+}
+
+complete -F __goa goa

@@ -64,6 +64,11 @@ Installation
 
     ! export PATH=$PATH:<goa-dir>/bin
 
+# Optionally, enable bash completion by adding the following line to your
+  '~/.bashrc' file:
+
+  ! source <goa-dir>/share/bash-completion/goa
+
 
 Usage
 -----
