@@ -67,6 +67,11 @@ foreach device [$template_doc selectNodes //device] {
 			$node appendXML [$reserved_mem asXML]
 		}
 
+		# copy io_mmu nodes
+		foreach io_mmu [$device selectNodes .//io_mmu] {
+			$node appendXML [$io_mmu asXML]
+		}
+
 		# copy reset-domain nodes
 		foreach reset [$device selectNodes .//reset-domain] {
 			$node appendXML [$reset asXML]
@@ -77,13 +82,22 @@ foreach device [$template_doc selectNodes //device] {
 			$node appendXML [$power asXML]
 		}
 
-		# find clocks
+		# copy clocks
 		set clocklist [list]
+		foreach clk [$device selectNodes .//clock] {
+			$node appendXML [$clk asXML]
+			if {[regexp "fpga\[0-9\]" [$clk @name] clkname]} {
+				lappend clocklist $clkname
+			}
+		}
+
+		# find clocks in xsa
 		foreach clk [$module selectNodes .//PORT\[@CLKFREQUENCY\]] {
 			set connection [$clk selectNodes .//CONNECTION\[@PORT\]]
-			if {[regexp "FCLK_CLK(\[0-9\])" [$connection @PORT] clkname clknum]} {
+			if {[regexp "FCLK_CLK(\[0-9\])" [$connection @PORT] rawclkname clknum]} {
+				set clkname "fpga$clknum"
 				if {$clkname in $clocklist} { continue }
-				$node appendXML "<clock name=\"fpga$clknum\" driver_name=\"fpga$clknum\" rate=\"[$clk @CLKFREQUENCY]\"/>"
+				$node appendXML "<clock name=\"$clkname\" driver_name=\"$clkname\" rate=\"[$clk @CLKFREQUENCY]\"/>"
 				lappend clocklist $clkname
 			}
 		}
