@@ -44,35 +44,33 @@ proc create_or_update_build_dir { } {
 proc build { } {
 	global build_dir jobs project_name verbose tool_dir project_dir
 
-	set target "$project_name.bit"
-	if {[file exists [file join $build_dir $target]]} {
-		return
-	}
-
 	set orig_pwd [pwd]
 	cd $build_dir
 
-	set cmd { }
-	lappend cmd vivado
-	lappend cmd "-nolog"
-	lappend cmd "-nojournal"
-	lappend cmd "-mode"
-	lappend cmd "batch"
-	lappend cmd "-source"
-	lappend cmd "[file join $tool_dir vivado generate_bitstream.tcl]"
-	if {$verbose != 0} {
-		lappend cmd "-verbose"
+	set target "$project_name.bit"
+	if {![file exists [file join $build_dir $target]]} {
+		set cmd { }
+		lappend cmd vivado
+		lappend cmd "-nolog"
+		lappend cmd "-nojournal"
+		lappend cmd "-mode"
+		lappend cmd "batch"
+		lappend cmd "-source"
+		lappend cmd "[file join $tool_dir vivado generate_bitstream.tcl]"
+		if {$verbose != 0} {
+			lappend cmd "-verbose"
+		}
+		lappend cmd "-tclargs"
+		lappend cmd "--jobs"
+		lappend cmd $jobs"
+		lappend cmd "--target"
+		lappend cmd $target"
+
+		diag "generating bitstream via command:" {*}$cmd
+
+		if {[catch {exec {*}$cmd | sed "/^#.*/d" | sed "s/^/\[$project_name:vivado\] /" >@ stdout} msg]} {
+			exit_with_error "build via vivado failed:\n" $msg }
 	}
-	lappend cmd "-tclargs"
-	lappend cmd "--jobs"
-	lappend cmd $jobs"
-	lappend cmd "--target"
-	lappend cmd $target"
-
-	diag "generating bitstream via command:" {*}$cmd
-
-	if {[catch {exec {*}$cmd | sed "/^#.*/d" | sed "s/^/\[$project_name:vivado\] /" >@ stdout} msg]} {
-		exit_with_error "build via vivado failed:\n" $msg }
 
 	# generate device_manager.config if src/devices exists
 	set devices_file [file join $project_dir src devices]
