@@ -795,15 +795,15 @@ proc extract_artifacts_from_build_dir { } {
 proc check_abis { } {
 	global arch project_dir tool_dir library_artifacts
 
-	source [file join $tool_dir abi check_abi]
-
 	foreach library $library_artifacts {
 
 		set so_extension ".lib.so"
-		regsub $so_extension [file tail $library] "" symbol_file
-		set symbol_file_name [file join $project_dir symbols $symbol_file]
+		regsub $so_extension [file tail $library] "" symbols_file
+		set symbols_file_name [file join $project_dir symbols $symbols_file]
 
-		check_abi_symbols  $library $symbol_file_name
+		if {[catch { exec [file join $tool_dir abi check_abi] $library $symbols_file_name } msg]} {
+			exit_with_error $msg
+		}
 	}
 }
 
@@ -838,8 +838,6 @@ proc extract_api_artifacts { } {
 proc extract_library_symbols { } {
 	global build_dir project_dir tool_dir
 
-	source [file join $tool_dir abi abi_symbols.inc]
-
 	set artifacts_file_path [file join $project_dir artifacts]
 	set artifacts [read_file_content_as_list $artifacts_file_path]
 
@@ -852,20 +850,20 @@ proc extract_library_symbols { } {
 		if {[artifact_is_library $artifact]} {
 
 			# remove library extension
-			regsub $so_extension $artifact "" symbol_file_name
+			regsub $so_extension $artifact "" symbols_file_name
 
-			set symbol_file_name [file tail $symbol_file_name]
+			set symbols_file_name [file tail $symbols_file_name]
 			set library_file_path [file join $build_dir $artifact]
 			if {![file exists $library_file_path]} {
 				exit_with_error "build artifact does not exist $artifact"}
 
 			file mkdir $symbols_dir
-			set symbols_file_paht [file join $symbols_dir $symbol_file_name]
-			set symbols_file_fd [open $symbols_file_paht "w+"]
-			abi_symbols_from_library $library_file_path $symbols_file_fd
-			close $symbols_file_fd
+			set symbols_file_path [file join $symbols_dir $symbols_file_name]
+			if {[catch { exec [file join $tool_dir abi abi_symbols] $library_file_path > $symbols_file_path}]} {
+				exit_with_error "unable to extract abi symbols"
+			}
 
-			lappend libraries $symbol_file_name
+			lappend libraries $symbols_file_name
 		}
 	}
 	return $libraries
