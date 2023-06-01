@@ -28,5 +28,5 @@ header file.
 
 *include/spdlog/*
 
-All files found in the direcory 'include/spdlog' below the build directory are
+All files found in the directory 'include/spdlog' below the build directory are
 added as artifacts. The relative directory structure is kept intact.

@@ -35,12 +35,12 @@ Examples
 *install/bin/ls*
 
 The 'ls' executable binary is taken from the build directory's 'install/bin/'
-sub directory as a single ROM module named 'ls'.
+subdirectory as a single ROM module named 'ls'.
 
 *install/bin/*
 
 All executable binaries found at the build directory's 'install/bin/'
-sub directory are turned into ROM modules.
+subdirectory are turned into ROM modules.
 
 *coreutils.tar: install/bin/ls*
 
@@ -49,13 +49,13 @@ The single executable binary 'ls' is archived at the root of the
 
 *coreutils.tar: install*
 
-The entire 'install' sub directory within the build directory is archived
+The entire 'install' subdirectory within the build directory is archived
 into the 'coreutils.tar' archive. The archive contains an 'install' directory
 at the root of the archive.
 
 *coreutils.tar: install/*
 
-All files within the build directory's 'install' sub directory are archived
+All files within the build directory's 'install' subdirectory are archived
 into the 'coreutils.tar' archive. The files are located at the root of the
 archive.
 

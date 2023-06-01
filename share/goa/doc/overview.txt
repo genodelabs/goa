@@ -9,7 +9,7 @@ Goa is a tool for streamlining the development of application software for the
 Genode OS Framework. The work flow is project-centered. A project is a
 directory that may contain source code, data, instructions how to download
 source codes from a 3rd party, descriptions of system scenarios, or
-combinations thereof. Goa is independent from Genode's regular build system.
+combinations thereof. Goa is independent of Genode's regular build system.
 It combines Genode's package management (depot) with commodity build systems
 such a CMake. In addition to building and test-driving application software
 directly on a Linux-based development system, Goa is able to aid the process
@@ -123,7 +123,7 @@ USAGE
   use of library maintainers only.
   The output is a file 'symbols/<library-name>'. For each library in the
   list of artifacts (recognized by the ending '.lib.so').
-  You should review the files and add them file to the repository.
+  You should review the files and add them to the repository.
   They are required by users of the library during the 'build' step.
 
 :goa run [--pkg <pkg-name>]:
@@ -164,7 +164,7 @@ OPTIONAL ARGUMENTS
   Print diagnostic information about the operation of Goa.
 
 :-C <dir>:
-  Change to project directory dir before executing the command.
+  Change into project directory <dir> before executing the command.
 
 SEE ALSO
 ########

@@ -102,7 +102,7 @@ Goa evaluates the following configuration variables.
   If defined, Goa places all generated files in the specified directory
   instead of creating a 'var' directory inside the project directory.
   Within the common var directory, the content of each project is created
-  in a sub directory named after the project.
+  in a subdirectory named after the project.
 
   This option is useful to keep the source code of a project completely
   separate from any generated files.

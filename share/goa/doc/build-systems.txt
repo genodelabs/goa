@@ -81,7 +81,7 @@ for specifying XPAR_ parameter definitions for Xilinx standalone drivers.
 Missing property values are supplemented by definitions found in the hardware
 design.
 
-Note that Goa writes the bistream to a <project_name>.bit file.
+Note that Goa writes the bitstream to a <project_name>.bit file.
 
 
 SEE ALSO
