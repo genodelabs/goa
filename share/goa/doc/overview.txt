@@ -166,6 +166,10 @@ OPTIONAL ARGUMENTS
 :-C <dir>:
   Change into project directory <dir> before executing the command.
 
+:-r:
+  Recursively scan for project directories in the current working directory
+  and execute the command for each project.
+
 SEE ALSO
 ########
 
