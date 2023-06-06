@@ -232,6 +232,43 @@ proc generate_runtime_config { } {
 		}
 	}
 
+	set clipboard_config_nodes ""
+	set clipboard_route ""
+	catch {
+		set node [query_node /runtime/requires/rom\[@label="clipboard"\] $runtime_file]
+		append clipboard_route {
+					<service name="ROM" label="clipboard">} \
+					{    <child name="clipboard"/> </service>}
+	}
+	catch {
+		set node [query_node /runtime/requires/report\[@label="clipboard"\] $runtime_file]
+		append clipboard_route {
+					<service name="Report" label="clipboard">} \
+					{ <child name="clipboard"/> </service>}
+	}
+
+	if {$clipboard_route != ""} {
+		append clipboard_config_nodes {
+			<start name="clipboard" caps="100">
+				<binary name="report_rom"/>
+				<resource name="RAM" quantum="2M"/>
+				<provides>
+					<service name="Report"/>
+					<service name="ROM"/>
+				</provides>
+				<config verbose="yes">
+					<policy label_suffix="clipboard" report="} $project_name { -> clipboard"/>
+				</config>
+				<route>
+					<service name="PD">  <parent/> </service>
+					<service name="CPU"> <parent/> </service>
+					<service name="LOG"> <parent/> </service>
+					<service name="ROM"> <parent/> </service>
+				</route>
+			</start>
+		}
+	}
+
 	set rtc_config_nodes ""
 	set rtc_route        ""
 	catch {
@@ -288,6 +325,7 @@ proc generate_runtime_config { } {
 			  $nic_config_nodes \
 			  $uplink_config_nodes \
 			  $fs_config_nodes \
+			  $clipboard_config_nodes \
 			  $rtc_config_nodes {
 
 			<start name="} $project_name {" caps="} $caps {">
@@ -297,7 +335,7 @@ proc generate_runtime_config { } {
 				<route>} $config_route $gui_route \
 				         $capture_route $event_route \
 				         $nic_route $fs_routes $rtc_route \
-				         $mesa_route {
+				         $mesa_route $clipboard_route {
 					<service name="ROM">   <parent/> </service>
 					<service name="PD">    <parent/> </service>
 					<service name="RM">    <parent/> </service>
@@ -345,6 +383,12 @@ proc generate_runtime_config { } {
 		lappend runtime_archives "genodelabs/src/lx_fs"
 
 		file link -symbolic "$run_dir/fs" "$var_dir/fs"
+	}
+
+	if {$clipboard_config_nodes != ""} {
+		lappend rom_modules report_rom
+
+		lappend runtime_archives "genodelabs/src/report_rom"
 	}
 
 	if {$rtc_config_nodes != ""} {
