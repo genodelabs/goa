@@ -49,6 +49,7 @@ set  version(genodelabs/src/linux_nic_drv)               2023-04-25
 set  version(genodelabs/src/linux_rtc_drv)               2023-04-25
 set  version(genodelabs/src/lx_fs)                       2023-04-25
 set  version(genodelabs/src/ncurses)                     2023-01-23
+set  version(genodelabs/src/nic_router)                  2023-04-25
 set  version(genodelabs/src/nitpicker)                   2023-04-25
 set  version(genodelabs/src/openssl)                     2023-04-16
 set  version(genodelabs/src/pcre)                        2023-01-23

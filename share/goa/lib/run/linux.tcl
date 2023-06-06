@@ -161,15 +161,47 @@ proc generate_runtime_config { } {
 				<provides> <service name="Nic"/> </provides>}
 		if {$nic_label != ""} {
 			append nic_config_nodes {
-				<config mode="nic_server"> <nic tap="} $nic_label {"/> </config>}
+				<config tap="} $nic_label {"/>}
 		}
 		append nic_config_nodes {
-				<route> <any-service> <parent/> </any-service> </route>
+				<route>
+					<service name="Uplink"> <child name="nic_router"/> </service>
+					<any-service> <parent/> </any-service>
+				</route>
+			</start>
+
+			<start name="nic_router" caps="200">
+				<resource name="RAM" quantum="10M"/>
+				<provides>
+					<service name="Uplink"/>
+					<service name="Nic"/>
+				</provides>
+				<config verbose_domain_state="yes">
+					<default-policy domain="default"/>
+					<policy label="nic_drv -> " domain="uplink"/>
+					<domain name="uplink">
+						<nat domain="default" tcp-ports="1000" udp-ports="1000" icmp-ids="1000"/>
+					</domain>
+					<domain name="default" interface="10.0.1.1/24">
+						<dhcp-server ip_first="10.0.1.2" ip_last="10.0.1.253"/>
+						<tcp dst="0.0.0.0/0">
+							<permit-any domain="uplink"/>
+						</tcp>
+						<udp dst="0.0.0.0/0">
+							<permit-any domain="uplink"/>
+						</udp>
+						<icmp dst="0.0.0.0/0" domain="uplink"/>
+					</domain>
+				</config>
+				<route>
+					<service name="Timer"> <child name="timer"/> </service>
+					<any-service> <parent/> </any-service>
+				</route>
 			</start>
 		}
 
 		append nic_route "\n\t\t\t\t\t" \
-			{<service name="Nic"> <child name="nic_drv"/> </service>}
+			{<service name="Nic"> <child name="nic_router"/> </service>}
 	}
 
 	set uplink_config_nodes ""
@@ -434,6 +466,12 @@ proc generate_runtime_config { } {
 		lappend rom_modules linux_nic_drv
 
 		lappend runtime_archives "genodelabs/src/linux_nic_drv"
+	}
+
+	if {$nic_config_nodes != ""} {
+		lappend rom_modules nic_router
+
+		lappend runtime_archives "genodelabs/src/nic_router"
 	}
 
 	if {$fs_config_nodes != ""} {
