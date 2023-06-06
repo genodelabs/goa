@@ -152,10 +152,7 @@ proc generate_runtime_config { } {
 	set nic_route        ""
 	catch {
 		set nic_node [query_node /runtime/requires/nic $runtime_file]
-		set nic_label ""
-		catch {
-			set nic_label [query_node string(/runtime/requires/nic/@label) $runtime_file]
-		}
+		set nic_label [query_node string(/runtime/requires/nic/@label) $runtime_file]
 
 		append nic_config_nodes {
 			<start name="nic_drv" caps="100" ld="no">
@@ -179,10 +176,7 @@ proc generate_runtime_config { } {
 	set uplink_provides     ""
 	catch {
 		set uplink_node [query_node /runtime/requires/uplink $runtime_file]
-		set uplink_label ""
-		catch {
-			set uplink_label [query_node string(/runtime/requires/uplink/@label) $runtime_file]
-		}
+		set uplink_label [query_node string(/runtime/requires/uplink/@label) $runtime_file]
 
 		append uplink_config_nodes "\n" {
 			<start name="nic_drv" caps="100" ld="no">
