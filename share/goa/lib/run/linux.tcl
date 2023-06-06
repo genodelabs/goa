@@ -1,6 +1,6 @@
 
 proc generate_runtime_config { } {
-	global runtime_archives runtime_file project_name rom_modules run_dir var_dir config_valid
+	global runtime_archives runtime_file project_name rom_modules run_dir var_dir config_valid run_as
 
 	set ram    [try_query_attr_from_runtime ram]
 	set caps   [try_query_attr_from_runtime caps]
@@ -455,29 +455,29 @@ proc generate_runtime_config { } {
 		                    report_rom \
 		                    rom_filter
 
-		lappend runtime_archives "genodelabs/src/nitpicker"
-		lappend runtime_archives "genodelabs/src/report_rom"
-		lappend runtime_archives "genodelabs/src/rom_filter"
-		lappend runtime_archives "genodelabs/pkg/drivers_interactive-linux"
+		lappend runtime_archives "$run_as/src/nitpicker"
+		lappend runtime_archives "$run_as/src/report_rom"
+		lappend runtime_archives "$run_as/src/rom_filter"
+		lappend runtime_archives "$run_as/pkg/drivers_interactive-linux"
 
 	}
 
 	if {$nic_config_nodes != "" || $uplink_config_nodes != ""} {
 		lappend rom_modules linux_nic_drv
 
-		lappend runtime_archives "genodelabs/src/linux_nic_drv"
+		lappend runtime_archives "$run_as/src/linux_nic_drv"
 	}
 
 	if {$nic_config_nodes != ""} {
 		lappend rom_modules nic_router
 
-		lappend runtime_archives "genodelabs/src/nic_router"
+		lappend runtime_archives "$run_as/src/nic_router"
 	}
 
 	if {$fs_config_nodes != ""} {
 		lappend rom_modules lx_fs
 
-		lappend runtime_archives "genodelabs/src/lx_fs"
+		lappend runtime_archives "$run_as/src/lx_fs"
 
 		file link -symbolic "$run_dir/fs" "$var_dir/fs"
 	}
@@ -485,23 +485,23 @@ proc generate_runtime_config { } {
 	if {$clipboard_config_nodes != ""} {
 		lappend rom_modules report_rom
 
-		lappend runtime_archives "genodelabs/src/report_rom"
+		lappend runtime_archives "$run_as/src/report_rom"
 	}
 
 	if {$blackhole_config_nodes != ""} {
 		lappend rom_modules black_hole
 
-		lappend runtime_archives "genodelabs/src/black_hole"
+		lappend runtime_archives "$run_as/src/black_hole"
 	}
 
 	if {$rtc_config_nodes != ""} {
 		lappend rom_modules linux_rtc_drv
 
-		lappend runtime_archives "genodelabs/src/linux_rtc_drv"
+		lappend runtime_archives "$run_as/src/linux_rtc_drv"
 	}
 
-	lappend runtime_archives "genodelabs/src/init"
-	lappend runtime_archives "genodelabs/src/base-linux"
+	lappend runtime_archives "$run_as/src/init"
+	lappend runtime_archives "$run_as/src/base-linux"
 
 	if {$mesa_route != ""} {
 		lappend rom_modules mesa_gpu-softpipe.lib.so

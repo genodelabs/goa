@@ -11,12 +11,12 @@ __goa()
     help_commands="config api build-systems artifacts add-depot-user"
     depot_commands="export|publish"
     depot_opts="--depot-user --depot-overwrite --pkg"
-    run_opts="--pkg"
+    run_opts="--pkg --run-as"
     user_opts="--depot-url --gpg-user-id --pubkey-file"
 
     globalopts="--arch --rebuild --warn-strict --no-warn-strict -C --license --versions-from-genode-dir --depot-dir --public-dir --project-name --contrib-dir --build-dir --abi-dir --bin-dir --run-dir --common-var-dir --verbose --jobs --cross-dev-prefix --ld-march --olevel"
 
-    stropts="--depot-url|--gpg-user-id|--depot-user|--ld-march"
+    stropts="--depot-url|--gpg-user-id|--depot-user|--ld-march|--run_as"
     fileopts="--license|--pubkey-file|--cross-dev-prefix"
     diropts="-C|--versions-from-genode-dir|--depot-dir|--public-dir|--project-name|--contrib-dir|--build-dir|--abi-dir|--bin-dir|--run-dir|--common-var-dir"
     pkgopts="--pkg"

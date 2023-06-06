@@ -116,6 +116,7 @@ set common_var_dir           ""
 set depot_overwrite          0
 set license                  ""
 set depot_user               ""
+set run_as                   "genodelabs"
 
 # if /proc/cpuinfo exists, use number of CPUs as 'jobs'
 if {[file exists /proc/cpuinfo]} {
@@ -314,8 +315,9 @@ if {$perform(build-dir)} {
 		set rebuild 1 }
 }
 
-# unless given as additional argument, run the pkg named after the project
 if {$perform(run)} {
+	set run_as  [consume_optional_cmdline_arg "--run-as" $run_as]
+	# unless given as additional argument, run the pkg named after the project
 	set run_pkg [consume_optional_cmdline_arg "--pkg" $project_name]
 }
 
@@ -349,6 +351,7 @@ if {$arch                     == ""} { unset arch }
 if {$cross_dev_prefix         == ""} { unset cross_dev_prefix }
 if {$ld_march                 == ""} { unset ld_march }
 if {$cc_march                 == ""} { unset cc_march }
+if {$run_as                   == ""} { unset run_as }
 
 if {![info exists arch]} {
 	switch [exec uname -m] {
