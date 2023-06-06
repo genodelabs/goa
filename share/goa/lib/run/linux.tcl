@@ -32,20 +32,31 @@ proc generate_runtime_config { } {
 
 	set gui_config_nodes ""
 	set gui_route        ""
+	set capture_route ""
+	set event_route ""
 	catch {
 		set capture_node ""
 		set event_node ""
 		catch {
 			set capture_node [query_node /runtime/requires/capture $runtime_file]
+
+			append capture_route "\n\t\t\t\t\t" \
+			                     "<service name=\"Capture\"> " \
+			                     "<child name=\"nitpicker\"/> " \
+			                     "</service>"
 		}
 		catch {
 			set event_node   [query_node /runtime/requires/event $runtime_file]
+
+			append event_route "\n\t\t\t\t\t" \
+			                     "<service name=\"Event\"> " \
+			                     "<child name=\"nitpicker\"/> " \
+			                     "</service>"
 		}
 		if {$capture_node == "" && $event_node == ""} {
 			set gui_node [query_node /runtime/requires/gui $runtime_file] }
 
 		append gui_config_nodes {
-
 			<start name="drivers" caps="1000">
 				<resource name="RAM" quantum="32M" constrain_phys="yes"/>
 				<binary name="init"/>
@@ -137,26 +148,6 @@ proc generate_runtime_config { } {
 		                 "</service>"
 	}
 
-	set capture_route ""
-	catch {
-		set capture_node [query_node /runtime/requires/capture $runtime_file]
-
-		append capture_route "\n\t\t\t\t\t" \
-		                     "<service name=\"Capture\"> " \
-		                     "<child name=\"nitpicker\"/> " \
-		                     "</service>"
-	}
-
-	set event_route ""
-	catch {
-		set event_route [query_node /runtime/requires/event $runtime_file]
-
-		append event_route "\n\t\t\t\t\t" \
-		                     "<service name=\"Event\"> " \
-		                     "<child name=\"nitpicker\"/> " \
-		                     "</service>"
-	}
-
 	set nic_config_nodes ""
 	set nic_route        ""
 	catch {
@@ -166,7 +157,7 @@ proc generate_runtime_config { } {
 			set nic_label [query_node string(/runtime/requires/nic/@label) $runtime_file]
 		}
 
-		append nic_config_nodes "\n" {
+		append nic_config_nodes {
 			<start name="nic_drv" caps="100" ld="no">
 				<binary name="linux_nic_drv"/>
 				<resource name="RAM" quantum="4M"/>
@@ -232,7 +223,8 @@ proc generate_runtime_config { } {
 					<service name="LOG"> <parent/> </service>
 					<service name="ROM"> <parent/> </service>
 				</route>
-			</start>}
+			</start>
+		}
 
 		append fs_routes "\n\t\t\t\t\t" \
 			"<service name=\"File_system\" label=\"$label\"> " \
@@ -251,13 +243,14 @@ proc generate_runtime_config { } {
 	catch {
 		set rtc_node [query_node /runtime/requires/rtc $runtime_file]
 
-		append rtc_config_nodes "\n" {
+		append rtc_config_nodes {
 			<start name="rtc_drv" caps="100" ld="no">
 				<binary name="linux_rtc_drv"/>
 				<resource name="RAM" quantum="1M"/>
 				<provides> <service name="Rtc"/> </provides>
 				<route> <any-service> <parent/> </any-service> </route>
-			</start>}
+			</start>
+		}
 
 		append rtc_route "\n\t\t\t\t\t" \
 		                     "<service name=\"Rtc\"> " \
