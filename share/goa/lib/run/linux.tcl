@@ -1,12 +1,10 @@
+proc generate_runtime_config { runtime_file } {
+	global project_name run_dir var_dir run_as
+	global runtime_archives rom_modules
 
-proc generate_runtime_config { } {
-	global runtime_archives runtime_file project_name rom_modules run_dir var_dir config_valid run_as
-
-	set ram    [try_query_attr_from_runtime ram]
-	set caps   [try_query_attr_from_runtime caps]
-	set binary [try_query_attr_from_runtime binary]
-
-	set config_valid 0
+	set ram    [try_query_attr_from_runtime $runtime_file ram]
+	set caps   [try_query_attr_from_runtime $runtime_file caps]
+	set binary [try_query_attr_from_runtime $runtime_file binary]
 
 	set config ""
 	catch {
@@ -27,8 +25,11 @@ proc generate_runtime_config { } {
 			                "specified as 'config' attribute as well as '<config>' node" }
 	}
 
-	if {$config != "" || $config_route != ""} {
-		set config_valid 1 }
+	if {$config == "" && $config_route == ""} {
+		exit_with_error "runtime lacks a configuration\n" \
+		                "\n You may declare a 'config' attribute in the <runtime> node, or" \
+		                "\n define a <config> node inside the <runtime> node.\n"
+	}
 
 	set gui_config_nodes ""
 	set gui_route        ""

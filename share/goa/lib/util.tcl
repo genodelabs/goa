@@ -526,9 +526,7 @@ proc desanitize_xml_characters { string } {
 }
 
 
-proc try_query_attr_from_runtime { attr } {
-	global runtime_file
-
+proc try_query_attr_from_runtime { runtime_file attr } {
 	if {[catch {
 		set result [query_attr /runtime $attr $runtime_file]
 	}]} {
