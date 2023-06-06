@@ -269,6 +269,64 @@ proc generate_runtime_config { } {
 		}
 	}
 
+
+	set blackhole_config_nodes ""
+	set blackhole_route ""
+	set blackhole_config ""
+	set blackhole_services ""
+	catch {
+		set node [query_node /runtime/requires/report\[@label!="clipboard"\] $runtime_file]
+		append blackhole_config {
+					<report/>}
+		append blackhole_services {
+					<service name="Report"/>}
+
+		# iterate all report nodes and their labels (except "clipboard")
+		foreach {label} [lsearch -inline -all -not -exact \
+			              [required_report_labels $runtime_file] "clipboard"] {
+			append blackhole_route {
+					<service name="Report" label_suffix=" -> } $label {">}\
+					{ <child name="black_hole"/> </service>}
+		}
+	}
+	catch {
+		set node [query_node /runtime/requires/audio_in $runtime_file]
+		puts $node
+		append blackhole_config {
+					<audio_in/>}
+		append blackhole_services {
+					<service name="Audio_in"/>}
+		append blackhole_route {
+					<service name="Audio_in">  <child name="black_hole"/> </service>}
+	}
+	catch {
+		set node [query_node /runtime/requires/audio_out $runtime_file]
+		append blackhole_config {
+					<audio_out/>}
+		append blackhole_services {
+					<service name="Audio_out"/>}
+		append blackhole_route {
+					<service name="Audio_out"> <child name="black_hole"/> </service>}
+	}
+
+	if {$blackhole_config != ""} {
+		append blackhole_config_nodes {
+			<start name="black_hole" caps="100">
+				<resource name="RAM" quantum="2M"/>
+				<provides> } $blackhole_services {
+				</provides>
+				<config> } $blackhole_config {
+				</config>
+				<route>
+					<service name="PD">  <parent/> </service>
+					<service name="CPU"> <parent/> </service>
+					<service name="LOG"> <parent/> </service>
+					<service name="ROM"> <parent/> </service>
+				</route>
+			</start>
+		}
+	}
+
 	set rtc_config_nodes ""
 	set rtc_route        ""
 	catch {
@@ -326,6 +384,7 @@ proc generate_runtime_config { } {
 			  $uplink_config_nodes \
 			  $fs_config_nodes \
 			  $clipboard_config_nodes \
+			  $blackhole_config_nodes \
 			  $rtc_config_nodes {
 
 			<start name="} $project_name {" caps="} $caps {">
@@ -335,7 +394,7 @@ proc generate_runtime_config { } {
 				<route>} $config_route $gui_route \
 				         $capture_route $event_route \
 				         $nic_route $fs_routes $rtc_route \
-				         $mesa_route $clipboard_route {
+				         $mesa_route $clipboard_route $blackhole_route {
 					<service name="ROM">   <parent/> </service>
 					<service name="PD">    <parent/> </service>
 					<service name="RM">    <parent/> </service>
@@ -389,6 +448,12 @@ proc generate_runtime_config { } {
 		lappend rom_modules report_rom
 
 		lappend runtime_archives "genodelabs/src/report_rom"
+	}
+
+	if {$blackhole_config_nodes != ""} {
+		lappend rom_modules black_hole
+
+		lappend runtime_archives "genodelabs/src/black_hole"
 	}
 
 	if {$rtc_config_nodes != ""} {

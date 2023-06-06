@@ -318,6 +318,44 @@ proc required_file_systems { runtime_file } {
 
 
 ##
+##
+# Return list of required report labels declared in a
+# runtime file's <requires> node
+#
+proc required_report_labels { runtime_file } {
+
+	set num_reports [exec xmllint --xpath "count(/runtime/requires/report)"  $runtime_file]
+
+	# Request attribute value from nth <required> node
+	proc report_attr { runtime_file n attr_name default_value } {
+
+		set value [exec xmllint \
+		                --xpath "string(/runtime/requires/report\[$n\]/@$attr_name)" \
+		                $runtime_file]
+		if {$value != ""} {
+			return $value }
+
+		return $default_value
+	}
+
+	set labels { }
+
+	# iterate over <reports> nodes
+	for {set i 1} {$i <= $num_reports} {incr i} {
+
+		set label     [report_attr $runtime_file $i "label"     ""]
+
+		if {$label == ""} {
+			puts stderr "Warning: reports without labels will be ignored"
+		} else {
+			lappend labels $label
+		}
+	}
+
+	return $labels
+}
+
+
 # Create symlinks for each file found at 'from_dir' in 'to_dir'
 #
 proc symlink_directory_content { file_whitelist from_dir to_dir } {

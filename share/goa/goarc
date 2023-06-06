@@ -35,6 +35,7 @@ set  version(genodelabs/raw/terminal)                    2019-02-25
 set  version(genodelabs/raw/ttf-bitstream-vera-minimal)  2019-02-25
 set  version(genodelabs/src/base-linux)                  2023-04-25
 set  version(genodelabs/src/bash)                        2023-02-26
+set  version(genodelabs/src/black_hole)                  2023-04-25
 set  version(genodelabs/src/coreutils)                   2023-02-26
 set  version(genodelabs/src/curl)                        2023-04-16
 set  version(genodelabs/src/event_filter)                2023-04-25
