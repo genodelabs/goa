@@ -259,103 +259,6 @@ proc api_archive_dir { api_name } {
 }
 
 
-##
-# Return list of ROM modules declared in a runtime file's <content> node
-#
-proc content_rom_modules { runtime_file } {
-
-	set attributes { }
-	catch {
-		set attributes [query_node "/runtime/content/rom/attribute::label" $runtime_file]
-	}
-
-	set rom_names { }
-	foreach attr $attributes {
-		regexp {"(.*)"} $attr dummy rom_name
-		lappend rom_names $rom_name
-	}
-	return $rom_names
-}
-
-
-##
-# Return list of required file systems (pair of label/writeable) declared in a
-# runtime file's <requires> node
-#
-proc required_file_systems { runtime_file } {
-
-	set num_fs [exec xmllint --xpath "count(/runtime/requires/file_system)"  $runtime_file]
-
-	# Request attribute value from nth <file_system> node
-	proc file_system_attr { runtime_file n attr_name default_value } {
-
-		set value [exec xmllint \
-		                --xpath "string(/runtime/requires/file_system\[$n\]/@$attr_name)" \
-		                $runtime_file]
-		if {$value != ""} {
-			return $value }
-
-		return $default_value
-	}
-
-	set file_systems { }
-
-	# iterate over <file_system> nodes
-	for {set i 1} {$i <= $num_fs} {incr i} {
-
-		set label     [file_system_attr $runtime_file $i "label"     ""]
-		set writeable [file_system_attr $runtime_file $i "writeable" "no"]
-
-		if {$label == ""} {
-			puts stderr "Warning: file systems without labels will be ignored"
-		} else {
-			lappend file_systems $label $writeable
-		}
-	}
-
-	return $file_systems
-}
-
-
-##
-##
-# Return list of required report labels declared in a
-# runtime file's <requires> node
-#
-proc required_report_labels { runtime_file } {
-
-	set num_reports [exec xmllint --xpath "count(/runtime/requires/report)"  $runtime_file]
-
-	# Request attribute value from nth <required> node
-	proc report_attr { runtime_file n attr_name default_value } {
-
-		set value [exec xmllint \
-		                --xpath "string(/runtime/requires/report\[$n\]/@$attr_name)" \
-		                $runtime_file]
-		if {$value != ""} {
-			return $value }
-
-		return $default_value
-	}
-
-	set labels { }
-
-	# iterate over <reports> nodes
-	for {set i 1} {$i <= $num_reports} {incr i} {
-
-		set label     [report_attr $runtime_file $i "label"     ""]
-
-		if {$label == ""} {
-			puts stderr "Warning: reports without labels will be ignored"
-		} else {
-			lappend labels $label
-		}
-	}
-
-	return $labels
-}
-
-
 # Create symlinks for each file found at 'from_dir' in 'to_dir'
 #
 proc symlink_directory_content { file_whitelist from_dir to_dir } {
@@ -499,7 +402,46 @@ proc check_xml_syntax { xml_file } {
 }
 
 
-proc query_attr { node_path attr_name xml_file }  {
+proc query_from_string { xpath node default_value } {
+
+	set content [exec xmllint --xpath $xpath - << $node]
+
+	if {$content == ""} {
+		set content $default_value }
+
+	return $content
+}
+
+
+proc query_attrs_from_string { node_path attr_name xml }  {
+
+	set xpath "$node_path/attribute::$attr_name"
+	set attributes [exec xmllint --xpath $xpath - << $xml]
+
+	set values { }
+	foreach attr $attributes {
+		regexp {"(.*)"} $attr dummy value
+		lappend values $value
+	}
+	return $values
+}
+
+
+proc query_attrs_from_file { node_path attr_name xml_file }  {
+
+	set xpath "$node_path/attribute::$attr_name"
+	set attributes [exec xmllint --xpath $xpath $xml_file]
+
+	set values { }
+	foreach attr $attributes {
+		regexp {"(.*)"} $attr dummy value
+		lappend values $value
+	}
+	return $values
+}
+
+
+proc query_attr_from_file { node_path attr_name xml_file }  {
 
 	set xpath "$node_path/attribute::$attr_name"
 	set attr_value [exec xmllint --xpath $xpath $xml_file]
@@ -510,7 +452,7 @@ proc query_attr { node_path attr_name xml_file }  {
 }
 
 
-proc query_node { node_path xml_file }  {
+proc query_from_file { node_path xml_file }  {
 
 	set xpath "$node_path"
 	set content [exec xmllint --xpath $xpath $xml_file]
@@ -526,9 +468,9 @@ proc desanitize_xml_characters { string } {
 }
 
 
-proc try_query_attr_from_runtime { runtime_file attr } {
+proc try_query_attr_from_file { runtime_file attr } {
 	if {[catch {
-		set result [query_attr /runtime $attr $runtime_file]
+		set result [query_attr_from_file /runtime $attr $runtime_file]
 	}]} {
 		exit_with_error "missing '$attr' attribute in <runtime> at $runtime_file"
 	}

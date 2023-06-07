@@ -459,7 +459,7 @@ proc update_depot_roms { archive_list } {
 	foreach archive [apply_versions $archive_list] {
 		set archive_runtime [file join $depot_dir $archive runtime]
 		if {[file exists $archive_runtime]} {
-			append rom_modules " " [content_rom_modules $archive_runtime]
+			append rom_modules " " [query_attrs_from_file /runtime/content/rom label $archive_runtime]
 		}
 	}
 }
@@ -895,6 +895,7 @@ if {$perform(extract-abi-symbols)} {
 
 if {$perform(run)} {
 
+	source [file join $tool_dir lib run common.tcl]
 	source [file join $tool_dir lib run linux.tcl]
 
 	set pkg_dir [file join $project_dir pkg $run_pkg]
@@ -926,7 +927,7 @@ if {$perform(run)} {
 		check_xml_syntax $config_file }
 
 	set rom_modules { }
-	generate_runtime_config $runtime_file
+	generate_runtime_config $runtime_file runtime_archives rom_modules
 
 	set binary_archives [binary_archives [apply_versions $runtime_archives]]
 	prepare_depot_with_archives $binary_archives

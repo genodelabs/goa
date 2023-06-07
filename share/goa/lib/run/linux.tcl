@@ -1,63 +1,273 @@
-proc generate_runtime_config { runtime_file } {
-	global project_name run_dir var_dir run_as
-	global runtime_archives rom_modules
+proc run_genode { } {
+	global run_dir
 
-	set ram    [try_query_attr_from_runtime $runtime_file ram]
-	set caps   [try_query_attr_from_runtime $runtime_file caps]
-	set binary [try_query_attr_from_runtime $runtime_file binary]
+	set orig_pwd [pwd]
+	cd $run_dir
+	eval spawn -noecho ./core
+	cd $orig_pwd
 
-	set config ""
-	catch {
-		set config [query_node /runtime/config $runtime_file]
-		set config [desanitize_xml_characters $config]
-	}
-
-	set config_route ""
-	catch {
-		set rom_name [query_attr /runtime config $runtime_file]
-		append config_route "\n\t\t\t\t\t" \
-		                    "<service name=\"ROM\" label=\"config\"> " \
-		                    "<parent label=\"$rom_name\"/> " \
-		                    "</service>"
-
-		if {$config != ""} {
-			exit_with_error "runtime config is ambiguous,"
-			                "specified as 'config' attribute as well as '<config>' node" }
-	}
-
-	if {$config == "" && $config_route == ""} {
-		exit_with_error "runtime lacks a configuration\n" \
-		                "\n You may declare a 'config' attribute in the <runtime> node, or" \
-		                "\n define a <config> node inside the <runtime> node.\n"
-	}
-
-	set gui_config_nodes ""
-	set gui_route        ""
-	set capture_route ""
-	set event_route ""
-	catch {
-		set capture_node ""
-		set event_node ""
-		catch {
-			set capture_node [query_node /runtime/requires/capture $runtime_file]
-
-			append capture_route "\n\t\t\t\t\t" \
-			                     "<service name=\"Capture\"> " \
-			                     "<child name=\"nitpicker\"/> " \
-			                     "</service>"
+	set timeout -1
+	interact {
+		\003 {
+			send_user "Expect: 'interact' received 'strg+c' and was cancelled\n";
+			exit
 		}
-		catch {
-			set event_node   [query_node /runtime/requires/event $runtime_file]
+		-i $spawn_id
+	}
+}
 
-			append event_route "\n\t\t\t\t\t" \
-			                     "<service name=\"Event\"> " \
-			                     "<child name=\"nitpicker\"/> " \
-			                     "</service>"
+
+proc base_archives { } {
+	global run_as
+
+	return [list "$run_as/src/base-linux"]
+}
+
+
+proc bind_provided_services { &services } {
+	# use upvar to access array
+	upvar 1 ${&services} services
+
+	# make sure to declare variables locally
+	variable start_nodes routes archives modules
+
+	set start_nodes { }
+	set routes { }
+	set archives { }
+	set modules { }
+
+	# instantiate NIC driver in uplink mode if required by runtime
+	if {[info exists services(uplink)]} {
+		if { [llength ${services(uplink)}] > 1 } {
+			log "Ignoring all but the first provided <uplink/> service." }
+
+		set uplink_node [lindex ${services(uplink)} 0]
+		set uplink_label [query_from_string string(/uplink/@label) $uplink_node ""]
+
+		append routes "\n\t\t\t\t\t" {<service name="Uplink"/>}
+
+		_instantiate_uplink_client $uplink_label start_nodes archives modules
+
+		unset services(uplink)
+	}
+
+	return [list $start_nodes $routes $archives $modules]
+}
+
+
+proc bind_required_services { &services } {
+	# use upvar to access array
+	upvar 1 ${&services} services
+
+	# make sure to declare variables locally
+	variable start_nodes routes archives modules
+
+	set routes { }
+	set start_nodes { }
+	set archives { }
+	set modules { }
+
+	# route trace to parent if required by runtime
+	if {[info exists services(trace)]} {
+		append routes "\n\t\t\t\t\t" \
+		              "<service name=\"TRACE\"> " \
+		              "<parent/> " \
+		              "</service>"
+		unset services(trace)
+	}
+
+	# route RM to parent if required by runtime
+	if {[info exists services(rm)]} {
+		append routes "\n\t\t\t\t\t" \
+		              "<service name=\"RM\"> " \
+		              "<parent/> " \
+		              "</service>"
+		unset services(rm)
+	}
+
+	# always instantiate timer
+	_instantiate_timer start_nodes archives modules
+
+	# route timer if required by runtime
+	if {[info exists services(timer)]} {
+		append routes "\n\t\t\t\t\t" \
+		              "<service name=\"Timer\"> " \
+		              "<child name=\"timer\"/> " \
+		              "</service>"
+		unset services(timer)
+	}
+
+	# route nitpicker services if required by runtime
+	set use_nitpicker 0
+	if {[info exists services(event)]} {
+		set use_nitpicker 1
+		append routes "\n\t\t\t\t\t" \
+		              "<service name=\"Event\"> " \
+		              "<child name=\"nitpicker\"/> " \
+		              "</service>"
+		unset services(event)
+	}
+
+	if {[info exists services(capture)]} {
+		set use_nitpicker 1
+		append routes "\n\t\t\t\t\t" \
+		              "<service name=\"Capture\"> " \
+		              "<child name=\"nitpicker\"/> " \
+		              "</service>"
+		unset services(capture)
+	}
+
+	if {[info exists services(gui)]} {
+		set use_nitpicker 1
+		append routes "\n\t\t\t\t\t" \
+		              "<service name=\"Gui\"> " \
+		              "<child name=\"nitpicker\"/> " \
+		              "</service>"
+		unset services(gui)
+	}
+
+	if {$use_nitpicker} {
+		_instantiate_nitpicker start_nodes archives modules }
+
+	##
+	# instantiate NIC router and driver if required by runtime
+	if {[info exists services(nic)]} {
+		if {[llength ${services(nic)}] > 1} {
+			log "Ignoring all but the first <nic/> requirement." }
+
+		set nic_node [lindex ${services(nic)} 0]
+		set nic_label [query_from_string string(/nic/@label) $nic_node ""]
+
+		append routes "\n\t\t\t\t\t" \
+			{<service name="Nic"> <child name="nic_router"/> </service>}
+
+		_instantiate_network $nic_label start_nodes archives modules
+
+		unset services(nic)
+	}
+
+	##
+	# instantiate file systems
+	if {[info exists services(file_system)]} {
+		foreach fs_node $services(file_system) {
+			variable label writeable name
+
+			set label     [query_from_string string(*/@label)     $fs_node  ""]
+			set writeable [query_from_string string(*/@writeable) $fs_node  "no"]
+			set name      "${label}_fs"
+
+			append routes "\n\t\t\t\t\t" \
+				"<service name=\"File_system\" label=\"$label\"> " \
+				"<child name=\"$name\"/> " \
+				"</service>"
+
+			_instantiate_file_system $name $label $writeable start_nodes archives modules
+
 		}
-		if {$capture_node == "" && $event_node == ""} {
-			set gui_node [query_node /runtime/requires/gui $runtime_file] }
 
-		append gui_config_nodes {
+		global run_dir var_dir
+		# link all file systems to run_dir
+		file link -symbolic "$run_dir/fs" "$var_dir/fs"
+
+		unset services(file_system)
+	}
+
+	##
+	# instantiate rtc driver if required by runtime
+	if {[info exists services(rtc)]} {
+		if {[llength ${services(rtc)}] > 1} {
+			log "Ignoring all but the first required <rtc/> service" }
+
+		append routes "\n\t\t\t\t\t" \
+		              "<service name=\"Rtc\"> " \
+		              "<child name=\"rtc_drv\"/> " \
+		              "</service>"
+
+		_instantiate_rtc start_nodes archives modules
+
+		unset services(rtc)
+	}
+
+	##
+	# add mesa gpu route if required by runtime
+	if {[info exists services(gpu)]} {
+		if {[llength ${services(gpu)}] > 1} {
+			log "Ignoring all but the first required <gpu/> service" }
+
+		append routes "\n\t\t\t\t\t" \
+		              "<service name=\"ROM\" label=\"mesa_gpu_drv.lib.so\"> " \
+		              "<parent label=\"mesa_gpu-softpipe.lib.so\"/> " \
+		              "</service>"
+
+		lappend modules mesa_gpu-softpipe.lib.so
+
+		unset services(gpu)
+	}
+
+	##
+	# instantiate report_rom for if clipboard Report or ROM required by runtime
+	set clipboard_rom_node ""
+	set clipboard_report_node ""
+	if {[info exists services(rom)]} {
+		set i [lsearch -regexp ${services(rom)} {label="clipboard"}]
+		set clipboard_rom_node [lindex ${services(rom)} $i]
+		set services(rom) [lreplace ${services(rom)} $i $i]
+	}
+	if {[info exists services(report)]} {
+		set i [lsearch -regexp ${services(report)} {label="clipboard"}]
+		set clipboard_report_node [lindex ${services(report)} $i]
+		set services(report) [lreplace ${services(report)} $i $i]
+	}
+
+	if {$clipboard_rom_node != ""} {
+		append routes {
+					<service name="ROM" label="clipboard">} \
+					{ <child name="clipboard"/> </service>}
+	}
+
+	if {$clipboard_report_node != ""} {
+		append routes {
+					<service name="Report" label="clipboard">} \
+					{ <child name="clipboard"/> </service>}
+	}
+
+	if {$clipboard_rom_node != "" || $clipboard_report_node != ""} {
+		_instantiate_clipboard start_nodes archives modules }
+
+	return [list $start_nodes $routes $archives $modules ]
+}
+
+
+proc _instantiate_timer { &start_nodes &archives &modules } {
+	upvar 1 ${&start_nodes} start_nodes
+	upvar 1 ${&archives} archives
+	upvar 1 ${&modules} modules
+
+	append start_nodes {
+			<start name="timer" caps="100">
+				<resource name="RAM" quantum="1M"/>
+				<provides><service name="Timer"/></provides>
+				<route>
+					<service name="PD">  <parent/> </service>
+					<service name="CPU"> <parent/> </service>
+					<service name="LOG"> <parent/> </service>
+					<service name="ROM"> <parent/> </service>
+				</route>
+			</start>
+	}
+
+	lappend modules timer
+}
+
+
+proc _instantiate_nitpicker { &start_nodes &archives &modules } {
+	upvar 1 ${&start_nodes} start_nodes
+	upvar 1 ${&archives} archives
+	upvar 1 ${&modules} modules
+
+	global run_as
+
+	append start_nodes {
 			<start name="drivers" caps="1000">
 				<resource name="RAM" quantum="32M" constrain_phys="yes"/>
 				<binary name="init"/>
@@ -141,30 +351,43 @@ proc generate_runtime_config { runtime_file } {
 				</route>
 				<config/>
 			</start>
-		}
-
-		append gui_route "\n\t\t\t\t\t" \
-		                 "<service name=\"Gui\"> " \
-		                 "<child name=\"nitpicker\"/> " \
-		                 "</service>"
 	}
 
-	set nic_config_nodes ""
-	set nic_route        ""
-	catch {
-		set nic_node [query_node /runtime/requires/nic $runtime_file]
-		set nic_label [query_node string(/runtime/requires/nic/@label) $runtime_file]
+	lappend modules nitpicker \
+	                pointer \
+	                fb_sdl \
+	                event_filter \
+	                drivers.config \
+	                event_filter.config \
+	                en_us.chargen \
+	                special.chargen \
+	                report_rom \
+	                rom_filter
 
-		append nic_config_nodes {
+	lappend archives "$run_as/src/nitpicker"
+	lappend archives "$run_as/src/report_rom"
+	lappend archives "$run_as/src/rom_filter"
+	lappend archives "$run_as/pkg/drivers_interactive-linux"
+}
+
+
+proc _instantiate_network { nic_label &start_nodes &archives &modules } {
+	upvar 1 ${&start_nodes} start_nodes
+	upvar 1 ${&archives} archives
+	upvar 1 ${&modules} modules
+
+	global run_as
+
+	append start_nodes {
 			<start name="nic_drv" caps="100" ld="no">
 				<binary name="linux_nic_drv"/>
 				<resource name="RAM" quantum="4M"/>
 				<provides> <service name="Nic"/> </provides>}
-		if {$nic_label != ""} {
-			append nic_config_nodes {
+	if {$nic_label != ""} {
+		append start_nodes {
 				<config tap="} $nic_label {"/>}
-		}
-		append nic_config_nodes {
+	}
+	append start_nodes {
 				<route>
 					<service name="Uplink"> <child name="nic_router"/> </service>
 					<any-service> <parent/> </any-service>
@@ -199,45 +422,54 @@ proc generate_runtime_config { runtime_file } {
 					<any-service> <parent/> </any-service>
 				</route>
 			</start>
-		}
-
-		append nic_route "\n\t\t\t\t\t" \
-			{<service name="Nic"> <child name="nic_router"/> </service>}
 	}
 
-	set uplink_config_nodes ""
-	set uplink_provides     ""
-	catch {
-		set uplink_node [query_node /runtime/requires/uplink $runtime_file]
-		set uplink_label [query_node string(/runtime/requires/uplink/@label) $runtime_file]
+	lappend modules linux_nic_drv nic_router
 
-		append uplink_config_nodes "\n" {
+	lappend archives "$run_as/src/linux_nic_drv"
+	lappend archives "$run_as/src/nic_router"
+}
+
+
+proc _instantiate_uplink_client { uplink_label &start_nodes &archives &modules } {
+	upvar 1 ${&start_nodes} start_nodes
+	upvar 1 ${&archives} archives
+	upvar 1 ${&modules} modules
+
+	global project_name run_as
+
+	append start_nodes "\n" {
 			<start name="nic_drv" caps="100" ld="no">
 				<binary name="linux_nic_drv"/>
 				<resource name="RAM" quantum="4M"/>
 				<provides> <service name="Uplink"/> </provides>}
-		if {$uplink_label != ""} {
-			append uplink_config_nodes {
+	if {$uplink_label != ""} {
+		append start_nodes {
 				<config tap="} $uplink_label {"/>}
-		}
-		append uplink_config_nodes {
+	}
+	append start_nodes {
 				<route>
 					<service name="Uplink"> <child name="} $project_name {"/> </service>
 					<any-service> <parent/> </any-service>
 				</route>
 			</start>
-		}
-		append uplink_provides "\n\t\t\t\t\t" \
-			{<service name="Uplink"/>}
 	}
 
-	set fs_config_nodes ""
-	set fs_routes       ""
-	foreach {label writeable} [required_file_systems $runtime_file] {
-		set label_fs "${label}_fs"
+	lappend modules linux_nic_drv
 
-		append fs_config_nodes {
-			<start name="} "$label_fs" {" caps="100" ld="no">
+	lappend archives "$run_as/src/linux_nic_drv"
+}
+
+
+proc _instantiate_file_system { name label writeable &start_nodes &archives &modules } {
+	upvar 1 ${&start_nodes} start_nodes
+	upvar 1 ${&archives} archives
+	upvar 1 ${&modules} modules
+
+	global var_dir run_as
+
+	append start_nodes {
+			<start name="} $name {" caps="100" ld="no">
 				<binary name="lx_fs"/>
 				<resource name="RAM" quantum="1M"/>
 				<provides> <service name="File_system"/> </provides>
@@ -251,37 +483,51 @@ proc generate_runtime_config { runtime_file } {
 					<service name="ROM"> <parent/> </service>
 				</route>
 			</start>
-		}
-
-		append fs_routes "\n\t\t\t\t\t" \
-			"<service name=\"File_system\" label=\"$label\"> " \
-			"<child name=\"$label_fs\"/> " \
-			"</service>"
-
-		set fs_dir "$var_dir/fs/$label"
-		if {![file isdirectory $fs_dir]} {
-			log "creating file-system directory $fs_dir"
-			file mkdir $fs_dir
-		}
 	}
 
-	set clipboard_config_nodes ""
-	set clipboard_route ""
-	catch {
-		set node [query_node /runtime/requires/rom\[@label="clipboard"\] $runtime_file]
-		append clipboard_route {
-					<service name="ROM" label="clipboard">} \
-					{    <child name="clipboard"/> </service>}
-	}
-	catch {
-		set node [query_node /runtime/requires/report\[@label="clipboard"\] $runtime_file]
-		append clipboard_route {
-					<service name="Report" label="clipboard">} \
-					{ <child name="clipboard"/> </service>}
+	# create folder in var_dir
+	set fs_dir "$var_dir/fs/$label"
+	if {![file isdirectory $fs_dir]} {
+		log "creating file-system directory $fs_dir"
+		file mkdir $fs_dir
 	}
 
-	if {$clipboard_route != ""} {
-		append clipboard_config_nodes {
+	lappend modules lx_fs
+
+	lappend archives "$run_as/src/lx_fs"
+}
+
+
+proc _instantiate_rtc { &start_nodes &archives &modules } {
+	upvar 1 ${&start_nodes} start_nodes
+	upvar 1 ${&archives} archives
+	upvar 1 ${&modules} modules
+
+	global run_as
+
+	append start_nodes {
+			<start name="rtc_drv" caps="100" ld="no">
+				<binary name="linux_rtc_drv"/>
+				<resource name="RAM" quantum="1M"/>
+				<provides> <service name="Rtc"/> </provides>
+				<route> <any-service> <parent/> </any-service> </route>
+			</start>
+	}
+
+	lappend modules linux_rtc_drv
+
+	lappend archives "$run_as/src/linux_rtc_drv"
+}
+
+
+proc _instantiate_clipboard { &start_nodes &archives &modules } {
+	upvar 1 ${&start_nodes} start_nodes
+	upvar 1 ${&archives} archives
+	upvar 1 ${&modules} modules
+
+	global project_name run_as
+
+	append start_nodes {
 			<start name="clipboard" caps="100">
 				<binary name="report_rom"/>
 				<resource name="RAM" quantum="2M"/>
@@ -299,231 +545,9 @@ proc generate_runtime_config { runtime_file } {
 					<service name="ROM"> <parent/> </service>
 				</route>
 			</start>
-		}
 	}
 
+	lappend modules report_rom
 
-	set blackhole_config_nodes ""
-	set blackhole_route ""
-	set blackhole_config ""
-	set blackhole_services ""
-	catch {
-		set node [query_node /runtime/requires/report\[@label!="clipboard"\] $runtime_file]
-		append blackhole_config {
-					<report/>}
-		append blackhole_services {
-					<service name="Report"/>}
-
-		# iterate all report nodes and their labels (except "clipboard")
-		foreach {label} [lsearch -inline -all -not -exact \
-			              [required_report_labels $runtime_file] "clipboard"] {
-			append blackhole_route {
-					<service name="Report" label_suffix=" -> } $label {">}\
-					{ <child name="black_hole"/> </service>}
-		}
-	}
-	catch {
-		set node [query_node /runtime/requires/audio_in $runtime_file]
-		puts $node
-		append blackhole_config {
-					<audio_in/>}
-		append blackhole_services {
-					<service name="Audio_in"/>}
-		append blackhole_route {
-					<service name="Audio_in">  <child name="black_hole"/> </service>}
-	}
-	catch {
-		set node [query_node /runtime/requires/audio_out $runtime_file]
-		append blackhole_config {
-					<audio_out/>}
-		append blackhole_services {
-					<service name="Audio_out"/>}
-		append blackhole_route {
-					<service name="Audio_out"> <child name="black_hole"/> </service>}
-	}
-
-	if {$blackhole_config != ""} {
-		append blackhole_config_nodes {
-			<start name="black_hole" caps="100">
-				<resource name="RAM" quantum="2M"/>
-				<provides> } $blackhole_services {
-				</provides>
-				<config> } $blackhole_config {
-				</config>
-				<route>
-					<service name="PD">  <parent/> </service>
-					<service name="CPU"> <parent/> </service>
-					<service name="LOG"> <parent/> </service>
-					<service name="ROM"> <parent/> </service>
-				</route>
-			</start>
-		}
-	}
-
-	set rtc_config_nodes ""
-	set rtc_route        ""
-	catch {
-		set rtc_node [query_node /runtime/requires/rtc $runtime_file]
-
-		append rtc_config_nodes {
-			<start name="rtc_drv" caps="100" ld="no">
-				<binary name="linux_rtc_drv"/>
-				<resource name="RAM" quantum="1M"/>
-				<provides> <service name="Rtc"/> </provides>
-				<route> <any-service> <parent/> </any-service> </route>
-			</start>
-		}
-
-		append rtc_route "\n\t\t\t\t\t" \
-		                     "<service name=\"Rtc\"> " \
-		                     "<child name=\"rtc_drv\"/> " \
-		                     "</service>"
-	}
-
-	set mesa_route ""
-	catch {
-		set gpu_node [query_node /runtime/requires/gpu $runtime_file]
-
-		append mesa_route "\n\t\t\t\t\t" \
-			"<service name=\"ROM\" label=\"mesa_gpu_drv.lib.so\"> " \
-			"<parent label=\"mesa_gpu-softpipe.lib.so\"/> " \
-			"</service>"
-	}
-
-	install_config {
-		<config>
-			<parent-provides>
-				<service name="ROM"/>
-				<service name="PD"/>
-				<service name="RM"/>
-				<service name="CPU"/>
-				<service name="LOG"/>
-				<service name="TRACE"/>
-			</parent-provides>
-
-			<start name="timer" caps="100">
-				<resource name="RAM" quantum="1M"/>
-				<provides><service name="Timer"/></provides>
-				<route>
-					<service name="PD">  <parent/> </service>
-					<service name="CPU"> <parent/> </service>
-					<service name="LOG"> <parent/> </service>
-					<service name="ROM"> <parent/> </service>
-				</route>
-			</start>
-
-			} $gui_config_nodes \
-			  $nic_config_nodes \
-			  $uplink_config_nodes \
-			  $fs_config_nodes \
-			  $clipboard_config_nodes \
-			  $blackhole_config_nodes \
-			  $rtc_config_nodes {
-
-			<start name="} $project_name {" caps="} $caps {">
-				<resource name="RAM" quantum="} $ram {"/>
-				<binary name="} $binary {"/>
-				<provides>} $uplink_provides {</provides>
-				<route>} $config_route $gui_route \
-				         $capture_route $event_route \
-				         $nic_route $fs_routes $rtc_route \
-				         $mesa_route $clipboard_route $blackhole_route {
-					<service name="ROM">   <parent/> </service>
-					<service name="PD">    <parent/> </service>
-					<service name="RM">    <parent/> </service>
-					<service name="CPU">   <parent/> </service>
-					<service name="LOG">   <parent/> </service>
-					<service name="TRACE"> <parent/> </service>
-					<service name="Timer"> <child name="timer"/> </service>
-				</route>
-				} $config {
-			</start>
-		</config>
-	}
-
-	set rom_modules [content_rom_modules $runtime_file]
-	lappend rom_modules core ld.lib.so timer init
-
-	if {$gui_config_nodes != ""} {
-		lappend rom_modules nitpicker \
-		                    pointer \
-		                    fb_sdl \
-		                    event_filter \
-		                    drivers.config \
-		                    event_filter.config \
-		                    en_us.chargen \
-		                    special.chargen \
-		                    report_rom \
-		                    rom_filter
-
-		lappend runtime_archives "$run_as/src/nitpicker"
-		lappend runtime_archives "$run_as/src/report_rom"
-		lappend runtime_archives "$run_as/src/rom_filter"
-		lappend runtime_archives "$run_as/pkg/drivers_interactive-linux"
-
-	}
-
-	if {$nic_config_nodes != "" || $uplink_config_nodes != ""} {
-		lappend rom_modules linux_nic_drv
-
-		lappend runtime_archives "$run_as/src/linux_nic_drv"
-	}
-
-	if {$nic_config_nodes != ""} {
-		lappend rom_modules nic_router
-
-		lappend runtime_archives "$run_as/src/nic_router"
-	}
-
-	if {$fs_config_nodes != ""} {
-		lappend rom_modules lx_fs
-
-		lappend runtime_archives "$run_as/src/lx_fs"
-
-		file link -symbolic "$run_dir/fs" "$var_dir/fs"
-	}
-
-	if {$clipboard_config_nodes != ""} {
-		lappend rom_modules report_rom
-
-		lappend runtime_archives "$run_as/src/report_rom"
-	}
-
-	if {$blackhole_config_nodes != ""} {
-		lappend rom_modules black_hole
-
-		lappend runtime_archives "$run_as/src/black_hole"
-	}
-
-	if {$rtc_config_nodes != ""} {
-		lappend rom_modules linux_rtc_drv
-
-		lappend runtime_archives "$run_as/src/linux_rtc_drv"
-	}
-
-	lappend runtime_archives "$run_as/src/init"
-	lappend runtime_archives "$run_as/src/base-linux"
-
-	if {$mesa_route != ""} {
-		lappend rom_modules mesa_gpu-softpipe.lib.so
-	}
-}
-
-
-proc run_genode { } {
-	global run_dir
-
-	set orig_pwd [pwd]
-	cd $run_dir
-	eval spawn -noecho ./core
-	cd $orig_pwd
-
-	set timeout -1
-	interact {
-		\003 {
-			send_user "Expect: 'interact' received 'strg+c' and was cancelled\n";
-			exit
-		}
-		-i $spawn_id
-	}
+	lappend archives "$run_as/src/report_rom"
 }
