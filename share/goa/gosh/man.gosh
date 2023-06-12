@@ -98,7 +98,8 @@ proc process_verbatim_man {txtblock} {
 	while {[lindex $txtblock end] == ""} {
 		set txtblock [lrange $txtblock 0 [expr [llength $txtblock]-2]]
 	}
-	puts ".PP"
+	puts ".sp"
+	puts ".in +4n"
 	puts ".ll +1i"
 	foreach txtline $txtblock {
 		set txt [linetxt $txtline]
@@ -108,6 +109,7 @@ proc process_verbatim_man {txtblock} {
 		puts "$txt\n.br"
 	}
 	puts ".ll"
+	puts ".in -4n"
 	puts ".PP"
 }
 
