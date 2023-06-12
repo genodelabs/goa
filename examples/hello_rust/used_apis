@@ -1,3 +1,4 @@
+genodelabs/api/compat-libc
 genodelabs/api/base
 genodelabs/api/libc
 genodelabs/api/posix

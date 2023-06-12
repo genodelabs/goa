@@ -14,5 +14,6 @@
      <rom label="libc.lib.so"/>
      <rom label="vfs.lib.so"/>
      <rom label="libunwind.lib.so"/>
+     <rom label="compat-libc.lib.so"/>
    </content>
  </runtime>

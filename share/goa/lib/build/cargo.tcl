@@ -36,6 +36,16 @@ proc build { } {
 		lappend rustflags -C link-arg=$x
 	}
 
+	#
+	# If compat-libc.lib.so is present, move it to the front (Note: this breaks
+	# 'fork', so better don't use 'fork')
+	#
+	if {[using_api compat-libc]} {
+		set idx [lsearch -exact $ldlibs_exe "-l:compat-libc.lib.so"]
+		if {$idx != -1} { set ldlibs_exe [lreplace $ldlibs_exe $idx $idx] }
+		set ldlibs_exe [linsert $ldlibs_exe 0 "-l:compat-libc.lib.so"]
+	}
+
 	foreach x $ldlibs_exe {
 		lappend rustflags -C link-arg=$x
 	}
@@ -54,7 +64,7 @@ proc build { } {
 	lappend cmd --config target.x86_64-unknown-freebsd.linker="$cross_dev_prefix\gcc"
 	lappend cmd --config profile.release.panic="abort"
 
-	set copy [list cp -l]
+	set copy [list cp -f -l]
 
 	if {$verbose == 1} {
 		lappend cmd "-vv"
