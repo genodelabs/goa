@@ -25,6 +25,9 @@ proc man_mkboldline {string} {
 	regsub -all  \
 	       {\n(\.I )?} [string trimright $string] \
 	       {" " } string
+
+	# escape double quotes
+	regsub -all {"} $string {\\(dq} string
 	
 	regsub {^\.I } $string {.IB "} string
 	regsub {^([^.])} $string {.BI "\1} string
