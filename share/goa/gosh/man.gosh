@@ -137,7 +137,7 @@ proc process_description_man {txtblock} {
 	puts ".RS 0.0"
 	handle_txtblock description $txtblock
 	puts ".RE"
-#	puts ""
+	puts ".sp"
 }
 
 ### DESCRIPTION ITEM ###
