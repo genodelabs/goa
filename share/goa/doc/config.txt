@@ -171,5 +171,5 @@ Goa evaluates the following configuration variables.
 SEE ALSO
 ########
 
-add-depot-user, artifacts, build-systems, overview
+add-depot-user, artifacts, build-systems, overview, targets
 

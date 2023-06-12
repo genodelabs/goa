@@ -35,5 +35,5 @@ ARGUMENTS
 SEE ALSO
 ########
 
-artifacts, build-systems, config, overview
+artifacts, build-systems, config, overview, targets
 

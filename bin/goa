@@ -896,7 +896,12 @@ if {$perform(extract-abi-symbols)} {
 if {$perform(run)} {
 
 	source [file join $tool_dir lib run common.tcl]
-	source [file join $tool_dir lib run linux.tcl]
+
+	set target_file [file join $tool_dir lib run $target.tcl]
+	if {$target == "common" || ![file exists $target_file]} {
+		exit_with_error "Target '$target' not available (see 'goa help targets')" }
+
+	source $target_file
 
 	set pkg_dir [file join $project_dir pkg $run_pkg]
 

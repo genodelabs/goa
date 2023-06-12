@@ -117,6 +117,7 @@ set depot_overwrite          0
 set license                  ""
 set depot_user               ""
 set run_as                   "genodelabs"
+set target                   "linux"
 
 # if /proc/cpuinfo exists, use number of CPUs as 'jobs'
 if {[file exists /proc/cpuinfo]} {
@@ -316,6 +317,7 @@ if {$perform(build-dir)} {
 }
 
 if {$perform(run)} {
+	set target [consume_optional_cmdline_arg "--target" $target]
 	set run_as  [consume_optional_cmdline_arg "--run-as" $run_as]
 	# unless given as additional argument, run the pkg named after the project
 	set run_pkg [consume_optional_cmdline_arg "--pkg" $project_name]

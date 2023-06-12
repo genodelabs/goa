@@ -68,5 +68,5 @@ The archive contains two entries '/usr/local/bin/ls' and '/usr/local/bin/cp'.
 SEE ALSO
 ########
 
-add-depot-user, build-systems, config, overview
+add-depot-user, build-systems, config, overview, targets
 
