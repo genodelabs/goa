@@ -69,6 +69,12 @@ the _runtime_ file's <requires> node:
   Any required _Audio_in_ and _Audio_out_ service is routed to a black-hole
   component.
 
+:<usb/>:
+  Any required _Usb_ service is routed to a black-hole component.
+
+:<uplink/>:
+  Any required _Uplink_ service is routed to a black-hole component.
+
 
 The 'linux' target evaluates the following services mentioned in
 the _runtime_ file's <provides> node:
