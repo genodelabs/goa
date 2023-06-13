@@ -1253,6 +1253,9 @@ if {$perform(publish)} {
 	if {[file exists $bin_dir] && [file isdirectory $bin_dir]} {
 		lappend archives [versioned_project_archive bin] }
 
+	if {[file exists $api_dir] && [file isdirectory $api_dir]} {
+		lappend archives [versioned_project_archive api] }
+
 	if {$publish_pkg != ""} {
 		lappend archives [versioned_project_archive pkg $publish_pkg]
 	} else {
