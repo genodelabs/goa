@@ -93,14 +93,16 @@ proc run_goa_until {{test} {timeout_value 0}} {
 		incr stats(skipped); return "skipped\t('$test_dir' does not exists)" }
 
 	# execute and compare output
-	cd $test_dir
-	eval spawn $goa run
+	variable public var
+	set public [file join [_find_tool_dir] public]
+	set var    [file join [_find_tool_dir] var]
+	eval spawn $goa run -C $test_dir --public-dir $public --common-var-dir $var
 	set result [wait_for_output $test_output($test) $timeout_value $spawn_id]
 
 	#
 	# leave depot and public intact
 	#
-	exec rm -rf var/abi var/api var/bin var/build var/run wget-log
+	exec rm -rf var/$test
 
 	return $result
 }
