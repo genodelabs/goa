@@ -41,8 +41,10 @@ the _runtime_ file's <requires> node:
   Any required _Rtc_ service is routed to a linux_rtc_drv component.
 
 :<file_system label="<label>"/>:
-  For any required _File_system_ a separate lx_fs component is added to the
-  runtime and configured to provide access to the host directory
+  If <label> equals "fonts", a _File_system" requirement is routed to a
+  fonts_fs component.
+  For any other required _File_system_ a separate lx_fs component is added to
+  the runtime and configured to provide access to the host directory
   'var/projects/<project_name>/fs/<label>'.
 
 :<nic label="<tap_name>"/>:

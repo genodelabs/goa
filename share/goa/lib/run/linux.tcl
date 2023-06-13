@@ -161,8 +161,11 @@ proc bind_required_services { &services } {
 				"<child name=\"$name\"/> " \
 				"</service>"
 
-			_instantiate_file_system $name $label $writeable start_nodes archives modules
-
+			if {$label == "fonts"} {
+				_instantiate_fonts_fs start_nodes archives modules
+			} else {
+				_instantiate_file_system $name $label $writeable start_nodes archives modules
+			}
 		}
 
 		global run_dir var_dir
@@ -458,6 +461,34 @@ proc _instantiate_uplink_client { uplink_label &start_nodes &archives &modules }
 	lappend modules linux_nic_drv
 
 	lappend archives "$run_as/src/linux_nic_drv"
+}
+
+
+proc _instantiate_fonts_fs { &start_nodes &archives &modules } {
+	upvar 1 ${&start_nodes} start_nodes
+	upvar 1 ${&archives} archives
+	upvar 1 ${&modules} modules
+
+	global run_as
+
+	append start_nodes {
+		<start name="fonts_fs" caps="100">
+			<binary name="vfs"/>
+			<resource name="RAM" quantum="2M"/>
+			<provides> <service name="File_system"/> </provides>
+			<route>
+				<service name="ROM" label="config"> <parent label="fonts_fs.config"/> </service>
+				<service name="PD">  <parent/> </service>
+				<service name="CPU"> <parent/> </service>
+				<service name="LOG"> <parent/> </service>
+				<service name="ROM"> <parent/> </service>
+			</route>
+		</start>
+	}
+
+	lappend modules vfs fonts_fs.config
+
+	lappend archives $run_as/pkg/fonts_fs
 }
 
 

@@ -30,6 +30,7 @@ set  version(genodelabs/api/timer_session)               2023-03-12
 set  version(genodelabs/api/vfs)                         2023-02-26
 set  version(genodelabs/api/zlib)                        2019-02-25
 set  version(genodelabs/pkg/drivers_interactive-linux)   2023-04-25
+set  version(genodelabs/pkg/fonts_fs)                    2023-04-27
 set  version(genodelabs/raw/drivers_interactive-linux)   2020-08-24
 set  version(genodelabs/raw/terminal)                    2019-02-25
 set  version(genodelabs/raw/ttf-bitstream-vera-minimal)  2019-02-25
