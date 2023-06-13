@@ -424,6 +424,7 @@ set_if_undefined build_dir   [file join $var_dir build $arch]
 set_if_undefined abi_dir     [file join $var_dir abi   $arch]
 set_if_undefined bin_dir     [file join $var_dir bin   $arch]
 set_if_undefined run_dir     [file join $var_dir run]
+set_if_undefined api_dir     [file join $var_dir api]
 
 ##
 # Return true if variable 'var_name' has not its default value

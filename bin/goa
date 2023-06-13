@@ -809,11 +809,10 @@ proc check_abis { } {
 
 
 proc extract_api_artifacts { } {
-	global project_dir build_dir
+	global project_dir build_dir api_dir
 
 	set api_file_path [file join $project_dir api]
 	set artifacts [read_file_content_as_list $api_file_path]
-	set api_dir [file join $project_dir var api]
 
 	# remove artifacts from last build
 	if {[file exists $api_dir]} {
@@ -1078,10 +1077,6 @@ if {$perform(export)} {
 
 	assert_definition_of_depot_user
 
-	set api_dir [file join $project_dir var api]
-	if {![file exists $api_dir] || ![file isdirectory $api_dir]} {
-		unset api_dir }
-
 	# create raw archive
 	set raw_dir [file join $project_dir raw]
 	if {![file exists $raw_dir] || ![file isdirectory $raw_dir]} {
@@ -1091,7 +1086,7 @@ if {$perform(export)} {
 	if {![file exists $src_dir] || ![file isdirectory $src_dir]} {
 		unset src_dir }
 
-	if {[info exists api_dir]} {
+	if {[file exists $api_dir] && [file isdirectory $api_dir]} {
 		set dst_dir [prepare_project_archive_directory api]
 		set files [exec find $api_dir -not -type d -and -not -name "*~"]
 		foreach file $files {
