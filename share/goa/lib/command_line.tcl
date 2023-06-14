@@ -26,9 +26,9 @@ if {$targeted_dir != ""} {
 #
 proc looks_like_goa_project_dir { dir } {
 
-	# no project if neither 'src/' nor 'import' nor 'pkg/' exists
+	# no project if neither 'src/' nor 'import' nor 'pkg/' nor 'raw/' exists
 	set ingredient 0
-	foreach name [list import src pkg] {
+	foreach name [list import src pkg raw] {
 		if {[file exists $dir/$name]} {
 			set ingredient 1 } }
 	if {!$ingredient} {
@@ -38,12 +38,51 @@ proc looks_like_goa_project_dir { dir } {
 	if {[file exists $dir/import] && ![file isfile $dir/import]} {
 		return 0 }
 
-	# no project if 'src/' or 'pkg/' is anything other than a directory
-	foreach name [list src pkg] {
+	# no project if 'src/' or 'pkg/' or 'raw/' is anything other than a directory
+	foreach name [list src pkg raw] {
 		if {[file exists $dir/$name] && ![file isdirectory $dir/$name]} {
 			return 0 } }
 
+	# no project if 'src/' exists but there is no 'artifacts' file
+	if {[file exists $dir/src] && ![file isfile $dir/artifacts]} {
+		return 0}
+
 	return 1
+}
+
+
+#
+# Search directory tree for project directories
+#
+
+proc goa_project_dirs { } {
+
+	#
+	# A project directory must contain an 'import' file, a 'src/' directory,
+	# a 'pkg/' directory or a 'raw/' directory. Don't consider any directories
+	# behind a 'depot/', 'contrib/', 'build/', or 'var/' directory.
+	#
+	set project_candidates [exec find -not -path "*/depot/*" \
+	                             -and -not -path "*/contrib/*" \
+	                             -and -not -path "*/build/*" \
+	                             -and -not -path "*/var/*" \
+	                             -and \( -name import \
+	                                     -or -name src \
+	                                     -or -name pkg \
+	                                     -or -name raw \)]
+
+	regsub -line -all {(/(src|pkg|raw|import))$} $project_candidates "" project_candidates
+	set project_candidates [lsort -unique $project_candidates]
+
+	# filter out candidates that are do not look like a real project dir
+	set project_dirs { }
+	foreach dir $project_candidates {
+
+		if {[looks_like_goa_project_dir $dir]} {
+			lappend project_dirs $dir }
+	}
+
+	return $project_dirs
 }
 
 
@@ -53,29 +92,7 @@ proc looks_like_goa_project_dir { dir } {
 #
 if {[consume_optional_cmdline_switch "-r"]} {
 
-	#
-	# Search directory tree for candidates for project directories. A project
-	# directory must contain an 'artifacts' file and either a 'src/' directory
-	# or an 'import' file. Don't consider any directories behind a 'depot/',
-	# 'contrib/', 'build/', or 'var/' directory.
-	#
-	set project_artifact_candidates [exec find -not -path "*/depot/*" \
-	                                      -and -not -path "*/contrib/*" \
-	                                      -and -not -path "*/build/*" \
-	                                      -and -not -path "*/var/*" \
-	                                      -and -name artifacts]
-
-	# filter out candidates that lack a 'src/' directory or 'import' file
-	set project_dirs { }
-	foreach artifact $project_artifact_candidates {
-
-		set dir [file dirname $artifact]
-
-		if {[looks_like_goa_project_dir $dir]} {
-			lappend project_dirs $dir }
-	}
-
-	foreach dir $project_dirs {
+	foreach dir [goa_project_dirs] {
 
 		# assemble command for invoking the per-project execution of goa
 		set cmd { }
