@@ -16,6 +16,7 @@ if {[consume_optional_cmdline_switch "--version"]} {
 #
 # Handle -C argument, changing the current working directory
 #
+set original_dir [pwd]
 set targeted_dir [consume_optional_cmdline_arg "-C" ""]
 if {$targeted_dir != ""} {
 	cd $targeted_dir }

@@ -145,6 +145,47 @@ proc read_file_content_as_list { path } {
 
 
 ##
+# Find archive in directory tree starting from the directory where Goa was
+# called with -C
+#
+proc find_project_dir_for_archive { type name } {
+	global original_dir
+
+	set orig_pwd [pwd]
+	set candidates ""
+
+	set find_cmd_base [list find -not -path "*/depot/*" \
+	                        -and -not -path "*/contrib/*" \
+	                        -and -not -path "*/build/*" \
+	                        -and -not -path "*/var/*"]
+
+	cd $original_dir
+	if {$type == "src" || $type == "bin"} {
+		set candidates [exec {*}$find_cmd_base -and \( -path */$name/src \
+		                                           -or -path */$name/import \
+		                                           -or -path */$name/artifacts \)]
+	} elseif {$type == "api"} {
+		set candidates [exec {*}$find_cmd_base -and -path */$name/api -type f]
+	} elseif {$type == "pkg"} {
+		set candidates [exec {*}$find_cmd_base -and -path */pkg/$name -type d]
+	} elseif {$type == "raw"} {
+		set candidates [exec {*}$find_cmd_base -and -path */$name/raw -type d]
+	}
+	cd $orig_pwd
+
+	regsub -line -all {(/(src|pkg/.*|raw|import|artifacts|api))$} $candidates "" candidates
+
+	foreach dir $candidates {
+		set absolute_path [file join $original_dir [string trimleft $dir "./"]]
+		if {[looks_like_goa_project_dir $absolute_path]} {
+			return $absolute_path }
+	}
+
+	return -code error
+}
+
+
+##
 # Acquire project version from 'version' file
 #
 proc project_version { dir } {
@@ -168,12 +209,19 @@ proc project_version { dir } {
 
 
 ##
-# Supplement list of archives with version information found in .goarc files
+# Supplement list of archives with version information found in .goarc files,
+# in the genode directory, or in local Goa projects
 #
 # This procedure expects that each archive is specified with either 3 (without
 # version) or 4 (with version) elements. Hence, it must not be called for
 # binary archives, which may have 4 or 5 elements.
 #
+# If versions_from_genode_dir is set, version information from found in the
+# specified genode directory supersedes version information found in .goarc
+# files.
+#
+# If no version information is available, the original working directory is
+# scanned for corresponding Goa projects.
 proc apply_versions { archive_list } {
 	global version versions_from_genode_dir
 
@@ -208,6 +256,15 @@ proc apply_versions { archive_list } {
 			}
 		}
 
+		# try to obtain missing version information from Goa projects
+		if {![info exists version($archive)]} {
+			catch {
+				set dir [find_project_dir_for_archive $type $name]
+				set version($archive) [project_version $dir]
+			}
+		}
+
+		# exit if version information is still missing
 		if {![info exists version($archive)]} {
 			exit_with_error "no version defined for depot archive '$archive'" }
 

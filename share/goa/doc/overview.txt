@@ -178,7 +178,9 @@ OPTIONAL ARGUMENTS
   Print diagnostic information about the operation of Goa.
 
 :-C <dir>:
-  Change into project directory <dir> before executing the command.
+  Change into project directory <dir> before executing the command. The
+  working directory before the change determines the scope in which Goa
+  may locate dependent projects.
 
 :-r:
   Recursively scan for project directories in the current working directory
