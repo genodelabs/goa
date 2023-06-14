@@ -55,9 +55,11 @@ the _runtime_ file's <requires> node:
   for its default domain.
 
 :<gpu/>:
-  Any required _Gpu_ service is routed to a black-hole component. Moreover,
-  the 'mesa_gpu_drv.lib.so' ROM is routed to the 'mesa_gpu-softpipe.lib' ROM
-  module.
+  Any required _Gpu_ service is routed to a black-hole component.
+
+:<rom label="mesa_gpu_drv.lib.so"/>:
+  The 'mesa_gpu_drv.lib.so' _ROM_ requirement is routed to the
+  'mesa_gpu-softpipe.lib' ROM module.
 
 :<rom label="clipboard"/>:
   The clipboard _ROM_ requirement is routed to a report_rom component.

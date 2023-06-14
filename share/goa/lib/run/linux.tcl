@@ -193,9 +193,9 @@ proc bind_required_services { &services } {
 
 	##
 	# add mesa gpu route if required by runtime
-	if {[info exists services(gpu)]} {
-		if {[llength ${services(gpu)}] > 1} {
-			log "Ignoring all but the first required <gpu/> service" }
+	if {[info exists services(rom)]} {
+		set i [lsearch -regexp ${services(rom)} {label="mesa_gpu_drv.lib.so"}]
+		set services(rom) [lreplace ${services(rom)} $i $i]
 
 		append routes "\n\t\t\t\t\t" \
 		              "<service name=\"ROM\" label=\"mesa_gpu_drv.lib.so\"> " \
@@ -203,8 +203,6 @@ proc bind_required_services { &services } {
 		              "</service>"
 
 		lappend modules mesa_gpu-softpipe.lib.so
-
-		unset services(gpu)
 	}
 
 	##
