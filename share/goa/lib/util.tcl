@@ -145,6 +145,29 @@ proc read_file_content_as_list { path } {
 
 
 ##
+# Acquire project version from 'version' file
+#
+proc project_version { dir } {
+
+	set version_file [file join $dir version]
+	if {[file exists $version_file]} {
+		set version_from_file [read_file_content $version_file]
+
+		if {[llength $version_from_file] > 1} {
+			exit_with_error "version defined at $version_file" \
+			                "must not contain any whitespace" }
+
+		if {$version_from_file == ""} {
+			exit_with_error "$version_file is empty" }
+
+		return [lindex $version_from_file 0]
+	}
+
+	return -code error "file $version_file does not exist"
+}
+
+
+##
 # Supplement list of archives with version information found in .goarc files
 #
 # This procedure expects that each archive is specified with either 3 (without

@@ -1027,15 +1027,8 @@ proc versioned_project_archive { type { pkg_name ""} } {
 
 	assert_definition_of_depot_user
 
-	set version_file [file join $project_dir version]
-	if {[file exists $version_file]} {
-		set version_from_file [read_file_content $version_file]
-
-		if {[llength $version_from_file] > 1} {
-			exit_with_error "version defined at $version_file" \
-			                "must not contain any whitespace" }
-
-		set archive_version [lindex $version_from_file 0]
+	catch {
+		set archive_version [project_version $project_dir]
 	}
 
 	#
