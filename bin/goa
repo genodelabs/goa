@@ -1176,7 +1176,10 @@ if {$perform(export)} {
 	}
 
 	# create pkg archive
-	set pkgs [glob -nocomplain -directory pkg -tail * -type d]
+	set pkg_expr "*"
+	if {$publish_pkg != ""} {
+		set pkg_expr $publish_pkg }
+	set pkgs [glob -nocomplain -directory pkg -tail $pkg_expr -type d]
 	foreach pkg $pkgs {
 
 		set pkg_dir [file join pkg $pkg]
