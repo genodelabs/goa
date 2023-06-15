@@ -166,7 +166,9 @@ set goarc_path [file separator]
 # to absolute paths.
 #
 set path_var_names [list depot_dir public_dir cross_dev_prefix \
-                         versions_from_genode_dir common_var_dir]
+                         versions_from_genode_dir common_var_dir \
+                         contrib_dir import_dir abi_dir build_dir \
+                         run_dir bin_dir]
 
 
 foreach path_elem $goarc_path_elements {
@@ -229,8 +231,10 @@ foreach var_name $path_var_names {
 		set $var_name [file normalize $path] }
 }
 
-set jobs [consume_optional_cmdline_arg "--jobs" $jobs]
-set arch [consume_optional_cmdline_arg "--arch" $arch]
+set jobs     [consume_optional_cmdline_arg "--jobs" $jobs]
+set arch     [consume_optional_cmdline_arg "--arch" $arch]
+set ld_march [consume_optional_cmdline_arg "--ld-march" $ld_march]
+set cc_march [consume_optional_cmdline_arg "--cc-march" $cc_march]
 
 
 #
