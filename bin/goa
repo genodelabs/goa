@@ -1233,18 +1233,6 @@ if {$perform(export)} {
 			file copy $file [file join $dst_dir [file tail $file]] }
 		log "exported $dst_dir"
 	}
-
-	# create api archive
-	if {[file exists $build_dir/api] && [file isdirectory $build_dir/api]} {
-		set dst_dir [prepare_project_archive_directory api]
-		set files [glob -nocomplain -directory $build_dir/api *]
-		foreach file $files {
-			set file [file normalize $file]
-			catch { set file [file link  $file] }
-			file copy $file [file join $dst_dir [file tail $file]]
-		}
-		log "exported $dst_dir"
-	}
 }
 
 
