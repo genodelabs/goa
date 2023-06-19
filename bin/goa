@@ -774,11 +774,13 @@ proc extract_artifacts_from_build_dir { } {
 	global library_artifacts
 
 	set artifacts_file_path [file join $project_dir artifacts]
-	set artifacts [read_file_content_as_list $artifacts_file_path]
 
 	# remove artifacts from last build
 	if {[file exists $bin_dir]} {
 		file delete -force $bin_dir }
+
+	if {![file exists $artifacts_file_path]} {
+		return }
 
 	file mkdir $bin_dir
 
@@ -816,11 +818,13 @@ proc extract_api_artifacts { } {
 	global project_dir build_dir api_dir
 
 	set api_file_path [file join $project_dir api]
-	set artifacts [read_file_content_as_list $api_file_path]
 
 	# remove artifacts from last build
 	if {[file exists $api_dir]} {
 		file delete -force $api_dir }
+
+	if {![file exists $api_file_path]} {
+		return }
 
 	file mkdir $api_dir
 
@@ -842,7 +846,9 @@ proc extract_library_symbols { } {
 	global build_dir project_dir tool_dir
 
 	set artifacts_file_path [file join $project_dir artifacts]
-	set artifacts [read_file_content_as_list $artifacts_file_path]
+
+	if {![file exists $artifacts_file_path]} {
+		return }
 
 	set so_extension ".lib.so"
 	set symbols_dir [file join $project_dir symbols]
