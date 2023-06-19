@@ -22,6 +22,19 @@ if {$targeted_dir != ""} {
 
 
 ##
+# Return 1 if project directory has src/ directory but no artifacts file
+#
+proc has_src_but_no_artifacts { dir } {
+
+	# 'src/' exists but there is no 'artifacts' file
+	if {[file exists $dir/src] && ![file isfile $dir/artifacts]} {
+		return 1}
+
+	return 0
+}
+
+
+##
 # Return 1 if directory is considered as goa project
 #
 proc looks_like_goa_project_dir { dir } {
@@ -43,9 +56,8 @@ proc looks_like_goa_project_dir { dir } {
 		if {[file exists $dir/$name] && ![file isdirectory $dir/$name]} {
 			return 0 } }
 
-	# no project if 'src/' exists but there is no 'artifacts' file
-	if {[file exists $dir/src] && ![file isfile $dir/artifacts]} {
-		return 0}
+	if {[has_src_but_no_artifacts $dir]} {
+		return 0 }
 
 	return 1
 }

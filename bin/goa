@@ -160,7 +160,11 @@ if {$perform(add-depot-user)} {
 # project.
 #
 if {![looks_like_goa_project_dir $project_dir]} {
-	exit_with_error "$project_dir does not look like a goa project" }
+	if {[has_src_but_no_artifacts $project_dir]} {
+		exit_with_error "$project_dir has a 'src' directory but lacks an" \
+		                "'artifacts' file. You may start with an empty file."
+	} else {
+		exit_with_error "$project_dir does not look like a goa project" } }
 
 
 ##
