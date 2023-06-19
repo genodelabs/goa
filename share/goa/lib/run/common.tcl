@@ -189,7 +189,7 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	upvar 1 ${&runtime_archives} runtime_archives
 	upvar 1 ${&rom_modules} rom_modules
 
-	global project_name run_dir var_dir run_as
+	global project_name run_dir var_dir run_as bin_dir
 
 	set ram    [try_query_attr_from_file $runtime_file ram]
 	set caps   [try_query_attr_from_file $runtime_file caps]
@@ -227,7 +227,32 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	}
 
 	set rom_modules [query_attrs_from_file "/runtime/content/rom" label $runtime_file]
-	lappend rom_modules core ld.lib.so init
+
+	set default_rom_modules [list core ld.lib.so init]
+
+	# check availability of content ROM modules
+	set binary_archives [binary_archives [apply_versions $runtime_archives]]
+	foreach rom $rom_modules {
+		# default content?
+		if {[lsearch -exact $default_rom_modules $rom] > -1} {
+			continue }
+
+		# raw content?
+		if {[file exists [file join raw $rom]]} {
+			continue }
+
+		# artifact?
+		if {[file exists [file join $bin_dir $rom]]} {
+			continue }
+
+		# find in other archives
+		if {[_find_rom_in_archives $rom $binary_archives] == ""} {
+			exit_with_error "Unable to find content ROM module '$rom'." \
+			                "You either need to add it to the 'raw/' directory" \
+			                "or add the corresponding dependency to the 'archives' file." }
+	}
+
+	lappend rom_modules {*}$default_rom_modules
 
 	set start_nodes ""
 	set provides ""
