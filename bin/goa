@@ -939,10 +939,18 @@ if {$perform(run)} {
 	check_xml_syntax $runtime_file
 	foreach config_file [glob -nocomplain [file join raw *.config]] {
 		check_xml_syntax $config_file }
+	
+	#
+	# Partially prepare depot before calling 'generate_runtime_config'.
+	# For plausability checks, the latter needs access to the included ROM modules.
+	#
+	set binary_archives [binary_archives [apply_versions $runtime_archives]]
+	prepare_depot_with_archives $binary_archives
 
 	set rom_modules { }
 	generate_runtime_config $runtime_file runtime_archives rom_modules
 
+	# prepare depot with additional archives added by 'generate_runtime_config'
 	set binary_archives [binary_archives [apply_versions $runtime_archives]]
 	prepare_depot_with_archives $binary_archives
 

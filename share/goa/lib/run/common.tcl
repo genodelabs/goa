@@ -1,8 +1,27 @@
 ##
 ##
+# Find a particular ROM in depot archives. Returns the file path if found.
+# Otherwise it returns an empty string.
+#
+proc _find_rom_in_archives { rom_name binary_archives } {
+	global depot_dir
+
+	foreach archive $binary_archives {
+		set file_path [file join $depot_dir $archive $rom_name]
+		if {[file exists $file_path]} {
+			return $file_path }
+	}
+
+	return ""
+}
+
+
+##
+##
 # Acquire config XML
 #
-proc _acquire_config { runtime_file } {
+proc _acquire_config { runtime_file runtime_archives } {
+
 	set config ""
 	set routes ""
 
@@ -25,7 +44,12 @@ proc _acquire_config { runtime_file } {
 		# check existence of $rom_name in raw/
 		set config_file [file join raw $rom_name]
 		if {![file exists $config_file]} {
-			exit_with_error "runtime declares 'config=\"$rom_name\"' but the file raw/$rom_name is missing" }
+			set binary_archives [binary_archives [apply_versions $runtime_archives]]
+			set config_file [_find_rom_in_archives $rom_name $binary_archives]
+
+			if {$config_file == ""} {
+				exit_with_error "runtime declares 'config=\"$rom_name\"' but the file raw/$rom_name is missing" }
+		}
 
 		# load content into config variable
 		set config [query_from_file /* $config_file]
@@ -172,7 +196,7 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	set binary [try_query_attr_from_file $runtime_file binary]
 
 	# get config XML from runtime file
-	lassign [_acquire_config $runtime_file] config config_route
+	lassign [_acquire_config $runtime_file $runtime_archives] config config_route
 
 	# list of services that are do not need to mentioned as requirement
 	set base_services   [list CPU PD LOG RM]
