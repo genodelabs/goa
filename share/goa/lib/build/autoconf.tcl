@@ -47,9 +47,11 @@ proc create_or_update_build_dir { } {
 	lappend cmd "CC=${cross_dev_prefix}gcc"
 	lappend cmd "STRIP=${cross_dev_prefix}strip"
 	lappend cmd "RANLIB=${cross_dev_prefix}ranlib"
+	lappend cmd "AR=${cross_dev_prefix}ar"
+	lappend cmd "AS=${cross_dev_prefix}as"
 
 	#
-	# Some autoconf projects (e.g. OnpenSC) unconditionally do checks
+	# Some autoconf projects (e.g. OpenSC) unconditionally do checks
 	# on the C/C++ preprocessors and therefore need these variables.
 	#
 	lappend cmd "CPP=${cross_dev_prefix}cpp"
