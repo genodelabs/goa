@@ -258,7 +258,7 @@ if {[llength $argv] == 0} {
 
 set avail_commands [list update-goa archive-versions import diff build-dir \
                          build run export publish add-depot-user \
-                         extract-abi-symbols help versions]
+                         extract-abi-symbols help versions depot-dir]
 
 foreach command $avail_commands {
 	set perform($command) 0 }
@@ -280,10 +280,12 @@ proc action_dependency { action dependency } {
 	if {$perform($action) == 1} {
 		set perform($dependency) 1 } }
 
-action_dependency publish export
-action_dependency export  build
-action_dependency run     build
-action_dependency build   build-dir
+action_dependency publish         export
+action_dependency export          build
+action_dependency run             build
+action_dependency build           build-dir
+action_dependency build-dir       depot-dir
+action_dependency add-depot-user  depot-dir
 
 if {[file exists import] && [file isfile import]} {
 	action_dependency build-dir import }

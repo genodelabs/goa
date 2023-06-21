@@ -7,7 +7,7 @@ __goa()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions"
+    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions depot-dir"
     help_commands="config api build-systems artifacts add-depot-user targets"
     depot_commands="export|publish"
     depot_opts="--depot-user --depot-overwrite --pkg"

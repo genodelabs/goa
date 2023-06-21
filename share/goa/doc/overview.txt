@@ -103,8 +103,13 @@ USAGE
 :goa diff:
   Show local modifications of the imported 3rd-party software.
 
+:goa depot-dir:
+  Create a depot directory and install default depot users.
+
 :goa build-dir:
   Create a build directory.
+
+  This command implies the 'depot-dir' command.
 
   If an 'import' file exists, this command automatically invokes the 'import'
   command.
@@ -148,11 +153,15 @@ USAGE
   Make a new depot user known at a Genode depot as software source
   by specifying a URL and the public key as an ASCII-armored file.
 
+  This command implies the 'depot-dir' command.
+
 :goa add-depot-user <name> --depot-url <url> --gpg-user-id <id>:
   Make a new depot user known at a Genode depot as software source
   by specifying a URL and the public key as GPG key ID, i.e., the
   email address. This command works only if the GPG keyring already
   contains the specified user ID.
+
+  This command implies the 'depot-dir' command.
 
 :goa archive-versions:
   Print information about known depot-archive versions.

@@ -117,6 +117,41 @@ if {$perform(versions)} {
 
 
 ##
+# Return 1 if depot_dir exists
+#
+proc depot_exists { } {
+	global depot_dir
+	return [expr {[file exists $depot_dir] && [file isdirectory $depot_dir]}]
+}
+
+
+##
+# Set writeable permission for specified path and its subdirectories
+#
+proc make_writeable { path } {
+	file attributes $path -permissions "+w"
+	if {[file isdirectory $path]} {
+		foreach entry [glob [file join $path "*"]] {
+			make_writeable $entry } }
+}
+
+
+##
+## Create and initialize depot directory
+##
+
+if {$perform(depot-dir)} {
+
+	# create default depot
+	if {![depot_exists]} {
+		file mkdir [file dirname $depot_dir]
+		file copy [file join $tool_dir default_depot] $depot_dir
+		make_writeable $depot_dir
+	}
+}
+
+
+##
 ## Add depot user
 ##
 
@@ -377,45 +412,13 @@ if {![info exists warn_strict] && [using_api base]} {
 
 
 ##
-# Return 1 if depot_dir exists
-#
-proc depot_exists { } {
-	global depot_dir
-	return [expr {[file exists $depot_dir] && [file isdirectory $depot_dir]}]
-}
-
-
-##
 # Return depot user for archive path
 #
 proc depot_user { archive } { return [lindex [split $archive "/"] 0] }
 
 
-##
-# Set writeable permission for specified path and its subdirectories
-#
-proc make_writeable { path } {
-	file attributes $path -permissions "+w"
-	if {[file isdirectory $path]} {
-		foreach entry [glob [file join $path "*"]] {
-			make_writeable $entry } }
-}
-
-
 proc prepare_depot_with_archives { archive_list } {
 	global depot_dir public_dir tool_dir jobs
-
-	if {![depot_exists]} {
-
-		if {[customized_variable depot_dir]} {
-			exit_with_error "cannot install APIs because" \
-			                "there is no depot at $depot_dir" }
-
-		# create default depot local to the project at var/depot/
-		file mkdir [file dirname $depot_dir]
-		file copy [file join $tool_dir default_depot] $depot_dir
-		make_writeable $depot_dir
-	}
 
 	# create list of depot users without duplicates
 	set depot_users { }
