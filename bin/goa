@@ -256,6 +256,9 @@ proc check_modified { subdir } {
 
 if {$perform(import)} {
 
+	if {![file exists import] || ![file isfile import]} {
+		exit_with_error "missing 'import' file" }
+
 	# quick-check the import.hash to detect the need for re-import
 	set need_fresh_import 0
 	set existing_hash [read_file_content_as_list [file join $contrib_dir import.hash]]
