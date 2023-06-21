@@ -40,12 +40,17 @@ proc has_src_but_no_artifacts { dir } {
 #
 proc looks_like_goa_project_dir { dir } {
 
-	# no project if neither 'src/' nor 'import' nor 'pkg/' nor 'raw/' exists
+	# no project if neither 'src/' nor 'import' nor 'pkg/' nor 'raw/'
+	# nor 'index' exists
 	set ingredient 0
-	foreach name [list import src pkg raw] {
+	foreach name [list import src pkg raw index] {
 		if {[file exists $dir/$name]} {
 			set ingredient 1 } }
 	if {!$ingredient} {
+		return 0 }
+
+	# no project if 'index' is anything other than a file
+	if {[file exists $dir/index] && ![file isfile $dir/index]} {
 		return 0 }
 
 	# no project if 'import' is anything other than a file
@@ -72,8 +77,9 @@ proc goa_project_dirs { } {
 
 	#
 	# A project directory must contain an 'import' file, a 'src/' directory,
-	# a 'pkg/' directory or a 'raw/' directory. Don't consider any directories
-	# behind a 'depot/', 'contrib/', 'build/', or 'var/' directory.
+	# a 'pkg/' directory, a 'raw/' directory or an 'index' file. Don't consider
+	# any directories behind a 'depot/', 'contrib/', 'build/', or 'var/'
+	# directory.
 	#
 	set project_candidates [exec find -not -path "*/depot/*" \
 	                             -and -not -path "*/contrib/*" \
@@ -82,7 +88,8 @@ proc goa_project_dirs { } {
 	                             -and \( -name import \
 	                                     -or -name src \
 	                                     -or -name pkg \
-	                                     -or -name raw \)]
+	                                     -or -name raw \
+	                                     -or -name index \)]
 
 	regsub -line -all {(/(src|pkg|raw|import))$} $project_candidates "" project_candidates
 	set project_candidates [lsort -unique $project_candidates]
@@ -148,6 +155,7 @@ set license                  ""
 set depot_user               ""
 set run_as                   "genodelabs"
 set target                   "linux"
+set sculpt_version           ""
 
 # if /proc/cpuinfo exists, use number of CPUs as 'jobs'
 if {[file exists /proc/cpuinfo]} {
@@ -371,9 +379,10 @@ if {$perform(export)} {
 	if {[consume_optional_cmdline_switch "--depot-overwrite"]} {
 		set depot_overwrite 1 }
 
-	set depot_user  [consume_optional_cmdline_arg "--depot-user" $depot_user]
-	set license     [consume_optional_cmdline_arg "--license"    $license]
-	set publish_pkg [consume_optional_cmdline_arg "--pkg"        ""]
+	set depot_user     [consume_optional_cmdline_arg "--depot-user"     $depot_user]
+	set license        [consume_optional_cmdline_arg "--license"        $license]
+	set publish_pkg    [consume_optional_cmdline_arg "--pkg"            ""]
+	set sculpt_version [consume_optional_cmdline_arg "--sculpt-version" $sculpt_version]
 }
 
 if {$perform(archive-versions)} {

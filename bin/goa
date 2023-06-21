@@ -1014,11 +1014,11 @@ proc assert_definition_of_depot_user { } {
 
 ##
 # Return versioned archive path for a project's archive of the specified type
-# (raw, src, pkg, bin)
+# (raw, src, pkg, bin, index)
 #
 proc versioned_project_archive { type { pkg_name ""} } {
 
-	global depot_user project_dir project_name version arch
+	global depot_user project_dir project_name version arch sculpt_version
 
 	set name $project_name
 
@@ -1026,6 +1026,16 @@ proc versioned_project_archive { type { pkg_name ""} } {
 		set name $pkg_name }
 
 	assert_definition_of_depot_user
+
+	if {$type == "index"} {
+		if {$sculpt_version == ""} {
+			exit_with_error "missing definition of sculpt version\n" \
+			                "\n You can define the sculpt version by setting the 'sculpt_version'" \
+			                "\n variable in a .goarc file, or by specifing the '--sculpt-version <version>'"\
+			                "\n command-line argument.\n" }
+
+		return $depot_user/index/$sculpt_version
+	}
 
 	catch {
 		set archive_version [project_version $project_dir]
@@ -1063,7 +1073,7 @@ proc versioned_project_archive { type { pkg_name ""} } {
 ##
 # Prepare destination directory within the depot
 #
-# \return path to the archive directory
+# \return path to the archive directory (or file if type=="index")
 #
 proc prepare_project_archive_directory { type { pkg_name "" } } {
 	global depot_dir depot_overwrite
@@ -1081,7 +1091,11 @@ proc prepare_project_archive_directory { type { pkg_name "" } } {
 		}
 	}
 
-	file mkdir $dst_dir
+	if {$type == "index"} {
+		file mkdir [file dirname $dst_dir]
+	} else {
+		file mkdir $dst_dir
+	}
 	return $dst_dir
 }
 
@@ -1110,9 +1124,83 @@ proc license_file { } {
 }
 
 
+##
+# Get a list of pkg+arch-list pairs from an index file
+#
+proc pkgs_from_index { index_file } {
+	global depot_user
+
+	set result ""
+
+	# get supported archs
+	if {[catch { set supported_archs [query_attrs_from_file /index/supports arch $index_file] }]} {
+		exit_with_error "missing <supports arch=\"...\"/> in index file" }
+
+	# helper proc to apply archs to paths found in a list of <pkg> nodes
+	proc _paths_with_arch { pkgs archs } {
+		set res ""
+		foreach pkg $pkgs {
+			set path [query_from_string string(/pkg/@path) $pkg ""]
+			set pkg_archs $archs
+			catch {
+				set pkg_archs [query_attrs_from_string /pkg arch $pkg] }
+
+			lappend res $path $pkg_archs
+		}
+		return $res
+	}
+
+	# iterate <pkg> nodes within <index> nodes with no 'arch' attribute
+	catch {
+		set pkgs [split [query_from_file /index/index\[not(@arch)\]/pkg $index_file] \n]
+		lappend result {*}[_paths_with_arch $pkgs $supported_archs]
+	}
+
+	# iterate 'arch' attributes of <index> nodes
+	catch {
+		set archs [query_attrs_from_file /index/index arch $index_file]
+		foreach pkg_arch [lsort -unique $archs] {
+			set pkgs [split [query_from_file /index/index\[@arch="$pkg_arch"\]/pkg $index_file] \n]
+			lappend result {*}[_paths_with_arch $pkgs [list $pkg_arch]]
+		}
+	}
+
+	return $result
+}
+
+
+##
+# Supplement index file pkg paths with user and version information
+#
+proc augment_index_versions { src_file dst_file } {
+	global depot_user
+
+	# read src_file
+	set fd [open $src_file r]
+	set content [read $fd]
+	close $fd
+
+	# filter 'path' attribute
+	set pattern "(\<pkg\[^\>\]+?path=\")(\[^/\]+)(\")"
+	while {[regexp $pattern $content dummy head pkg tail]} {
+		set pkg_path [apply_versions $depot_user/pkg/$pkg]
+		regsub $pattern $content "$head$pkg_path$tail" content
+	}
+
+	# write to dst_file
+	set fd [open $dst_file w]
+	puts $fd $content
+	close $fd
+}
+
+
 if {$perform(export)} {
 
 	assert_definition_of_depot_user
+
+	set index_file [file join $project_dir index]
+	if {![file exists $index_file] || ![file isfile $index_file]} {
+		unset index_file }
 
 	# create raw archive
 	set raw_dir [file join $project_dir raw]
@@ -1268,6 +1356,16 @@ if {$perform(export)} {
 			file copy $file [file join $dst_dir [file tail $file]] }
 		log "exported $dst_dir"
 	}
+
+	# create index
+	if {[info exists index_file]} {
+		check_xml_syntax $index_file
+
+		set dst_file [prepare_project_archive_directory index]
+		augment_index_versions $index_file $dst_file
+
+		log "exported $dst_file"
+	}
 }
 
 
@@ -1304,6 +1402,20 @@ if {$perform(publish)} {
 			lappend archives [versioned_project_archive pkg $pkg] }
 	}
 
+	set index_file [file join $project_dir index]
+	if {[file exists $index_file] && [file isfile $index_file]} {
+		set index_archive [versioned_project_archive index]
+
+		#
+		# add pkg paths found in index file to archives (adding arch part to
+		# pkg path to make sure that the corresponding bin archives are
+		# downloadable)
+		#
+		foreach { pkg_path pkg_archs } [pkgs_from_index [file join $depot_dir $index_archive]] {
+			foreach pkg_arch $pkg_archs {
+				lappend archives [apply_arch $pkg_path $pkg_arch] } }
+	}
+
 	# first, download missing dependencies
 	if {[llength $archives] > 0} {
 		set cmd "[file join $tool_dir depot download]"
@@ -1319,6 +1431,10 @@ if {$perform(publish)} {
 			exit_with_error "failed to download dependencies of the following depot archives:\n" \
 			                [join $archives "\n "] }
 	}
+
+	# add index archive to archives
+	if {[info exists index_archive]} {
+		lappend archives $index_archive }
 
 	# second, try to publish archives
 	if {[llength $archives] > 0} {

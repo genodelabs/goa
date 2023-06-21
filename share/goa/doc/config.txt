@@ -148,6 +148,12 @@ Goa evaluates the following configuration variables.
   strict warnings can be enabled or disabled via the '--warn-strict' and
   '--no-warn-strict' command-line arguments.
 
+:sculpt_version:
+  Determines the Sculpt version for which a depot index is exported and
+  published. The default value can either be overridden by setting this
+  configuration variable in a custom '.goarc' file or via the
+  '--sculpt-version' command-line argument.
+
 :version(<user>/<type>/<name>):
   The version array is indexed with a depot-archive path and contains the
   version to be assumed for this archive.

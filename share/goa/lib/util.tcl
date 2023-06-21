@@ -275,6 +275,20 @@ proc apply_versions { archive_list } {
 
 
 ##
+# Applys architecture to an archive of type pkg
+#
+proc apply_arch { archive arch } {
+	set elements [split $archive /]
+	set i [lsearch $elements pkg]
+	if {$i == -1} {
+		return -code error "apply_arch was called for non-pkg archive" }
+
+	set elements_with_arch [linsert $elements [expr $i + 1] $arch]
+	return [join $elements_with_arch /]
+}
+
+
+##
 # Return list of binary archives for a given list of versioned source archives
 #
 proc binary_archives { archive_list } {

@@ -1,3 +1,7 @@
+# Sculpt version is required for publishing index projects
+set  sculpt_version 23.04
+
+# archive versions
 set  version(genodelabs/api/base)                        2023-04-25
 set  version(genodelabs/api/base-linux)                  2023-04-16
 set  version(genodelabs/api/blit)                        2021-12-16

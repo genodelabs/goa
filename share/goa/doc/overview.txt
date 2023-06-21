@@ -58,6 +58,11 @@ It can have the following ingredients:
   supplemented whenever a source-archive is exported from the project
   via the 'export' or 'publish' commands.
 
+:index: A file that specifies a depot index. If an 'index' file is present,
+  the 'export' command will augment the archive names mentioned by the 'index'
+  file with the current depot user and known archive versions, and export the
+  result as a depot index for the current Sculpt version.
+
 :cmake_args: A file containing a list of project-specific arguments
   passed to CMake.
 
