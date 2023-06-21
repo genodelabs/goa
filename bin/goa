@@ -240,7 +240,7 @@ if {$perform(archive-versions)} {
 	set archives [lsort -unique $archives]
 	set versioned_archives [apply_versions $archives]
 	foreach a $archives v $versioned_archives {
-		set vers [lindex [split $v "/"] end]
+		set vers [archive_version $v]
 		puts "set version($a) $vers"
 	}
 

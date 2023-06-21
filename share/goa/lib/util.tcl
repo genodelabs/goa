@@ -283,12 +283,7 @@ proc binary_archives { archive_list } {
 	set bin_archives { }
 	foreach archive $archive_list {
 
-		set elements [split $archive "/"]
-
-		set user    [lindex $elements 0]
-		set type    [lindex $elements 1]
-		set name    [lindex $elements 2]
-		set version [lindex $elements 3]
+		archive_parts $archive user type name version
 
 		if {$type == "src"} {
 			lappend bin_archives "$user/bin/$arch/$name/$version" }
@@ -318,13 +313,53 @@ proc binary_archives { archive_list } {
 
 
 ##
+# Extracts parts (user, type, name, version) of the specified archive path
+#
+# Valid archive paths are:
+#   - user/type/name
+#   - user/type/name/version
+#   - user/type/arch/name/version
+#
+proc archive_parts { archive &user &type &name &version } {
+	set elements [split $archive /]
+
+	# an archive has at least 3 and at most 5 elements
+	if {[llength $elements] < 3 || [llength $elements] > 5} {
+		return -code error "invalid depot-archive path '$archive'" }
+
+	upvar 1 ${&user}    user
+	upvar 1 ${&type}    type
+	upvar 1 ${&name}    name
+	upvar 1 ${&version} version
+
+	set user    [lindex $elements 0]
+	set type    [lindex $elements 1]
+
+	if {[llength $elements] >= 4} {
+		set name    [lindex $elements end-1]
+		set version [lindex $elements end]
+	} else {
+		set name    [lindex $elements end]
+		set version ""
+	}
+}
+
+
+##
+# Return type element of specified archive path
+#
+proc archive_version { archive } {
+	archive_parts $archive user type name version
+	return $version
+}
+
+
+##
 # Return name element of specified archive path
 #
 proc archive_name { archive } {
-	set elements [split $archive "/"]
-	if {[llength $elements] < 3} {
-		return "" }
-	return [lindex $elements 2]
+	archive_parts $archive user type name version
+	return $name
 }
 
 
