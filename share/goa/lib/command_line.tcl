@@ -266,7 +266,7 @@ if {[llength $argv] == 0} {
 	exit_with_error "missing command argument" }
 
 set avail_commands [list update-goa archive-versions import diff build-dir \
-                         build run run-dir export publish add-depot-user \
+                         build run run-dir export publish add-depot-user bump-version \
                          extract-abi-symbols help versions depot-dir]
 
 foreach command $avail_commands {
@@ -316,6 +316,14 @@ if {$perform(help)} {
 	set help_topic overview
 	if {[llength $argv] == 1} {
 		set help_topic [lindex $argv 0]
+		set argv [lrange $argv 1 end]
+	}
+}
+
+if {$perform(bump-version)} {
+	set target_version [clock format [clock seconds] -format %Y-%m-%d]
+	if {[llength $argv] == 1} {
+		set target_version [lindex $argv 0]
 		set argv [lrange $argv 1 end]
 	}
 }

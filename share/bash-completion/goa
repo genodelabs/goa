@@ -7,7 +7,7 @@ __goa()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions depot-dir run-dir"
+    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions depot-dir run-dir bump-version"
     help_commands="config api build-systems artifacts add-depot-user import targets"
     depot_commands="export|publish"
     run_commands="run|run-dir"
@@ -82,6 +82,9 @@ __goa()
         if [[ ${COMP_CWORD} -gt 2 ]]; then
             COMPREPLY=( $(compgen -W "${user_opts} ${globalopts}" -- ${cur}) )
         fi
+        return 0
+    elif [[ ${second} == "bump-version" ]]; then
+        COMPREPLY=( $(compgen -W "-r" -- ${cur}) )
         return 0
     fi
 

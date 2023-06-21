@@ -101,6 +101,11 @@ USAGE
 :goa --version:
   Print current major version of the Goa tool.
 
+:goa bump-version [<version>]:
+  Update version file of a Goa project. If <version> is not provided, the
+  current date is taken. If the project version already matches the desired
+  date, "-a" is added as a suffix and alphabetically incremented.
+
 :goa import:
   Download and patch 3rd-party source code according to the rules given by
   an 'import' file.
