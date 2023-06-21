@@ -152,6 +152,10 @@ USAGE
   Export entire project to a Genode depot. If <pkg-name> is supplied,
   only the scenario defined at pkg/<pkg-name> is exported.
 
+  When Goa encounters dependencies to depot archives provided by
+  projects located in subdirectories of the current working directory, it
+  may run the export command recursively.
+
   This command implies the 'build' command.
 
 :goa publish [--depot-user <name>] [--pkg <pkg-name>]:

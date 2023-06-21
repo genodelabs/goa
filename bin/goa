@@ -1170,6 +1170,47 @@ proc pkgs_from_index { index_file } {
 
 
 ##
+# Run `goa export` in specified project directory
+#
+proc export_dependent_project { dir arch depot_overwrite { pkg_name "" } } {
+	global argv0 jobs depot_user depot_dir
+	global public_dir common_var_dir var_dir verbose original_dir
+
+	set orig_pwd [pwd]
+	cd $original_dir
+
+	set cmd { }
+	lappend cmd expect $argv0 export
+	lappend cmd -C $dir
+	lappend cmd --jobs $jobs
+	lappend cmd --arch $arch
+	lappend cmd --depot-user     $depot_user
+	lappend cmd --depot-dir      $depot_dir
+	lappend cmd --public-dir     $public_dir
+	if {$common_var_dir != ""} {
+		lappend cmd --common-var-dir $common_var_dir
+	} else {
+		lappend cmd --common-var-dir $var_dir
+	}
+	if {$verbose} {
+		lappend cmd --verbose }
+	if {$depot_overwrite} {
+		lappend cmd --depot-overwrite }
+	if {$pkg_name != ""} {
+		lappend cmd --pkg $pkg_name
+	}
+
+	diag "exporting project $dir via cmd: $cmd"
+
+	exec -ignorestderr {*}$cmd >@ stdout
+
+	cd $orig_pwd
+
+	return -code ok
+}
+
+
+##
 # Supplement index file pkg paths with user and version information
 #
 proc augment_index_versions { src_file dst_file } {
@@ -1211,6 +1252,8 @@ if {$perform(export)} {
 	if {![file exists $src_dir] || ![file isdirectory $src_dir]} {
 		unset src_dir }
 
+	set exported_archives ""
+
 	if {[file exists $api_dir] && [file isdirectory $api_dir]} {
 		set dst_dir [prepare_project_archive_directory api]
 		set files [exec find $api_dir -not -type d -and -not -name "*~"]
@@ -1247,6 +1290,8 @@ if {$perform(export)} {
 		if {[file exists [file join $project_dir "symbols"]]} {
 			file copy [file join $project_dir "symbols"] [file join $dst_dir lib]
 		}
+
+		lappend exported_archives [versioned_project_archive api]
 		log "exported $dst_dir"
 	}
 
@@ -1255,6 +1300,8 @@ if {$perform(export)} {
 		set files [exec find $raw_dir -not -type d -and -not -name "*~"]
 		foreach file $files {
 			file copy $file [file join $dst_dir [file tail $file]] }
+
+		lappend exported_archives [versioned_project_archive raw]
 		log "exported $dst_dir"
 	}
 
@@ -1297,6 +1344,8 @@ if {$perform(export)} {
 			puts $fh [regsub {^.*?/.*?/} $api ""]
 		}
 		close $fh
+
+		lappend exported_archives [versioned_project_archive src]
 		log "exported $dst_dir"
 	}
 
@@ -1343,6 +1392,8 @@ if {$perform(export)} {
 			puts $fh [join $runtime_archives "\n"]
 			close $fh
 		}
+
+		lappend exported_archives [apply_arch [versioned_project_archive pkg $pkg] $arch]
 		log "exported $dst_dir"
 	}
 
@@ -1354,6 +1405,8 @@ if {$perform(export)} {
 			set file [file normalize $file]
 			catch { set file [file link  $file] }
 			file copy $file [file join $dst_dir [file tail $file]] }
+
+		lappend exported_archives [versioned_project_archive bin]
 		log "exported $dst_dir"
 	}
 
@@ -1361,10 +1414,69 @@ if {$perform(export)} {
 	if {[info exists index_file]} {
 		check_xml_syntax $index_file
 
+		# check index file for any unexported Goa archives
+		foreach { pkg_name pkg_archs } [pkgs_from_index $index_file] {
+			set archive "$depot_user/pkg/$pkg_name"
+
+			catch {
+				set dir [find_project_dir_for_archive pkg $pkg_name]
+				set version($archive) [project_version $dir]
+				set versioned_archive $archive/$version($archive)
+
+				# export archive if it has not been exported or depot_overwrite is set
+				set dst_dir "[file join $depot_dir $versioned_archive]"
+				if {$depot_overwrite || ![file exists $dst_dir]} {
+					foreach pkg_arch $pkg_archs {
+						if {[catch { export_dependent_project $dir $pkg_arch 1 $pkg_name } msg]} {
+							exit_with_error "failed to export depot archive $archive: \n\t$msg" } } }
+			}
+		}
+
 		set dst_file [prepare_project_archive_directory index]
 		augment_index_versions $index_file $dst_file
 
 		log "exported $dst_file"
+	}
+
+
+	# determine dependent projects that need exporting
+	set export_projects ""
+	if {[llength $exported_archives] > 0} {
+		set cmd "[file join $tool_dir depot dependencies]"
+		set cmd [concat $cmd $exported_archives]
+		lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
+		lappend cmd "DEPOT_DIR=$depot_dir"
+		lappend cmd "PUBLIC_DIR=$public_dir"
+		lappend cmd "REPOSITORIES="
+
+		diag "acquiring dependencies of exported depot archives via command: $cmd"
+
+		if {[catch { exec {*}$cmd 2> /dev/null } msg]} {
+			foreach line [split $msg \n] {
+				catch {
+					archive_parts [string trim $line] user type name vers
+
+					set dir [find_project_dir_for_archive $type $name]
+					if {[project_version $dir] != $vers} {
+						log "skipping export of $dir due to version mismatch"
+						continue
+					}
+
+					if {$user != $depot_user} {
+						log "skipping export of $dir: must be exported as depot user '$user'"
+						continue
+					}
+
+					lappend export_projects $dir
+				}
+			}
+		}
+	}
+
+	# export dependent projects
+	foreach dir [lsort -unique $export_projects] {
+		if {[catch { export_dependent_project $dir $arch $depot_overwrite } msg]} {
+			exit_with_error "failed to export project $dir: \n\t$msg" }
 	}
 }
 
