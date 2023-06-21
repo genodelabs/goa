@@ -1,0 +1,9 @@
+<index>
+	<supports arch="x86_64"/>
+	<supports arch="arm_v8a"/>
+
+	<index name="Test">
+		<pkg path="dependent_hello" info="Re-use hello_posix"/>
+	</index>
+
+</index>

@@ -1,0 +1,6 @@
+
+                   Goa example of an index project
+
+To export the depot index and all its dependencies, run:
+
+! goa export --depot-user x

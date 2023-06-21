@@ -1,0 +1,4 @@
+x/src/hello_posix
+genodelabs/src/libc
+genodelabs/src/posix
+genodelabs/src/vfs
