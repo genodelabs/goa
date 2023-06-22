@@ -908,7 +908,7 @@ if {$perform(extract-abi-symbols)} {
 }
 
 
-if {$perform(run)} {
+if {$perform(run-dir)} {
 
 	source [file join $tool_dir lib run common.tcl]
 
@@ -974,6 +974,10 @@ if {$perform(run)} {
 
 	# add content found in the project's raw/ subdirectory
 	symlink_directory_content $rom_modules [file join $project_dir raw] $run_dir
+}
+
+
+if {$perform(run)} {
 
 	run_genode
 }

@@ -257,7 +257,7 @@ if {[llength $argv] == 0} {
 	exit_with_error "missing command argument" }
 
 set avail_commands [list update-goa archive-versions import diff build-dir \
-                         build run export publish add-depot-user \
+                         build run run-dir export publish add-depot-user \
                          extract-abi-symbols help versions depot-dir]
 
 foreach command $avail_commands {
@@ -282,7 +282,8 @@ proc action_dependency { action dependency } {
 
 action_dependency publish         export
 action_dependency export          build
-action_dependency run             build
+action_dependency run             run-dir
+action_dependency run-dir         build
 action_dependency build           build-dir
 action_dependency build-dir       depot-dir
 action_dependency add-depot-user  depot-dir
@@ -351,7 +352,7 @@ if {$perform(build-dir)} {
 		set rebuild 1 }
 }
 
-if {$perform(run)} {
+if {$perform(run-dir)} {
 	set target [consume_optional_cmdline_arg "--target" $target]
 	set run_as  [consume_optional_cmdline_arg "--run-as" $run_as]
 	# unless given as additional argument, run the pkg named after the project

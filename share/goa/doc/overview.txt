@@ -131,12 +131,17 @@ USAGE
   You should review the files and add them to the repository.
   They are required by users of the library during the 'build' step.
 
-:goa run [--pkg <pkg-name>]:
-  Execute a system scenario defined at pkg/<pkg-name>. If no argument
-  is supplied, <pkg-name> is assumed to correspond to the name of the
-  project directory.
+:goa run-dir [--pkg <pkg-name>]:
+  Prepare the run directory for executing the system scenario defined at
+  pkg/<pkg-name>. If no argument is supplied, <pkg-name> is assumed to
+  correspond to the name of the project directory.
 
   This command implies the 'build' command.
+
+:goa run [--pkg <pkg-name>]:
+  Execute a system scenario as prepared by the 'run-dir' command.
+
+  This command implies the 'run-dir' command.
 
 :goa export [--depot-user <name>] [--pkg <pkg-name>]:
   Export entire project to a Genode depot. If <pkg-name> is supplied,

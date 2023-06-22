@@ -2,14 +2,15 @@
 
 __goa()
 {
-    local cur prev second globalopts fileopts diropts stropts commands help_commands pkgopts archvals depot_opts depot_commands run_opts user_opts olevelvals numopts targetvals
+    local cur prev second globalopts fileopts diropts stropts commands help_commands pkgopts archvals depot_opts depot_commands run_commands run_opts user_opts olevelvals numopts targetvals
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions depot-dir"
+    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions depot-dir run-dir"
     help_commands="config api build-systems artifacts add-depot-user targets"
     depot_commands="export|publish"
+    run_commands="run|run-dir"
     depot_opts="--depot-user --depot-overwrite --pkg"
     run_opts="--pkg --run-as --target"
     user_opts="--depot-url --gpg-user-id --pubkey-file"
@@ -74,7 +75,7 @@ __goa()
         return 0
     elif [[ ${second} == "--version" ]]; then
         return 0
-    elif [[ ${second} == "run" ]]; then
+    elif [[ ${second} =~ ${run_commands} ]]; then
         COMPREPLY=( $(compgen -W "${run_opts} ${globalopts}" -- ${cur}) )
         return 0
     elif [[ ${second} == "add-depot-user" ]]; then
