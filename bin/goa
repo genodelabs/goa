@@ -345,6 +345,17 @@ if {$perform(import)} {
 		}
 
 		file delete -force $build_dir
+
+	} else {
+
+		foreach subdir [list src raw] {
+
+			set src_dir [file join $contrib_dir $subdir]
+			set dst_dir [file join $project_dir $subdir]
+
+			if {[file exists $src_dir] && ![file exists $dst_dir]} {
+				file copy -force $src_dir $dst_dir }
+		}
 	}
 }
 
