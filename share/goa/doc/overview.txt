@@ -187,4 +187,4 @@ OPTIONAL ARGUMENTS
 SEE ALSO
 ########
 
-add-depot-user, api, artifacts, build-systems, config, targets
+add-depot-user, api, artifacts, build-systems, import, config, targets

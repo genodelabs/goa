@@ -1,0 +1,100 @@
+
+                                    Import
+
+
+                               Johannes Schlatow
+
+
+The 'import' file defines how to download, extract and patch 3rd-party source
+code.
+
+
+DESCRIPTION
+###########
+
+Syntactically, the file is a makefile that merely defines a couple of variables
+that steer the import procedure. The file is included by the Genode's ports,
+which evaluates the following mandatory variables:
+
+:LICENSE:
+  This variable defines the license of the 3rd-party source code.
+
+:VERSION:
+  This variable defines the version of the 3rd-party source code.
+
+:DOWNLOADS:
+  This variable defines a list of downloads in the form of '<name>.<type>'. The
+  <name> part is arbitrary and used for referencing in the URL, DIR and REV
+  variables. Supported <type> values are 'file' (a plain file), 'archive' (an
+  archive of the types tar.gz, tar.xz, tgz, tar.bz2, or zip), 'svn' (a
+  subversion repository), and 'git' (a git repository).
+
+:URL(<name>):
+  This variable defines the URL of a certain download.
+
+:DIR(<name>):
+  This variable defines the directory relative to the project directory where
+  the 3rd-party source code is going to be located.
+
+:SHA(<name>):
+  For downloads of type 'file' or 'archive, this variable defines the SHA256
+  hash of the downloaded file.
+
+:REV(<name>):
+  For downloads of type 'git' or 'svn', this variable defines the revision
+  to be checked out.
+
+In addition, the following optional variables are available that allow modifying
+the directory structure and source code once it has been downloaded.
+
+:DIRS:
+  Defines a list of additional directories to be created.
+
+:DIR_CONTENT(<dir>):
+  Lists the content of directory <dir>. The paths are relative to the project
+  directory and may contain wildcards. Note that <dir> must be present in DIRS.
+
+:PATCHES:
+  Defines a list of patch files that are going to be applied to the source code.
+
+:PATCH_OPT:
+  Sets command line options supplied to the 'patch' command. Default: -p0
+
+
+EXAMPLES
+########
+
+The following content of an 'import' file instructs Goa to clone a certain git
+repository and checkout commit 'ba8881e2c9afb2f2345bd1df8d6b42cd1deadb08'. This
+is conducted in the contrib directory. The content is then copied into the
+'src/' subdirectory of the project.
+
+! LICENSE := BSD
+! VERSION := 1.2.3
+! DOWNLOADS := foobar.git
+!
+! URL(foobar) := https://...
+! REV(foobar) := ba8881e2c9afb2f2345bd1df8d6b42cd1deadb08
+! DIR(foobar) := src
+
+Let's assume there are a few patches necessary to adapt the 3rd-party source
+code to Genode. These patches are present in the 'patches' subdirectory. Goa is
+then instructed to apply all the '*.patch' files found in this directory to the
+checked out source code as follows:
+
+! PATCHES := $(notdir $(wildcard patches/*.patch))
+
+Furthermore, let's assume there is a 'background.png' file needed, which would
+like to pack up in a raw archive. The file is present in the checked out git
+repository and can be placed into the 'raw/' directory with the following lines
+added to the 'import' file:
+
+! DIRS := raw
+! DIR_CONTENT(raw) := src/resources/background.png
+
+
+SEE ALSO
+########
+
+add-depot-user, artifacts, build-systems, config, overview, targets
+

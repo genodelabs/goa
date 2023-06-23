@@ -122,4 +122,4 @@ The file must implement the following procedures:
 SEE ALSO
 ########
 
-add-depot-user, artifacts, build-systems, config, overview
+add-depot-user, artifacts, build-systems, import, config, overview
