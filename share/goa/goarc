@@ -61,6 +61,7 @@ set  version(genodelabs/src/pcre)                        2023-01-23
 set  version(genodelabs/src/posix)                       2023-04-25
 set  version(genodelabs/src/report_rom)                  2023-04-25
 set  version(genodelabs/src/rom_filter)                  2023-04-25
+set  version(genodelabs/src/rom_reporter)                2023-04-25
 set  version(genodelabs/src/sdl)                         2023-04-26
 set  version(genodelabs/src/sed)                         2023-02-26
 set  version(genodelabs/src/stdcxx)                      2023-01-23

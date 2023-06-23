@@ -1,0 +1,49 @@
+<runtime ram="16M" caps="1000" binary="init">
+
+	<requires>
+		<rom label="input"/>
+	</requires>
+
+	<content>
+		<rom label="init"/>
+		<rom label="report_rom"/>
+		<rom label="rom_reporter"/>
+	</content>
+
+	<config>
+
+		<parent-provides>
+			<service name="CPU"/>
+			<service name="LOG"/>
+			<service name="PD"/>
+			<service name="RM"/>
+			<service name="ROM"/>
+		</parent-provides>
+
+		<start name="report_rom" caps="100">
+			<resource name="RAM" quantum="1M"/>
+			<provides>
+				<service name="Report"/>
+				<service name="ROM"/>
+			</provides>
+			<config verbose="yes"/>
+			<route>
+				<any-service> <parent/> </any-service>
+			</route>
+		</start>
+
+		<start name="rom_reporter" caps="100">
+			<resource name="RAM" quantum="2M"/>
+			<config>
+				<rom label="input"/>
+			</config>
+			<route>
+				<service name="ROM" label="input"> <parent label="input"/> </service>
+				<service name="Report" label="input"> <child name="report_rom"/> </service>
+				<any-service> <parent/> </any-service>
+			</route>
+		</start>
+
+	</config>
+
+</runtime>
