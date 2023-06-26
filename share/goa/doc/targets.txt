@@ -47,12 +47,16 @@ the _runtime_ file's <requires> node:
   the runtime and configured to provide access to the host directory
   'var/projects/<project_name>/fs/<label>'.
 
-:<nic label="<tap_name>"/>:
-  For the first required _Nic_ service, a linux_nic_drv and a nic_router is
-  added to the runtime. The linux_nic_drv is configured to use the tap device
-  <tap_name> and connects to the uplink domain of the Nic router. The latter
-  is configured as a DHCP client for its uplink interface and as a DHCP server
-  for its default domain.
+:<nic label="<label>" tap_name="<tap_name>"/>:
+  Required _Nic_ services are tied to a tap device on the host by adding a
+  linux_nic_drv and a nic_router to the runtime. The linux_nic_drv is configured
+  to use the tap device '<tap_name>' (if provided, otherwise 'tap0') and
+  connects to the uplink domain of the Nic router. The latter is configured as a
+  DHCP client for its uplink interface and as a DHCP server for its default
+  domain. Each nic_router will use a distinct subnet for its default domain,
+  starting from 10.0.10.0/24 and ending at 10.0.255.0/24. For every distinct tap
+  device in use, only a single pair of linux_nic_drv and nic_router will be
+  instantiated.
 
 :<gpu/>:
   Any required _Gpu_ service is routed to a black-hole component.
