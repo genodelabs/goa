@@ -435,7 +435,7 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules }
 						<nat domain="default" tcp-ports="1000" udp-ports="1000" icmp-ids="1000"/>
 					</domain>
 					<domain name="default" interface="10.0.} $subnet_id {.1/24">
-						<dhcp-server ip_first="10.0.} $subnet_id {.2" ip_last="10.0.} $subnet_id {.253"/>
+						<dhcp-server ip_first="10.0.} $subnet_id {.2" ip_last="10.0.} $subnet_id {.253" dns_config_from="uplink"/>
 						<tcp dst="0.0.0.0/0">
 							<permit-any domain="uplink"/>
 						</tcp>
