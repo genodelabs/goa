@@ -17,6 +17,11 @@ path relative to the build directory. The paths select the files and
 directories to be featured in the api archive of the library.
 If a path refers to a directory, all contained files are included.
 
+Note that the build directory also contains an 'install' subdirectory which is
+used as a destination directory for running 'make install' after a successful
+build. When extracting include paths from the install subdirectory, the
+'install/' prefix is removed.
+
 
 Examples
 ########
@@ -30,3 +35,8 @@ header file.
 
 All files found in the directory 'include/spdlog' below the build directory are
 added as artifacts. The relative directory structure is kept intact.
+
+*install/include/spdlog*
+
+All files found in the directory 'install/include/spdlog' below the build
+directory are added as artifacts to 'include/spdlog' of the api archive.

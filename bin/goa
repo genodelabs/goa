@@ -888,6 +888,7 @@ proc extract_api_artifacts { } {
 
 	foreach file [artifact_file_list_from_list_file $api_file_path $build_dir] {
 		regsub "$build_dir/" $file "" link_src
+		regsub "install/" $link_src "" link_src
 		set dir [file dirname $link_src]
 		set target_dir [file join $api_dir $dir]
 		set link_target [file join $target_dir [file tail $file]]
