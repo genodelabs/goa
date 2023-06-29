@@ -824,6 +824,11 @@ proc check_abis { } {
 		regsub $so_extension [file tail $library] "" symbols_file
 		set symbols_file_name [file join $project_dir symbols $symbols_file]
 
+		if {![file exists $symbols_file_name]} {
+			exit_with_error "missing symbols file '$symbols_file'\n" \
+			                "\n You can generate this file by running 'goa extract-abi-symbols'."
+		}
+
 		if {[catch { exec [file join $tool_dir abi check_abi] $library $symbols_file_name } msg]} {
 			exit_with_error $msg
 		}
