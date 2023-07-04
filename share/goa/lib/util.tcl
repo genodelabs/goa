@@ -1,6 +1,7 @@
 
 proc exit_with_error { args } {
-	puts stderr "Error: [join $args { }]"
+	global project_name
+	puts stderr "\[$project_name\] Error: [join $args { }]"
 	exit 1
 }
 
