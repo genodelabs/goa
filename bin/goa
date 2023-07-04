@@ -1409,8 +1409,8 @@ if {$perform(export)} {
 		# add archives specified at the pkg's 'archives' file
 		set archives_file [file join $pkg_dir archives]
 		if {[file exists $archives_file]} {
-			set runtime_archives [concat $runtime_archives \
-			                             [read_file_content_as_list $archives_file]] }
+			set runtime_archives [concat [read_file_content_as_list $archives_file] \
+			                             $runtime_archives] }
 
 		# supplement version info
 		set runtime_archives [apply_versions $runtime_archives]
