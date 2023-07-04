@@ -62,6 +62,18 @@ proc looks_like_goa_project_dir { dir } {
 		if {[file exists $dir/$name] && ![file isdirectory $dir/$name]} {
 			return 0 } }
 
+	# no project if there is no subdirectory in 'pkg/' with a runtime file
+	if {[file exists $dir/pkg]} {
+		set runtime_files [glob -nocomplain -directory $dir/pkg -type f */runtime]
+		if {[llength $runtime_files] == 0} {
+			return 0 } }
+
+	# no project if raw/ is empty or has only *~ files or *.orig files
+	if {[file exists $dir/raw]} {
+		set raw_files [exec find $dir/raw -type f -and -not -name "*.orig" -and -not -name "*~"]
+		if {[llength $raw_files] == 0} {
+			return 0 } }
+
 	if {[has_src_but_no_artifacts $dir]} {
 		return 0 }
 
