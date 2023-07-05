@@ -210,7 +210,7 @@ proc project_version { dir } {
 
 
 ##
-# Supplement list of archives with version information found in .goarc files,
+# Supplement list of archives with version information found in goarc files,
 # in the genode directory, or in local Goa projects
 #
 # This procedure expects that each archive is specified with either 3 (without
@@ -218,7 +218,7 @@ proc project_version { dir } {
 # binary archives, which may have 4 or 5 elements.
 #
 # If versions_from_genode_dir is set, version information from found in the
-# specified genode directory supersedes version information found in .goarc
+# specified genode directory supersedes version information found in goarc
 # files.
 #
 # If no version information is available, the original working directory is

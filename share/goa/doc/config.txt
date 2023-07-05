@@ -5,18 +5,18 @@
                                  Norman Feske
 
 
-Goa can be configured using configuration files called '.goarc' or via
+Goa can be configured using configuration files called 'goarc' or via
 command-line arguments.
 
 
 Configuration files
 ###################
 
-Upon startup, Goa includes all files named '.goarc' found in the directory
+Upon startup, Goa includes all files named 'goarc' found in the directory
 hierarchy up to the project directory, starting with the root directory.
 This way, different aspects of Goa can be configured at different scopes.
 For example, settings that should be applied to any project of a given
-user can be defined at the user's home directory at '~/.goarc', settings
+user can be defined at the user's home directory at '~/goarc', settings
 shared by multiple Goa projects can be defined at the common parent directory
 of those projects, and project-specific settings can live local to the
 project directory.
@@ -27,7 +27,7 @@ is defined as follows:
 ! set <variable-name> <value>
 
 If <value> is a path name, the path can be specified relative to the location
-of the '.goarc' file or relative to the user's home directory '~'.
+of the 'goarc' file or relative to the user's home directory '~'.
 
 
 Settings
@@ -151,7 +151,7 @@ Goa evaluates the following configuration variables.
 :sculpt_version:
   Determines the Sculpt version for which a depot index is exported and
   published. The default value can either be overridden by setting this
-  configuration variable in a custom '.goarc' file or via the
+  configuration variable in a custom 'goarc' file or via the
   '--sculpt-version' command-line argument.
 
 :version(<user>/<type>/<name>):

@@ -152,7 +152,7 @@ if {[consume_optional_cmdline_switch "-r"]} {
 set project_dir [pwd]
 set project_name [file tail $project_dir]
 
-# defaults, potentially being overwritten by '.goarc' files
+# defaults, potentially being overwritten by 'goarc' files
 set arch                     ""
 set cross_dev_prefix         ""
 set rebuild                  0
@@ -185,16 +185,16 @@ diag "process project '$project_name' with arguments: $argv"
 
 
 #
-# Read the hierarcy of '.goarc' files
+# Read the hierarcy of 'goarc' files
 #
 
 set goarc_path_elements [file split $project_dir]
-set goarc_name ".goarc"
+set goarc_name "goarc"
 set goarc_path [file separator]
 
 
 #
-# The .goarc file may contain paths relative to the local directory
+# The goarc file may contain paths relative to the local directory
 # or relative to the home directory ('~' character). Convert those
 # to absolute paths.
 #
@@ -208,13 +208,18 @@ foreach path_elem $goarc_path_elements {
 
 	set goarc_path           [file join $goarc_path $path_elem]
 	set goarc_path_candidate [file join $goarc_path $goarc_name]
+	set deprecated_goarc     [file join $goarc_path .$goarc_name]
+
+	if {[file exists $deprecated_goarc]} {
+		log "ignoring hidden '.goarc' file at $goarc_path\n" \
+		    "\n Consider renaming the file to 'goarc' instead\n" }
 
 	if {[file exists $goarc_path_candidate]} {
 
 		set goarc_file_path [file join $goarc_path $goarc_name]
 
 		#
-		# Change to the directory of the .goarc file before including it
+		# Change to the directory of the goarc file before including it
 		# so that the commands of the file are executed in the expected
 		# directory.
 		#

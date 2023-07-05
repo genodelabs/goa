@@ -1044,7 +1044,7 @@ proc assert_definition_of_depot_user { } {
 
 	exit_with_error "missing definition of depot user\n" \
 	                "\n You can define your depot user name by setting the 'depot_user'" \
-	                "\n variable in a .goarc file, or by specifing the '--depot-user <name>'"\
+	                "\n variable in a goarc file, or by specifing the '--depot-user <name>'"\
 	                "\n command-line argument.\n"
 }
 
@@ -1068,7 +1068,7 @@ proc versioned_project_archive { type { pkg_name ""} } {
 		if {$sculpt_version == ""} {
 			exit_with_error "missing definition of sculpt version\n" \
 			                "\n You can define the sculpt version by setting the 'sculpt_version'" \
-			                "\n variable in a .goarc file, or by specifing the '--sculpt-version <version>'"\
+			                "\n variable in a goarc file, or by specifing the '--sculpt-version <version>'"\
 			                "\n command-line argument.\n" }
 
 		return $depot_user/index/$sculpt_version
@@ -1097,7 +1097,7 @@ proc versioned_project_archive { type { pkg_name ""} } {
 	if {![info exists archive_version]} {
 		exit_with_error "version for archive $archive undefined\n" \
 		                "\n Create a 'version' file in your project directory, or" \
-		                "\n define 'set version($archive) <version>' in your .goarc file.\n"
+		                "\n define 'set version($archive) <version>' in your goarc file.\n"
 	}
 
 	if {$binary_archive} {
@@ -1150,7 +1150,7 @@ proc license_file { } {
 	if {![info exists license]} {
 		exit_with_error "cannot export src archive because the license is undefined\n" \
 		                "\n Create a 'LICENSE' file for the project, or" \
-		                "\n define 'set license <path>' in your .goarc file, or" \
+		                "\n define 'set license <path>' in your goarc file, or" \
 		                "\n specify '--license <path>' as argument.\n"
 	}
 
