@@ -247,9 +247,9 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 
 		# find in other archives
 		if {[_find_rom_in_archives $rom $binary_archives] == ""} {
-			exit_with_error "Unable to find content ROM module '$rom'." \
-			                "You either need to add it to the 'raw/' directory" \
-			                "or add the corresponding dependency to the 'archives' file." }
+			exit_with_error "Unable to find content ROM module '$rom'.\n" \
+			                "\n You either need to add it to the 'raw/' directory" \
+			                "\n or add the corresponding dependency to the 'archives' file." }
 	}
 
 	lappend rom_modules {*}$default_rom_modules
