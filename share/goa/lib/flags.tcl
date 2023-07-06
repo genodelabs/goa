@@ -62,7 +62,6 @@ set ld_script_dir [file join $tool_dir ld]
 set     ldflags { }
 lappend ldflags -gc-sections
 lappend ldflags -z max-page-size=0x1000
-lappend ldflags -Ttext=0x01000000
 lappend ldflags --eh-frame-hdr -rpath-link=.
 
 if {$ld_march != ""} {
@@ -73,6 +72,10 @@ set prefixed_flags { }
 foreach flag $ldflags {
 	lappend prefixed_flags "-Wl,$flag" }
 set ldflags $prefixed_flags
+
+# set -Ttext flag only for executables
+set ldflags_so [list {*}$ldflags]
+lappend ldflags -Wl,-Ttext=0x01000000
 
 
 #
