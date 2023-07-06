@@ -36,8 +36,6 @@
 		<rom label="libdrm.lib.so"/>
 		<rom label="mesa.lib.so"/>
 		<rom label="qt5_component.lib.so"/>
-		<rom label="qt5_dejavusans.tar"/>
-		<rom label="qt5_libqgenode.tar"/>
 		<rom label="stdcxx.lib.so"/>
 		<rom label="vfs.lib.so"/>
 		<rom label="vfs_gpu.lib.so"/>
