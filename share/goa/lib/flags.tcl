@@ -93,7 +93,7 @@ lappend ldlibs_exe    -T [file join $ld_script_dir genode_dyn.ld]
 
 set     ldlibs_so     { }
 lappend ldlibs_so     -Wl,-shared
-lappend ldlibs_so     -l:ldso_so_support.lib.a
+lappend ldlibs_so     -Wl,--whole-archive -l:ldso_so_support.lib.a -Wl,--no-whole-archive
 lappend ldlibs_so     -T [file join $ld_script_dir genode_rel.ld]
 
 # determine ABIs to link against the executable
