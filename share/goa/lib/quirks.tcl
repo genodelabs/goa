@@ -92,3 +92,9 @@ if {[using_api blit]} {
 
 	lappend lib_src [file join $blit_dir blit.cc]
 }
+
+if {[using_api gui_session]} {
+
+	# prevent strict-aliasing errors in gui_session.h
+	lappend cxxflags -fno-strict-aliasing
+}
