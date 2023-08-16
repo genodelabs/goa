@@ -2,13 +2,16 @@
 proc create_or_update_build_dir { } { mirror_source_dir_to_build_dir }
 
 proc generate_static_stubs { libs } {
-	global tool_dir abi_dir cross_dev_prefix cc_march verbose project_name
+	global tool_dir abi_dir cross_dev_prefix cc_march cflags cppflags verbose project_name lib_src
 	set     cmd "make -f $tool_dir/lib/gen_static_stubs.mk"
 	lappend cmd "LIBS=[join $libs { }]"
 	lappend cmd "TOOL_DIR=$tool_dir"
 	lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
 	lappend cmd "ABI_DIR=$abi_dir"
 	lappend cmd "CC_MARCH=[join $cc_march { }]"
+	lappend cmd "CFLAGS=$cflags"
+	lappend cmd "CPPFLAGS=$cppflags"
+	lappend cmd "RUST_COMPAT_LIB=$lib_src"
 	diag "generate static library stubs via command: [join $cmd { }]"
 
 	if {[catch { exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:stubs\] /" >@ stdout }]} {
@@ -34,16 +37,6 @@ proc build { } {
 
 	foreach x $ldlibs_common {
 		lappend rustflags -C link-arg=$x
-	}
-
-	#
-	# If compat-libc.lib.so is present, move it to the front (Note: this breaks
-	# 'fork', so better don't use 'fork')
-	#
-	if {[using_api compat-libc]} {
-		set idx [lsearch -exact $ldlibs_exe "-l:compat-libc.lib.so"]
-		if {$idx != -1} { set ldlibs_exe [lreplace $ldlibs_exe $idx $idx] }
-		set ldlibs_exe [linsert $ldlibs_exe 0 "-l:compat-libc.lib.so"]
 	}
 
 	foreach x $ldlibs_exe {

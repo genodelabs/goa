@@ -98,3 +98,10 @@ if {[using_api gui_session]} {
 	# prevent strict-aliasing errors in gui_session.h
 	lappend cxxflags -fno-strict-aliasing
 }
+
+if {[using_api compat-libc]} {
+
+	set compat_libc_dir [file join [api_archive_dir compat-libc] src lib compat-libc]
+
+	lappend lib_src [file join $compat_libc_dir compat.cc]
+}
