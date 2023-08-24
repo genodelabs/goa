@@ -18,17 +18,16 @@ $(foreach S,$(SYMBOL_FILES),$(eval SYMBOL_FILE(${notdir $S}) := $S))
 
 ABIS := $(addsuffix .lib.so, $(addprefix $(ABI_DIR)/,$(notdir $(SYMBOL_FILES))))
 
-default: $(ABIS)
+SYMBOLS_NEW := $(addprefix $(ABI_DIR)/,$(addsuffix .symbols.s.new,$(notdir $(SYMBOL_FILES))))
 
-# make symbols.s files depend on the symbols files of the depot
-$(foreach S,$(SYMBOL_FILES),$(eval $(ABI_DIR)/$(notdir $S).symbols.s: $S))
+default: $(SYMBOLS_NEW) $(ABIS)
 
 ASM_SYM_DEPENDENCY := .long \1
 ifeq ($(ARCH),x86_64)
 ASM_SYM_DEPENDENCY := movq \1@GOTPCREL(%rip), %rax
 endif
 
-$(ABI_DIR)/%.symbols.s:
+$(SYMBOLS_NEW): $(ABI_DIR)/%.symbols.s.new:
 	mkdir -p $(dir $@)
 	sed -e "s/^\(\w\+\) D \(\w\+\)\$$/.data; .global \1; .type \1,%object; .size \1,\2; \1:/p" \
 	    -e "s/^\(\w\+\) V/.data; .weak \1; .type \1,%object; \1:/p" \
@@ -38,6 +37,13 @@ $(ABI_DIR)/%.symbols.s:
 	    -e "s/^\(\w\+\) B \(\w\+\)\$$/.bss; .global \1; .type \1,%object; .size \1,\2; \1:/p" \
 	    -e "s/^\(\w\+\) U/.text; .global \1; $(ASM_SYM_DEPENDENCY)/p" \
 	    ${SYMBOL_FILE($*)} > $@
+	if [ -f $(ABI_DIR)/$*.symbols.s ]; then \
+		diff -q $@ $(ABI_DIR)/$*.symbols.s || rm $(ABI_DIR)/$*.symbols.s; \
+	fi
+	if [ ! -f $(ABI_DIR)/$*.symbols.s ]; then \
+		cp $@ $(ABI_DIR)/$*.symbols.s; \
+	fi
+	rm $@
 
 $(ABI_DIR)/%.symbols.o: $(ABI_DIR)/%.symbols.s
 	$(CROSS_DEV_PREFIX)gcc $(CC_MARCH) -c $< -o $@
