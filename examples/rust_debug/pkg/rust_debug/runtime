@@ -1,0 +1,17 @@
+ <runtime ram="10M" caps="1000" binary="rust-debug">
+   <config>
+     <libc stdout="/dev/log" stderr="/dev/log"/>
+     <vfs>
+       <dir name="dev">
+         <log/>
+       </dir>
+     </vfs>
+     <arg value="rust-debug"/>
+   </config>
+   <content>
+     <rom label="rust-debug"/>
+     <rom label="posix.lib.so"/>
+     <rom label="libc.lib.so"/>
+     <rom label="vfs.lib.so"/>
+   </content>
+ </runtime>
