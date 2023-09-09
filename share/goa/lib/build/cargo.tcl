@@ -23,7 +23,7 @@ proc generate_static_stubs { libs } {
 
 proc build { } {
 
-	global build_dir cross_dev_prefix verbose project_name jobs project_dir
+	global build_dir cross_dev_prefix verbose debug project_name jobs project_dir
 	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe ldlibs_so lib_src
 	global cc_march
 
@@ -52,10 +52,12 @@ proc build { } {
 
 	set cmd { }
 	lappend cmd cargo build
-	lappend cmd "-r"
+	if {!$debug} {
+		lappend cmd "-r" }
 	lappend cmd "--target" x86_64-unknown-freebsd
 	lappend cmd --config target.x86_64-unknown-freebsd.linker="$cross_dev_prefix\gcc"
 	lappend cmd --config profile.release.panic="abort"
+	lappend cmd --config profile.dev.panic="abort"
 
 	set copy [list cp -f -l]
 
@@ -73,12 +75,21 @@ proc build { } {
 	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:cargo\] /" >@ stdout} msg]} {
 		exit_with_error "build via cargo failed: $msg" }
 
-	diag "copy release binaries"
-	set binaries [exec find target/x86_64-unknown-freebsd/release -maxdepth 1 -type f -executable]
-	lappend copy $binaries .
+	if {$debug} {
+		diag "copy debug binaries"
+		set binaries [exec find target/x86_64-unknown-freebsd/debug -maxdepth 1 -type f -executable]
+		lappend copy $binaries .
 
-	if {[catch {exec -ignorestderr {*}$copy | sed "s/^/\[$project_name:copy\] /" >@ stdout} msg]} {
-		exit_with_error "moving release binary failed: $msg" }
+		if {[catch {exec -ignorestderr {*}$copy | sed "s/^/\[$project_name:copy\] /" >@ stdout} msg]} {
+			exit_with_error "moving debug binary failed: $msg" }
+	} else {
+		diag "copy release binaries"
+		set binaries [exec find target/x86_64-unknown-freebsd/release -maxdepth 1 -type f -executable]
+		lappend copy $binaries .
+
+		if {[catch {exec -ignorestderr {*}$copy | sed "s/^/\[$project_name:copy\] /" >@ stdout} msg]} {
+			exit_with_error "moving release binary failed: $msg" }
+	}
 
 	cd $orig_pwd
 }
