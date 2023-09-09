@@ -160,6 +160,7 @@ set jobs                     1
 set ld_march                 ""
 set cc_march                 ""
 set olevel                   "-O2"
+set debug                    0
 set versions_from_genode_dir ""
 set common_var_dir           ""
 set depot_overwrite          0
@@ -396,6 +397,9 @@ if {$perform(run-dir)} {
 if {$perform(build)} {
 	if {[consume_optional_cmdline_switch "--warn-strict"   ]} { set warn_strict 1 }
 	if {[consume_optional_cmdline_switch "--no-warn-strict"]} { set warn_strict 0 }
+
+	# override 'debug' variable via optional command-line switch
+	if {[consume_optional_cmdline_switch "--debug"]} { set debug 1 }
 
 	set olevel [consume_optional_cmdline_arg "--olevel" $olevel]
 }
