@@ -139,6 +139,13 @@ Goa evaluates the following configuration variables.
   In this case, a path to a license file can be supplied via the 'license'
   configuration variable, or the '--license' command-line argument.
 
+:debug:
+  If set to 1, Goa uses debug build mode to produce binaries with debug
+  information (details depend on the build system). Goa uses release build
+  mode by default (i.e. debug is set to 0). Alternatively to defining the
+  configuration variable, the debug build mode can be enabled via the '--debug'
+  command-line argument.
+
 :warn_strict:
   If set to 1, Goa passes Genode's default strict C++ warning flags to the
   build system. It is implicitly enabled whenever a project uses the Genode
