@@ -1,10 +1,9 @@
-use std::io;
-
 extern "C" {
+    #![allow(unused)]
     fn wait_for_continue();
 }
 
-fn main() -> io::Result<()> {
+fn main() {
     // Invoke wait_for_continue only in debug build mode (--debug switch).
     #[cfg(debug_assertions)]
     unsafe {
@@ -13,6 +12,4 @@ fn main() -> io::Result<()> {
     }
 
     println!("Hello Genode Rust world!");
-
-    Ok(())
 }
