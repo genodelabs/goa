@@ -34,9 +34,11 @@ Cargo
 =====
 If Goa encounters a Cargo.toml file in the src/ directory, it uses Cargo
 (see https://github.com/rust-lang/cargo/) to build a Rust project. Cargo is
-configured to build a release binary. Use the --debug switch in goa to build a
-debug binary. For more information on obtaining a Rust toolchain for Genode,
-consult the release notes for Genode 23.05 at
+configured to build a release binary. Use the --debug command-line argument in
+goa to switch to the dev profile
+(see https://doc.rust-lang.org/cargo/reference/profiles.html) and build a debug
+binary. For more information on obtaining a Rust toolchain for Genode, consult
+the release notes for Genode 23.05 at
 https://genode.org/documentation/release-notes/23.05.
 
 CMake
