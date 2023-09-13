@@ -44,6 +44,9 @@ if {$cc_march != ""} {
 if {[info exists warn_strict] && $warn_strict} {
 	lappend cflags -Wall }
 
+if {$debug} {
+	lappend cflags -g }
+
 
 #
 # C++-compiler flags
