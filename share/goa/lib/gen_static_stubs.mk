@@ -13,7 +13,7 @@ default: $(STATIC_LIBS)
 $(ABI_DIR)/empty.c:
 	touch $(ABI_DIR)/empty.c
 
-$(ABI_DIR)/libc.o:
+$(ABI_DIR)/libutil.o:
 	$(CROSS_DEV_PREFIX)g++ $(CFLAGS) $(CPP_FLAGS) $(CC_MARCH) -c $(RUST_COMPAT_LIB) -o $@
 
 $(ABI_DIR)/%.o: $(ABI_DIR)/empty.c
