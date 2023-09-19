@@ -26,6 +26,7 @@ proc create_or_update_build_dir { } {
 	lappend cmd "-DCMAKE_SHARED_LINKER_FLAGS='$ldflags_so $ldlibs_common $ldlibs_so'"
 	lappend cmd "-DCMAKE_MODULE_LINKER_FLAGS='$ldflags_so $ldlibs_common $ldlibs_so'"
 	lappend cmd "-DCMAKE_INSTALL_PREFIX:PATH=[file join $build_dir install]"
+	lappend cmd "-DCMAKE_SYSTEM_LIBRARY_PATH='$abi_dir'"
 
 	if {[info exists cmake_quirk_args]} {
 		foreach arg $cmake_quirk_args {

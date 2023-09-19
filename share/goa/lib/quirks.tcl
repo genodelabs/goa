@@ -66,7 +66,6 @@ if {[using_api sdl]} {
 
 	# bring CMake on the right track to find the headers and library
 	lappend cmake_quirk_args "-DSDL_INCLUDE_DIR=$sdl_include_dir"
-	lappend cmake_quirk_args "-DCMAKE_SYSTEM_LIBRARY_PATH='$abi_dir'"
 	lappend cmake_quirk_args "-DSDL_LIBRARY:STRING=':sdl.lib.so'"
 }
 
