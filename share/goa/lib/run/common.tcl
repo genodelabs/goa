@@ -335,6 +335,7 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 					<service name="CPU"> <parent/> </service>
 					<service name="LOG"> <parent/> </service>
 					<service name="ROM"> <parent/> </service>
+					<service name="Timer">  <child name="timer"/> </service>
 				</route>
 			</start>
 		}
