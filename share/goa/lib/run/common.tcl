@@ -210,7 +210,7 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	set known_services [concat $base_services $other_services]]
 
 	# services supported by black_hole component
-	set blackhole_supported_services [list report audio_io audio_out event \
+	set blackhole_supported_services [list report audio_in audio_out event \
 	                                       capture gpu usb uplink]
 
 	# check and acquire required/provided services from runtime file
