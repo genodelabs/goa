@@ -552,7 +552,7 @@ proc prepare_ldso_support_stub { used_apis } {
 	foreach api_path $used_apis {
 		set parts [file split $api_path]
 		set api [lindex $parts 2]
-		if {[string compare $api "base"] == 0} {
+		if {[string compare $api "so"] == 0} {
 			lappend so_api $api_path
 		}
 	}
