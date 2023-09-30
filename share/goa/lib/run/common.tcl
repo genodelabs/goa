@@ -189,7 +189,7 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	upvar 1 ${&runtime_archives} runtime_archives
 	upvar 1 ${&rom_modules} rom_modules
 
-	global project_name run_dir var_dir run_as bin_dir
+	global run_pkg run_dir var_dir run_as bin_dir
 
 	set ram    [try_query_attr_from_file $runtime_file ram]
 	set caps   [try_query_attr_from_file $runtime_file caps]
@@ -362,7 +362,7 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 
 			} $start_nodes {
 
-			<start name="} $project_name {" caps="} $caps {">
+			<start name="} $run_pkg {" caps="} $caps {">
 				<resource name="RAM" quantum="} $ram {"/>
 				<binary name="} $binary {"/>
 				<provides>} $provides {</provides>
