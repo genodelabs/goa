@@ -13,7 +13,7 @@ proc create_or_update_build_dir { } {
 	cd $build_dir
 
 	lappend ldflags "-Wl,--whole-archive"
-	lappend ldlibs_common  "-lgcc"
+	lappend ldlibs_common -Wl,--whole-archive -lgcc -Wl,--no-whole-archive
 
 	set ::env(LDFLAGS) "$ldflags $ldlibs_common $ldlibs_exe"
 
