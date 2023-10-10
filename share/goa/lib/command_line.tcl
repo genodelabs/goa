@@ -440,8 +440,8 @@ if {![info exists arch]} {
 
 if {![info exists cross_dev_prefix]} {
 	switch $arch {
-	arm_v8a { set cross_dev_prefix "/usr/local/genode/tool/21.05/bin/genode-aarch64-" }
-	x86_64  { set cross_dev_prefix "/usr/local/genode/tool/21.05/bin/genode-x86-"  }
+	arm_v8a { set cross_dev_prefix "/usr/local/genode/tool/23.05/bin/genode-aarch64-" }
+	x86_64  { set cross_dev_prefix "/usr/local/genode/tool/23.05/bin/genode-x86-"  }
 	default { exit_with_error "tool-chain prefix is not defined" }
 	}
 }
