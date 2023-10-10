@@ -1210,7 +1210,7 @@ proc pkgs_from_index { index_file } {
 # Run `goa export` in specified project directory
 #
 proc export_dependent_project { dir arch depot_overwrite { pkg_name "" } } {
-	global argv0 jobs depot_user depot_dir
+	global argv0 jobs depot_user depot_dir versions_from_genode_dir
 	global public_dir common_var_dir var_dir verbose original_dir
 
 	set orig_pwd [pwd]
@@ -1228,6 +1228,9 @@ proc export_dependent_project { dir arch depot_overwrite { pkg_name "" } } {
 		lappend cmd --common-var-dir $common_var_dir
 	} else {
 		lappend cmd --common-var-dir $var_dir
+	}
+	if {[info exists versions_from_genode_dir]} {
+		lappend cmd --versions-from-genode-dir $versions_from_genode_dir
 	}
 	if {$verbose} {
 		lappend cmd --verbose }
