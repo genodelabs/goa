@@ -155,7 +155,7 @@ proc find_project_dir_for_archive { type name } {
 	set orig_pwd [pwd]
 	set candidates ""
 
-	set find_cmd_base [list find -not -path "*/depot/*" \
+	set find_cmd_base [list find -L -not -path "*/depot/*" \
 	                        -and -not -path "*/contrib/*" \
 	                        -and -not -path "*/build/*" \
 	                        -and -not -path "*/var/*"]

@@ -93,7 +93,7 @@ proc goa_project_dirs { } {
 	# any directories behind a 'depot/', 'contrib/', 'build/', or 'var/'
 	# directory.
 	#
-	set project_candidates [exec find -not -path "*/depot/*" \
+	set project_candidates [exec find -L -not -path "*/depot/*" \
 	                             -and -not -path "*/contrib/*" \
 	                             -and -not -path "*/build/*" \
 	                             -and -not -path "*/var/*" \
