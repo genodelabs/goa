@@ -3,10 +3,10 @@ genodelabs/src/stdcxx
 genodelabs/src/vfs
 genodelabs/src/vfs_pipe
 genodelabs/src/zlib
-ssumpf/src/expat/2023-02-13
-ssumpf/src/libdrm/2023-04-25
-ssumpf/src/mesa/2023-04-25
-ssumpf/src/qt5_base/2023-04-25
-ssumpf/src/qt5_component/2023-04-25
-ssumpf/src/qt5_svg/2023-04-25
-ssumpf/src/vfs_gpu/2023-04-25
+genodelabs/src/expat
+genodelabs/src/libdrm
+genodelabs/src/mesa
+genodelabs/src/qt5_base
+genodelabs/src/qt5_component
+genodelabs/src/qt5_svg
+genodelabs/src/vfs_gpu
