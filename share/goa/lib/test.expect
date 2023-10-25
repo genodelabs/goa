@@ -12,6 +12,7 @@
 set tests {
 	hello_make
 	hello_posix
+	hello_rust
 	cmake_step2:40
 	cmake_library
 	qt5_core:100
