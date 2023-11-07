@@ -1,4 +1,4 @@
 genodelabs/api/libc
 genodelabs/api/stdcxx
-genodelabs/api/qt5
+genodelabs/api/qt5_base
 genodelabs/api/qt5_component

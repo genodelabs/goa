@@ -23,7 +23,7 @@ set  version(genodelabs/api/openssl)                     2023-04-16
 set  version(genodelabs/api/os)                          2023-08-21
 set  version(genodelabs/api/pcre)                        2019-02-25
 set  version(genodelabs/api/posix)                       2020-05-17
-set  version(genodelabs/api/qt5)                         2023-04-16
+set  version(genodelabs/api/qt5_base)                    2023-05-26
 set  version(genodelabs/api/qt5_component)               2023-04-16
 set  version(genodelabs/api/report_session)              2023-05-26
 set  version(genodelabs/api/rtc_session)                 2023-05-26

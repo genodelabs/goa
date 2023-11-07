@@ -2,10 +2,10 @@
 proc create_or_update_build_dir { } {
 
 	global build_dir project_dir abi_dir cross_dev_prefix arch
-	global cppflags cxxflags ldflags ldlibs_exe project_name
-	global env
+	global cppflags cxxflags ldflags ldflags_so ldlibs_common
+	global ldlibs_exe ldlibs_so project_name env
 
-	set qt5_tool_dir "/usr/local/genode/qt5/20.08/bin"
+	set qt5_tool_dir "/usr/local/genode/tool/23.05/bin"
 
 	if {$arch == "x86_64"} {
 		set qmake_platform "genode-x86_64-g++"
@@ -24,16 +24,19 @@ proc create_or_update_build_dir { } {
 	file delete -force qmake_root
 	file mkdir qmake_root
 
+	set qt5_api "qt5_base"
+
 	file link -symbolic qmake_root/bin $qt5_tool_dir
-	file link -symbolic qmake_root/include [file join [api_archive_dir qt5] include]
+	file link -symbolic qmake_root/include [file join [api_archive_dir $qt5_api] include]
 	file link -symbolic qmake_root/lib $abi_dir
 
+
 	file mkdir qmake_root/mkspecs
-	file link -symbolic qmake_root/mkspecs/common            [file join [api_archive_dir qt5] mkspecs common]
-	file link -symbolic qmake_root/mkspecs/features          [file join [api_archive_dir qt5] mkspecs features]
-	file link -symbolic qmake_root/mkspecs/$qmake_platform   [file join [api_archive_dir qt5] mkspecs $qmake_platform]
-	file link -symbolic qmake_root/mkspecs/linux-g++         [file join [api_archive_dir qt5] mkspecs linux-g++]
-	file link -symbolic qmake_root/mkspecs/modules           [file join [api_archive_dir qt5] mkspecs modules]
+	file link -symbolic qmake_root/mkspecs/common            [file join [api_archive_dir $qt5_api] mkspecs common]
+	file link -symbolic qmake_root/mkspecs/features          [file join [api_archive_dir $qt5_api] mkspecs features]
+	file link -symbolic qmake_root/mkspecs/$qmake_platform   [file join [api_archive_dir $qt5_api] mkspecs $qmake_platform]
+	file link -symbolic qmake_root/mkspecs/linux-g++         [file join [api_archive_dir $qt5_api] mkspecs linux-g++]
+	file link -symbolic qmake_root/mkspecs/modules           [file join [api_archive_dir $qt5_api] mkspecs modules]
 	file link -symbolic qmake_root/mkspecs/qconfig.pri       $qmake_platform/qconfig.pri
 	file link -symbolic qmake_root/mkspecs/qmodule.pri       $qmake_platform/qmodule.pri
 
@@ -48,7 +51,6 @@ proc create_or_update_build_dir { } {
 	lappend qmake_ldlibs -l:libm.lib.so
 	lappend qmake_ldlibs -l:stdcxx.lib.so
 	lappend qmake_ldlibs -l:qt5_component.lib.so
-	lappend qmake_ldlibs -l:qt5_component.lib.so
 
 	if {$arch == "x86_64"} {
 		lappend qmake_ldlibs [file normalize [exec $cross_dev_prefix\gcc -m64 -print-libgcc-file-name]]
@@ -56,15 +58,17 @@ proc create_or_update_build_dir { } {
 		lappend qmake_ldlibs [file normalize [exec $cross_dev_prefix\gcc -print-libgcc-file-name]]
 	}
 
-	set ::env(GENODE_QMAKE_CC)         "${cross_dev_prefix}gcc"
-	set ::env(GENODE_QMAKE_CXX)        "${cross_dev_prefix}g++"
-	set ::env(GENODE_QMAKE_LINK)       "${cross_dev_prefix}g++"
-	set ::env(GENODE_QMAKE_AR)         "${cross_dev_prefix}ar"
-	set ::env(GENODE_QMAKE_OBJCOPY)    "${cross_dev_prefix}objcopy"
-	set ::env(GENODE_QMAKE_NM)         "${cross_dev_prefix}nm"
-	set ::env(GENODE_QMAKE_STRIP)      "${cross_dev_prefix}strip"
-	set ::env(GENODE_QMAKE_CFLAGS)     "$qmake_cflags"
-	set ::env(GENODE_QMAKE_LFLAGS_APP) "-nostdlib $ldflags $ldlibs_exe $qmake_ldlibs"
+	set ::env(GENODE_QMAKE_CC)           "${cross_dev_prefix}gcc"
+	set ::env(GENODE_QMAKE_CXX)          "${cross_dev_prefix}g++"
+	set ::env(GENODE_QMAKE_LINK)         "${cross_dev_prefix}g++"
+	set ::env(GENODE_QMAKE_AR)           "${cross_dev_prefix}ar"
+	set ::env(GENODE_QMAKE_OBJCOPY)      "${cross_dev_prefix}objcopy"
+	set ::env(GENODE_QMAKE_NM)           "${cross_dev_prefix}nm"
+	set ::env(GENODE_QMAKE_STRIP)        "${cross_dev_prefix}strip"
+	set ::env(GENODE_QMAKE_CFLAGS)       "$qmake_cflags"
+	set ::env(GENODE_QMAKE_LFLAGS_APP)   "-nostdlib $ldflags $ldlibs_exe $qmake_ldlibs"
+	set ::env(GENODE_QMAKE_LFLAGS_SHLIB) "-nostdlib $ldflags_so $ldlibs_common $ldlibs_so $qmake_ldlibs"
+
 
 	set qt_conf "qmake_root/mkspecs/$qmake_platform/qt.conf"
 	set cmd [list [file join $qt5_tool_dir qmake] -qtconf $qt_conf [file join $project_dir src]]
