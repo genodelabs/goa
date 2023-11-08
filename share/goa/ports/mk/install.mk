@@ -122,6 +122,9 @@ _patch: $(_PATCH_TARGETS)
 
 $(_PATCH_TARGETS): $(DOWNLOADS)
 
+# Apply patches serially
+.NOTPARALLEL: _patch
+
 phony/patches/%:
 	@$(MSG_APPLY)$*
 	$(VERBOSE)test -f $(firstword $(call _patch_input,$*) fail) ||\
