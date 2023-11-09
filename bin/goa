@@ -896,7 +896,7 @@ proc extract_api_artifacts { } {
 		if {![file exists $target_dir]} {
 			file mkdir $target_dir
 		}
-		file link $link_target $file
+		file copy $file $link_target
 	}
 }
 
