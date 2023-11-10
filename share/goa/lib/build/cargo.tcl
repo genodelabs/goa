@@ -24,7 +24,7 @@ proc generate_static_stubs { libs } {
 proc build { } {
 
 	global build_dir cross_dev_prefix verbose debug project_name jobs project_dir
-	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe ldlibs_so lib_src
+	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe lib_src
 	global cc_march
 
 	set rustflags { }
