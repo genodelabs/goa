@@ -1547,11 +1547,11 @@ if {$perform(publish)} {
 		lappend archives [versioned_project_archive api] }
 
 	if {$publish_pkg != ""} {
-		lappend archives [versioned_project_archive pkg $publish_pkg]
+		lappend archives [apply_arch [versioned_project_archive pkg $publish_pkg] $arch]
 	} else {
 		set pkgs [glob -nocomplain -directory pkg -tail * -type d]
 		foreach pkg $pkgs {
-			lappend archives [versioned_project_archive pkg $pkg] }
+			lappend archives [apply_arch [versioned_project_archive pkg $pkg] $arch] }
 	}
 
 	set index_file [file join $project_dir index]
