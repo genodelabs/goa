@@ -7,3 +7,6 @@ set(CMAKE_SHARED_LIBRARY_RPATH_LINK_C_FLAG "-Wl,-rpath-link,")
 
 # library that contains 'dlopen' and friends
 set(CMAKE_DL_LIBS "-l:libc.lib.so")
+
+# force link libgcc to all targets
+link_libraries(gcc)
