@@ -85,7 +85,7 @@ lappend ldflags -Wl,-Ttext=0x01000000
 # Library arguments for the linker
 #
 set     ldlibs_common { }
-lappend ldlibs_common -nostartfiles -nodefaultlibs -static-libgcc
+lappend ldlibs_common -nostartfiles -nodefaultlibs -lgcc
 lappend ldlibs_common -L$abi_dir
 
 set     ldlibs_exe    { }
@@ -99,7 +99,7 @@ lappend ldlibs_exe    -T [file join $ld_script_dir genode_dyn.ld]
 
 set     ldlibs_so     { }
 lappend ldlibs_so     -Wl,-shared
-lappend ldlibs_so     -Wl,--whole-archive -l:ldso_so_support.lib.a -Wl,--no-whole-archive
+lappend ldlibs_so     -Wl,--whole-archive -Wl,-l:ldso_so_support.lib.a -Wl,--no-whole-archive
 lappend ldlibs_so     -T [file join $ld_script_dir genode_rel.ld]
 
 # determine ABIs to link against the executable
