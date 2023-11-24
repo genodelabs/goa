@@ -45,8 +45,6 @@ proc create_or_update_build_dir { } {
 	append qmake_cflags "-I$build_dir/qmake_root/include/QtCore/spec/$qmake_platform"
 
 	set qmake_ldlibs { }
-	lappend qmake_ldlibs -nostdlib
-	lappend qmake_ldlibs -L$abi_dir
 	lappend qmake_ldlibs -l:libc.lib.so
 	lappend qmake_ldlibs -l:libm.lib.so
 	lappend qmake_ldlibs -l:stdcxx.lib.so
@@ -60,8 +58,8 @@ proc create_or_update_build_dir { } {
 	set ::env(GENODE_QMAKE_NM)           "${cross_dev_prefix}nm"
 	set ::env(GENODE_QMAKE_STRIP)        "${cross_dev_prefix}strip"
 	set ::env(GENODE_QMAKE_CFLAGS)       "$qmake_cflags"
-	set ::env(GENODE_QMAKE_LFLAGS_APP)   "-nostdlib $ldflags $ldlibs_exe $qmake_ldlibs"
-	set ::env(GENODE_QMAKE_LFLAGS_SHLIB) "-nostdlib $ldflags_so $ldlibs_common $ldlibs_so $qmake_ldlibs"
+	set ::env(GENODE_QMAKE_LFLAGS_APP)   "$ldflags $ldlibs_common $ldlibs_exe $qmake_ldlibs"
+	set ::env(GENODE_QMAKE_LFLAGS_SHLIB) "$ldflags_so $ldlibs_common $ldlibs_so $qmake_ldlibs"
 
 	#
 	# libgcc must appear on the command line after all other libs
