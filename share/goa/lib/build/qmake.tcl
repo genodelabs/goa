@@ -52,12 +52,6 @@ proc create_or_update_build_dir { } {
 	lappend qmake_ldlibs -l:stdcxx.lib.so
 	lappend qmake_ldlibs -l:qt5_component.lib.so
 
-	if {$arch == "x86_64"} {
-		lappend qmake_ldlibs [file normalize [exec $cross_dev_prefix\gcc -m64 -print-libgcc-file-name]]
-	} else {
-		lappend qmake_ldlibs [file normalize [exec $cross_dev_prefix\gcc -print-libgcc-file-name]]
-	}
-
 	set ::env(GENODE_QMAKE_CC)           "${cross_dev_prefix}gcc"
 	set ::env(GENODE_QMAKE_CXX)          "${cross_dev_prefix}g++"
 	set ::env(GENODE_QMAKE_LINK)         "${cross_dev_prefix}g++"
@@ -69,6 +63,12 @@ proc create_or_update_build_dir { } {
 	set ::env(GENODE_QMAKE_LFLAGS_APP)   "-nostdlib $ldflags $ldlibs_exe $qmake_ldlibs"
 	set ::env(GENODE_QMAKE_LFLAGS_SHLIB) "-nostdlib $ldflags_so $ldlibs_common $ldlibs_so $qmake_ldlibs"
 
+	#
+	# libgcc must appear on the command line after all other libs
+	# (including those added by qmake) and using the QMAKE_LIBS
+	# variable achieves this, fortunately
+	#
+	set ::env(GENODE_QMAKE_LIBS) "-lgcc"
 
 	set qt_conf "qmake_root/mkspecs/$qmake_platform/qt.conf"
 	set cmd [list [file join $qt5_tool_dir qmake] -qtconf $qt_conf [file join $project_dir src]]
