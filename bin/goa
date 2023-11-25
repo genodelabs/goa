@@ -802,6 +802,7 @@ proc create_artifact_containers_from_list_file { list_file_path artifact_path ta
 			foreach file $files {
 				set cmd "tar rf $archive_path"
 				lappend cmd -C [file dirname $file]
+				lappend cmd --dereference
 				lappend cmd --transform "s#^#$archive_sub_dir#"
 				lappend cmd [file tail $file]
 
