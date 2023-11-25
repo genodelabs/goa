@@ -1,17 +1,32 @@
+##
+# Add include search path whenever using the given 'api'
+#
+# \param api   API for which the input-search path must be extended
+# \param args  include-search path elements relative to the API archive
+#
+proc append_include_dir_for_api { api args } {
+
+	if {[using_api $api]} {
+		global include_dirs
+		lappend include_dirs [file join [api_archive_dir $api] {*}$args]
+	}
+}
+
+# C runtime
+
+append_include_dir_for_api libc  include libc
+append_include_dir_for_api libc  include libc-genode
+
+if {$arch == "x86_64"} {
+	append_include_dir_for_api libc  include spec x86    libc
+	append_include_dir_for_api libc  include spec x86_64 libc
+}
+
+if {$arch == "arm_v8a"} {
+	append_include_dir_for_api libc  include spec arm_64 libc
+}
+
 if {[using_api libc]} {
-
-	set libc_include_dir [file join [api_archive_dir libc] include]
-
-	lappend include_dirs [file join $libc_include_dir libc]
-	lappend include_dirs [file join $libc_include_dir libc-genode]
-
-	if {$arch == "x86_64"} {
-		lappend include_dirs [file join $libc_include_dir spec x86    libc]
-		lappend include_dirs [file join $libc_include_dir spec x86_64 libc]
-	}
-	if {$arch == "arm_v8a"} {
-		lappend include_dirs [file join $libc_include_dir spec arm_64 libc]
-	}
 
 	# trigger include of 'sys/signal.h' to make NSIG visible
 	lappend cppflags "-D__BSD_VISIBLE"
@@ -19,21 +34,26 @@ if {[using_api libc]} {
 	lappend cppflags "-D__FreeBSD__=8"
 }
 
-if {[using_api stdcxx]} {
+if {[using_api compat-libc]} {
 
-	set stdcxx_include_dir [file join [api_archive_dir stdcxx] include]
+	set compat_libc_dir [file join [api_archive_dir compat-libc] src lib compat-libc]
 
-	lappend include_dirs [file join $stdcxx_include_dir stdcxx]
-	lappend include_dirs [file join $stdcxx_include_dir stdcxx std]
-	lappend include_dirs [file join $stdcxx_include_dir stdcxx c_global]
-
-	if {$arch == "x86_64"} {
-		lappend include_dirs [file join $stdcxx_include_dir spec x86_64 stdcxx]
-	}
-	if {$arch == "arm_v8a"} {
-		lappend include_dirs [file join $stdcxx_include_dir spec arm_64 stdcxx]
-	}
+	lappend lib_src [file join $compat_libc_dir compat.cc]
 }
+
+# Standard C++ library
+
+append_include_dir_for_api stdcxx  include stdcxx
+append_include_dir_for_api stdcxx  include stdcxx std
+append_include_dir_for_api stdcxx  include stdcxx c_global
+
+if {$arch == "x86_64"}  { append_include_dir_for_api stdcxx  include spec x86_64 stdcxx }
+if {$arch == "arm_v8a"} { append_include_dir_for_api stdcxx  include spec arm_64 stdcxx }
+
+# SDL
+
+append_include_dir_for_api sdl        include SDL
+append_include_dir_for_api sdl_image  include SDL
 
 if {[using_api sdl]} {
 
@@ -42,9 +62,7 @@ if {[using_api sdl]} {
 	if {![file exists $symlink_name]} {
 		file link -symbolic $symlink_name "sdl.lib.so" }
 
-	# search for headers in the inlude/SDL sub directory
 	set sdl_include_dir [file join [api_archive_dir sdl] include SDL]
-	lappend include_dirs $sdl_include_dir
 
 	# bring CMake on the right track to find the headers and library
 	lappend cmake_quirk_args "-DSDL_INCLUDE_DIR=$sdl_include_dir"
@@ -52,12 +70,13 @@ if {[using_api sdl]} {
 	lappend cmake_quirk_args "-DSDL_LIBRARY:STRING=':sdl.lib.so'"
 }
 
-if {[using_api curl]} {
+# Curl
 
-	if {$arch == "x86_64"} {
-		lappend include_dirs [file join [api_archive_dir curl] src lib curl spec 64bit curl]
-	}
+if {$arch == "x86_64"} {
+	append_include_dir_for_api curl  src lib curl spec 64bit curl
 }
+
+# Genode's posix library
 
 if {[using_api posix]} {
 
@@ -77,6 +96,8 @@ if {[using_api posix]} {
 	# prepend known-good link order of the critical libaries
     set ldlibs_exe [linsert $ldlibs_exe 0 "-l:libc.lib.so" "-l:libm.lib.so" "-l:posix.lib.so"]
 }
+
+# Genode's blit library
 
 if {[using_api blit]} {
 
@@ -99,9 +120,3 @@ if {[using_api gui_session]} {
 	lappend cxxflags -fno-strict-aliasing
 }
 
-if {[using_api compat-libc]} {
-
-	set compat_libc_dir [file join [api_archive_dir compat-libc] src lib compat-libc]
-
-	lappend lib_src [file join $compat_libc_dir compat.cc]
-}
