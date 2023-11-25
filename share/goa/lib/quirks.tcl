@@ -70,6 +70,13 @@ if {[using_api sdl]} {
 	lappend cmake_quirk_args "-DSDL_LIBRARY:STRING=':sdl.lib.so'"
 }
 
+# SDL2
+
+append_include_dir_for_api sdl2        include SDL2
+append_include_dir_for_api sdl2_mixer  include SDL2
+append_include_dir_for_api sdl2_image  include SDL2
+append_include_dir_for_api sdl2_ttf    include SDL2
+
 # Curl
 
 if {$arch == "x86_64"} {
