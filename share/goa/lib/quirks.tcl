@@ -76,6 +76,21 @@ append_include_dir_for_api sdl2_mixer  include SDL2
 append_include_dir_for_api sdl2_image  include SDL2
 append_include_dir_for_api sdl2_ttf    include SDL2
 
+if {[using_api sdl2]} {
+
+	# CMake's detection of libSDL expects the library named uppercase
+	set symlink_name [file join $abi_dir SDL2.lib.so]
+	if {![file exists $symlink_name]} {
+		file link -symbolic $symlink_name "sdl2.lib.so" }
+
+	# search for headers in the inlude/SDL sub directory
+	set sdl2_include_dir [file join [api_archive_dir sdl2] include SDL2]
+
+	# bring CMake on the right track to find the headers and library
+	lappend cmake_quirk_args "-DSDL2_INCLUDE_DIR=$sdl2_include_dir"
+	lappend cmake_quirk_args "-DSDL2_LIBRARY:STRING=':sdl2.lib.so'"
+}
+
 # Curl
 
 if {$arch == "x86_64"} {
