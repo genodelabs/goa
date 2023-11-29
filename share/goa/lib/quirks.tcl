@@ -91,6 +91,22 @@ if {[using_api sdl2]} {
 	lappend cmake_quirk_args "-DSDL2_LIBRARY:STRING=':sdl2.lib.so'"
 }
 
+if {[using_api sdl2_mixer]} {
+
+	# CMake's detection of SDL2_mixer expects the library named uppercase
+	set symlink_name [file join $abi_dir SDL2_mixer.lib.so]
+	if {![file exists $symlink_name]} {
+		file link -symbolic $symlink_name "sdl2_mixer.lib.so" }
+
+	# search for headers in the inlude/SDL2 sub directory
+	set sdl2_mixer_include_dir [file join [api_archive_dir sdl2_mixer] include SDL2]
+
+	# bring CMake on the right track to find the headers and library
+	lappend cmake_quirk_args "-DSDL2_MIXER_INCLUDE_DIR=$sdl2_mixer_include_dir"
+	lappend cmake_quirk_args "-DSDL2_MIXER_LIBRARY:STRING=':sdl2_mixer.lib.so'"
+}
+
+
 # Curl
 
 if {$arch == "x86_64"} {
