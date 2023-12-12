@@ -112,6 +112,16 @@ proc consume_optional_cmdline_switch { tag } {
 }
 
 
+proc depot_policy { } {
+	global depot_overwrite depot_retain
+
+	if { $depot_retain }    { return "retain" }
+	if { $depot_overwrite } { return "overwrite" }
+
+	return ""
+}
+
+
 proc read_file_content { path } {
 
 	# return empty string if file does not exist

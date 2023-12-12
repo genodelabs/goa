@@ -115,6 +115,13 @@ Goa evaluates the following configuration variables.
   to overwrite existing depot content. This can be achieved by setting the
   value to 1 or by specifying the '--depot-overwrite' command-line argument.
 
+:depot_retain:
+  Whenever Goa encounters the situation where a 'goa export' or 'goa publish'
+  command would overwrite existing depot content, it aborts the command.
+  By setting the value to 1 or by specifying the '--depot-retain' command-line
+  argument, Goa will not touch the existing depot content but continue the
+  command.
+
 :depot_user:
   Depot user name to use when exporting or publishing the project via the
   'export' or 'publish' commands. In order to be able to publish software,

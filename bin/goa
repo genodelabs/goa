@@ -157,14 +157,19 @@ if {$perform(depot-dir)} {
 
 if {$perform(add-depot-user)} {
 
+	set policy [depot_policy]
+
 	set new_depot_user_dir [file join $depot_dir $new_depot_user]
 	if {[file exists $new_depot_user_dir]} {
-		if {$depot_overwrite} {
+		if {$policy == "overwrite"} {
 			file delete -force $new_depot_user_dir
+		} elseif {$policy == "retain"} {
+			log "depot user directory $new_depot_user_dir already exists"
+			return
 		} else {
 			exit_with_error "depot user directory $new_depot_user_dir already exists\n" \
 			                "\n You may specify '--depot-overwrite' to replace" \
-			                "the existing directory.\n"
+			                "or '--depot-retain' to keep the existing directory.\n"
 		}
 	}
 
@@ -1114,18 +1119,22 @@ proc versioned_project_archive { type { pkg_name ""} } {
 # \return path to the archive directory (or file if type=="index")
 #
 proc prepare_project_archive_directory { type { pkg_name "" } } {
-	global depot_dir depot_overwrite
+	global depot_dir
 
+	set policy [depot_policy]
 	set archive [versioned_project_archive $type $pkg_name]
 	set dst_dir "[file join $depot_dir $archive]"
 
 	if {[file exists $dst_dir]} {
-		if {$depot_overwrite} {
+		if {$policy == "overwrite"} {
 			file delete -force $dst_dir
+		} elseif {$policy == "retain"} {
+			log "retaining existing depot archive $archive"
+			return ""
 		} else {
 			exit_with_error "archive $archive already exists in the depot\n" \
 			                "\n You may specify '--depot-overwrite' to replace" \
-			                "the existing version.\n"
+			                "or '-depot-retain' to keep the existing version.\n"
 		}
 	}
 
@@ -1210,7 +1219,7 @@ proc pkgs_from_index { index_file } {
 ##
 # Run `goa export` in specified project directory
 #
-proc export_dependent_project { dir arch depot_overwrite { pkg_name "" } } {
+proc export_dependent_project { dir arch { pkg_name "" } } {
 	global argv0 jobs depot_user depot_dir versions_from_genode_dir
 	global public_dir common_var_dir var_dir verbose original_dir
 
@@ -1235,11 +1244,11 @@ proc export_dependent_project { dir arch depot_overwrite { pkg_name "" } } {
 	}
 	if {$verbose} {
 		lappend cmd --verbose }
-	if {$depot_overwrite} {
-		lappend cmd --depot-overwrite }
 	if {$pkg_name != ""} {
-		lappend cmd --pkg $pkg_name
-	}
+		lappend cmd --pkg $pkg_name }
+
+	# keep existing exports of dependent projects untouched
+	lappend cmd --depot-retain
 
 	diag "exporting project $dir via cmd: $cmd"
 
@@ -1297,53 +1306,59 @@ if {$perform(export)} {
 
 	if {[file exists $api_dir] && [file isdirectory $api_dir]} {
 		set dst_dir [prepare_project_archive_directory api]
-		set files [exec find $api_dir -not -type d -and -not -name "*~"]
-		foreach file $files {
-			regsub "$api_dir/" $file "" file_dir
-			set dir [file dirname $file_dir]
+		if {$dst_dir != ""} {
+			set files [exec find $api_dir -not -type d -and -not -name "*~"]
+			foreach file $files {
+				regsub "$api_dir/" $file "" file_dir
+				set dir [file dirname $file_dir]
 
-			# sanity check for include path
-			set out_dir $dir
-			set dir_parts [file split $dir]
-			if { [llength $dir_parts] > 1 && \
-			     [lindex $dir_parts 0] != "include" } {
-				set idx 0
-				set found 0
-				foreach part $dir_parts {
-					if {$part == "include"} {
-						set found $idx
+				# sanity check for include path
+				set out_dir $dir
+				set dir_parts [file split $dir]
+				if { [llength $dir_parts] > 1 && \
+				     [lindex $dir_parts 0] != "include" } {
+					set idx 0
+					set found 0
+					foreach part $dir_parts {
+						if {$part == "include"} {
+							set found $idx
+						}
+						incr idx
 					}
-					incr idx
+					if {$found == 0} {
+						exit_with_error "no valid include path found in api artifacts."
+					}
+					set out_dir [file join [lrange $dir_parts $found [llength $dir_parts]]]
 				}
-				if {$found == 0} {
-					exit_with_error "no valid include path found in api artifacts."
+				set target_dir [file join $dst_dir $out_dir]
+				if {![file exists $target_dir]} {
+					file mkdir $target_dir
 				}
-				set out_dir [file join [lrange $dir_parts $found [llength $dir_parts]]]
+				file copy $file [file join $target_dir [file tail $file]]
 			}
-			set target_dir [file join $dst_dir $out_dir]
-			if {![file exists $target_dir]} {
-				file mkdir $target_dir
-			}
-			file copy $file [file join $target_dir [file tail $file]]
-		}
 
-		file mkdir [file join $dst_dir lib]
-		if {[file exists [file join $project_dir "symbols"]]} {
-			file copy [file join $project_dir "symbols"] [file join $dst_dir lib]
+			file mkdir [file join $dst_dir lib]
+			if {[file exists [file join $project_dir "symbols"]]} {
+				file copy [file join $project_dir "symbols"] [file join $dst_dir lib]
+			}
+
+			log "exported $dst_dir"
 		}
 
 		lappend exported_archives [versioned_project_archive api]
-		log "exported $dst_dir"
 	}
 
 	if {[info exists raw_dir]} {
 		set dst_dir [prepare_project_archive_directory raw]
-		set files [exec find $raw_dir -not -type d -and -not -name "*~"]
-		foreach file $files {
-			file copy $file [file join $dst_dir [file tail $file]] }
+		if {$dst_dir != ""} {
+			set files [exec find $raw_dir -not -type d -and -not -name "*~"]
+			foreach file $files {
+				file copy $file [file join $dst_dir [file tail $file]] }
+
+			log "exported $dst_dir"
+		}
 
 		lappend exported_archives [versioned_project_archive raw]
-		log "exported $dst_dir"
 	}
 
 	# create src archive
@@ -1368,26 +1383,28 @@ if {$perform(export)} {
 				lappend files $optional_file } }
 
 		set dst_dir [prepare_project_archive_directory src]
+		if {$dst_dir != ""} {
+			foreach file $files {
+				file copy $file [file join $dst_dir [file tail $file]] }
 
-		foreach file $files {
-			file copy $file [file join $dst_dir [file tail $file]] }
+			file copy [license_file] [file join $dst_dir LICENSE]
 
-		file copy [license_file] [file join $dst_dir LICENSE]
+			exec find $dst_dir ( -name "*~" \
+			                     -or -name "*.rej" \
+			                     -or -name "*.orig" \
+			                     -or -name "*.swp" ) -delete
 
-		exec find $dst_dir ( -name "*~" \
-		                     -or -name "*.rej" \
-		                     -or -name "*.orig" \
-		                     -or -name "*.swp" ) -delete
+			# generate 'used_apis' file with specific versions
+			set fh [open [file join $dst_dir used_apis] "WRONLY CREAT TRUNC"]
+			foreach api $used_apis {
+				puts $fh [regsub {^.*?/.*?/} $api ""]
+			}
+			close $fh
 
-		# generate 'used_apis' file with specific versions
-		set fh [open [file join $dst_dir used_apis] "WRONLY CREAT TRUNC"]
-		foreach api $used_apis {
-			puts $fh [regsub {^.*?/.*?/} $api ""]
+			log "exported $dst_dir"
 		}
-		close $fh
 
 		lappend exported_archives [versioned_project_archive src]
-		log "exported $dst_dir"
 	}
 
 	# create pkg archive
@@ -1421,34 +1438,39 @@ if {$perform(export)} {
 		set runtime_archives [apply_versions $runtime_archives]
 
 		set dst_dir [prepare_project_archive_directory pkg $pkg]
+		if {$dst_dir != ""} {
+			# copy content from pkg directory as is
+			set files [exec find $pkg_dir -not -type d -and -not -name "*~"]
+			foreach file $files {
+				file copy $file [file join $dst_dir [file tail $file]] }
 
-		# copy content from pkg directory as is
-		set files [exec find $pkg_dir -not -type d -and -not -name "*~"]
-		foreach file $files {
-			file copy $file [file join $dst_dir [file tail $file]] }
+			# overwrite exported 'archives' file with specific versions
+			if {[llength $runtime_archives] > 0} {
+				set fh [open [file join $dst_dir archives] "WRONLY CREAT TRUNC"]
+				puts $fh [join $runtime_archives "\n"]
+				close $fh
+			}
 
-		# overwrite exported 'archives' file with specific versions
-		if {[llength $runtime_archives] > 0} {
-			set fh [open [file join $dst_dir archives] "WRONLY CREAT TRUNC"]
-			puts $fh [join $runtime_archives "\n"]
-			close $fh
+			log "exported $dst_dir"
 		}
 
 		lappend exported_archives [apply_arch [versioned_project_archive pkg $pkg] $arch]
-		log "exported $dst_dir"
 	}
 
 	# create bin archive
 	if {[file exists $bin_dir] && [file isdirectory $bin_dir]} {
 		set dst_dir [prepare_project_archive_directory bin]
-		set files [glob -nocomplain -directory $bin_dir *]
-		foreach file $files {
-			set file [file normalize $file]
-			catch { set file [file link  $file] }
-			file copy $file [file join $dst_dir [file tail $file]] }
+		if {$dst_dir != ""} {
+			set files [glob -nocomplain -directory $bin_dir *]
+			foreach file $files {
+				set file [file normalize $file]
+				catch { set file [file link  $file] }
+				file copy $file [file join $dst_dir [file tail $file]] }
+
+			log "exported $dst_dir"
+		}
 
 		lappend exported_archives [versioned_project_archive bin]
-		log "exported $dst_dir"
 	}
 
 	# create index
@@ -1464,19 +1486,25 @@ if {$perform(export)} {
 				set version($archive) [project_version $dir]
 				set versioned_archive $archive/$version($archive)
 
-				# export archive if it has not been exported or depot_overwrite is set
+				# export archive if it has not been exported
 				set dst_dir "[file join $depot_dir $versioned_archive]"
-				if {$depot_overwrite || ![file exists $dst_dir]} {
+				if {$dst_dir != "" && ![file exists $dst_dir]} {
 					foreach pkg_arch $pkg_archs {
-						if {[catch { export_dependent_project $dir $pkg_arch 1 $pkg_name } msg]} {
-							exit_with_error "failed to export depot archive $archive: \n\t$msg" } } }
+						if {[catch { export_dependent_project $dir $pkg_arch $pkg_name } msg]} {
+							exit_with_error "failed to export depot archive $archive: \n\t$msg" } }
+				} elseif {$dst_dir != "" && [file exists $dst_dir]} {
+					# mark arch-specific archives as exported to trigger dependency check
+					foreach pkg_arch $pkg_archs {
+						lappend exported_archives [apply_arch $versioned_archive $pkg_arch] }
+				}
 			}
 		}
 
 		set dst_file [prepare_project_archive_directory index]
-		augment_index_versions $index_file $dst_file
-
-		log "exported $dst_file"
+		if {$dst_file != ""} {
+			augment_index_versions $index_file $dst_file
+			log "exported $dst_file"
+		}
 	}
 
 
@@ -1516,7 +1544,7 @@ if {$perform(export)} {
 
 	# export dependent projects
 	foreach dir [lsort -unique $export_projects] {
-		if {[catch { export_dependent_project $dir $arch $depot_overwrite } msg]} {
+		if {[catch { export_dependent_project $dir $arch } msg]} {
 			exit_with_error "failed to export project $dir: \n\t$msg" }
 	}
 }

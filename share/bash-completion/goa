@@ -11,7 +11,7 @@ __goa()
     help_commands="config api build-systems artifacts add-depot-user import targets"
     depot_commands="export|publish"
     run_commands="run|run-dir"
-    depot_opts="--depot-user --depot-overwrite --pkg"
+    depot_opts="--depot-user --depot-overwrite --depot-retain --pkg"
     run_opts="--pkg --run-as --target"
     user_opts="--depot-url --gpg-user-id --pubkey-file"
 

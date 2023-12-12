@@ -164,6 +164,7 @@ set debug                    0
 set versions_from_genode_dir ""
 set common_var_dir           ""
 set depot_overwrite          0
+set depot_retain             0
 set license                  ""
 set depot_user               ""
 set run_as                   "genodelabs"
@@ -318,7 +319,6 @@ action_dependency add-depot-user  depot-dir
 if {[file exists import] && [file isfile import]} {
 	action_dependency build-dir import }
 
-
 #
 # Read command-specific command-line arguments
 #
@@ -352,6 +352,7 @@ if {$perform(add-depot-user)} {
 	set pubkey_file     [consume_optional_cmdline_arg    "--pubkey-file" ""]
 	set gpg_user_id     [consume_optional_cmdline_arg    "--gpg-user-id" ""]
 	set depot_overwrite [consume_optional_cmdline_switch "--depot-overwrite"]
+	set depot_retain    [consume_optional_cmdline_switch "--depot-retain"]
 
 	set hint ""
 	append hint "\n Expected command:\n" \
@@ -405,13 +406,12 @@ if {$perform(build)} {
 }
 
 if {$perform(export)} {
-	if {[consume_optional_cmdline_switch "--depot-overwrite"]} {
-		set depot_overwrite 1 }
-
-	set depot_user     [consume_optional_cmdline_arg "--depot-user"     $depot_user]
-	set license        [consume_optional_cmdline_arg "--license"        $license]
-	set publish_pkg    [consume_optional_cmdline_arg "--pkg"            ""]
-	set sculpt_version [consume_optional_cmdline_arg "--sculpt-version" $sculpt_version]
+	set depot_overwrite [consume_optional_cmdline_switch "--depot-overwrite"]
+	set depot_retain    [consume_optional_cmdline_switch "--depot-retain"]
+	set depot_user      [consume_optional_cmdline_arg "--depot-user"     $depot_user]
+	set license         [consume_optional_cmdline_arg "--license"        $license]
+	set publish_pkg     [consume_optional_cmdline_arg "--pkg"            ""]
+	set sculpt_version  [consume_optional_cmdline_arg "--sculpt-version" $sculpt_version]
 }
 
 if {$perform(archive-versions)} {
