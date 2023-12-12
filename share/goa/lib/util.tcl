@@ -688,7 +688,7 @@ proc export_dependent_project { dir arch { pkg_name "" } } {
 }
 
 
-proc download_archives { archives } {
+proc download_archives { archives { no_err 0 }} {
 	global tool_dir depot_dir public_dir
 
 	if {[llength $archives] > 0} {
@@ -701,9 +701,17 @@ proc download_archives { archives } {
 
 		diag "install depot archives via command: $cmd"
 
-		if {[catch { exec {*}$cmd >@ stdout }]} {
-			return -code error }
+		if { $no_err } {
+			if {[catch { exec {*}$cmd | sed "s/^Error://" >@ stdout }]} {
+				return -code error }
+		} else {
+			if {[catch { exec {*}$cmd >@ stdout }]} {
+				return -code error }
+		}
 	}
 
 	return -code ok
 }
+
+proc try_download_archives { archives } {
+	return [download_archives $archives 1] }

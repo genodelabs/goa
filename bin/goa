@@ -1420,10 +1420,15 @@ if {$perform(export)} {
 				set version($archive) [project_version $dir]
 				set versioned_archive $archive/$version($archive)
 
-				# export archive if it has not been exported
+				# download or export archive if it has not been exported
 				set dst_dir "[file join $depot_dir $versioned_archive]"
 				if {$dst_dir != "" && ![file exists $dst_dir]} {
 					foreach pkg_arch $pkg_archs {
+						# try downloading first
+						if {![catch {try_download_archives [list [apply_arch $versioned_archive $pkg_arch]]}]} {
+							continue }
+
+						# export if download failed
 						if {[catch { export_dependent_project $dir $pkg_arch $pkg_name } msg]} {
 							exit_with_error "failed to export depot archive $archive: \n\t$msg" } }
 				} elseif {$dst_dir != "" && [file exists $dst_dir]} {
@@ -1454,25 +1459,38 @@ if {$perform(export)} {
 
 		diag "acquiring dependencies of exported depot archives via command: $cmd"
 
+		set archives_incomplete 0
 		if {[catch { exec {*}$cmd 2> /dev/null } msg]} {
 			foreach line [split $msg \n] {
-				catch {
-					archive_parts [string trim $line] user type name vers
+				if {[catch {archive_parts [string trim $line] user type name vers}]} {
+					continue
+				}
 
-					set dir [find_project_dir_for_archive $type $name]
-					if {[project_version $dir] != $vers} {
-						log "skipping export of $dir due to version mismatch"
-						continue
-					}
+				# try downloading before exporting
+				if {![catch {try_download_archives [list [string trim $line]]}]} {
+					continue }
 
+				if {![catch {find_project_dir_for_archive $type $name} dir]} {
 					if {$user != $depot_user} {
 						log "skipping export of $dir: must be exported as depot user '$user'"
 						continue
 					}
 
+					if {[project_version $dir] != $vers} {
+						log "skipping export of $dir due to version mismatch"
+						continue
+					}
+
 					lappend export_projects $dir
+				} else {
+					set archives_incomplete 1
+					log "Unable to download or to find project directory for '[string trim $line]'"
 				}
 			}
+		}
+
+		if {$archives_incomplete} {
+			exit_with_error "There are missing archives (see messages above)."
 		}
 	}
 
