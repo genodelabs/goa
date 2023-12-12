@@ -120,6 +120,10 @@ proc bind_required_services { &services } {
 	if {[info exists services(gui)]} {
 		set use_nitpicker 1
 		append routes "\n\t\t\t\t\t" \
+		              "<service name=\"Gui\" label_suffix=\"backdrop\"> " \
+		              "<child name=\"nitpicker\" label=\"backdrop\"/> " \
+		              "</service>"
+		append routes "\n\t\t\t\t\t" \
 		              "<service name=\"Gui\"> " \
 		              "<child name=\"nitpicker\"/> " \
 		              "</service>"
@@ -390,10 +394,12 @@ proc _instantiate_nitpicker { &start_nodes &archives &modules } {
 				<config focus="rom">
 					<capture/> <event/>
 					<report hover="yes"/>
-					<domain name="pointer" layer="1" content="client" label="no" origin="pointer" />
-					<domain name="default" layer="2" content="client" label="no" hover="always"/>
+					<domain name="pointer"    layer="1" content="client" label="no" origin="pointer" />
+					<domain name="default"    layer="2" content="client" label="no" hover="always"/>
+					<domain name="background" layer="3" content="client" label="no" hover="always" focus="transient"/>
 
-					<policy label_prefix="pointer" domain="pointer"/>
+					<policy label_prefix="pointer"  domain="pointer"/>
+					<policy label_suffix="backdrop" domain="background"/>
 					<default-policy domain="default"/>
 				</config>
 			</start>
