@@ -686,3 +686,24 @@ proc export_dependent_project { dir arch { pkg_name "" } } {
 
 	return -code ok
 }
+
+
+proc download_archives { archives } {
+	global tool_dir depot_dir public_dir
+
+	if {[llength $archives] > 0} {
+		set cmd "[file join $tool_dir depot download]"
+		set cmd [concat $cmd $archives]
+		lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
+		lappend cmd "DEPOT_DIR=$depot_dir"
+		lappend cmd "PUBLIC_DIR=$public_dir"
+		lappend cmd "REPOSITORIES="
+
+		diag "install depot archives via command: $cmd"
+
+		if {[catch { exec {*}$cmd >@ stdout }]} {
+			return -code error }
+	}
+
+	return -code ok
+}

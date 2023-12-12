@@ -493,21 +493,9 @@ proc prepare_depot_with_archives { archive_list } {
 	set uninstalled_archives [lsort -unique $uninstalled_archives]
 
 	# download uninstalled archives
-	if {[llength $uninstalled_archives] > 0} {
-
-		set cmd "[file join $tool_dir depot download]"
-		set cmd [concat $cmd $uninstalled_archives]
-		lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
-		lappend cmd "DEPOT_DIR=$depot_dir"
-		lappend cmd "PUBLIC_DIR=$public_dir"
-		lappend cmd "REPOSITORIES="
-
-		diag "install depot archives via command: $cmd"
-
-		if {[catch { exec {*}$cmd >@ stdout }]} {
-			exit_with_error "failed to download the following depot archives:\n" \
-			                [join $uninstalled_archives "\n "] }
-	}
+	if {[catch { download_archives $uninstalled_archives }]} {
+		exit_with_error "failed to download the following depot archives:\n" \
+		                [join $uninstalled_archives "\n "] }
 }
 
 
@@ -1544,20 +1532,9 @@ if {$perform(publish)} {
 	}
 
 	# first, download missing dependencies
-	if {[llength $archives] > 0} {
-		set cmd "[file join $tool_dir depot download]"
-		set cmd [concat $cmd $archives]
-		lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
-		lappend cmd "DEPOT_DIR=$depot_dir"
-		lappend cmd "PUBLIC_DIR=$public_dir"
-		lappend cmd "REPOSITORIES="
-
-		diag "install depot archives via command: $cmd"
-
-		if {[catch { exec {*}$cmd >@ stdout }]} {
-			exit_with_error "failed to download dependencies of the following depot archives:\n" \
-			                [join $archives "\n "] }
-	}
+	if {[catch { download_archives $archives }]} {
+		exit_with_error "failed to download dependencies of the following depot archives:\n" \
+		                [join $archives "\n "] }
 
 	# add index archive to archives
 	if {[info exists index_archive]} {
