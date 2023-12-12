@@ -639,3 +639,50 @@ proc avail_goa_branches { } {
 
 	return [split $git_branch_output "\n"]
 }
+
+
+##
+# Run `goa export` in specified project directory
+#
+proc export_dependent_project { dir arch { pkg_name "" } } {
+	global argv0 jobs depot_user depot_dir versions_from_genode_dir
+	global public_dir common_var_dir var_dir verbose original_dir
+
+	set orig_pwd [pwd]
+	cd $original_dir
+
+	set cmd { }
+	lappend cmd expect $argv0 export
+	lappend cmd -C $dir
+	lappend cmd --jobs $jobs
+	lappend cmd --arch $arch
+	lappend cmd --depot-user     $depot_user
+	lappend cmd --depot-dir      $depot_dir
+	lappend cmd --public-dir     $public_dir
+	if {$common_var_dir != ""} {
+		lappend cmd --common-var-dir $common_var_dir
+	} else {
+		lappend cmd --common-var-dir $var_dir
+	}
+	if {[info exists versions_from_genode_dir]} {
+		lappend cmd --versions-from-genode-dir $versions_from_genode_dir
+	}
+	if {$verbose} {
+		lappend cmd --verbose }
+	if {$pkg_name != ""} {
+		lappend cmd --pkg $pkg_name }
+
+	# keep existing exports of dependent projects untouched
+	lappend cmd --depot-retain
+
+	if {!$verbose} {
+		log "exporting project $dir" }
+
+	diag "exporting project $dir via cmd: $cmd"
+
+	exec -ignorestderr {*}$cmd >@ stdout
+
+	cd $orig_pwd
+
+	return -code ok
+}
