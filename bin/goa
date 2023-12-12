@@ -446,6 +446,31 @@ if {$perform(build-dir)} {
 }
 
 
+if {$perform(export)} {
+
+	assert_definition_of_depot_user
+
+	foreach used_api $used_apis {
+		archive_parts $used_api user type name vers
+		if {$user != $depot_user} {
+			continue }
+
+		catch {
+			set dir [find_project_dir_for_archive $type $name]
+
+			# first, try downloading
+			if {[catch { try_download_archives [list $used_api] }]} {
+				if {[project_version $dir] != $vers} {
+					log "skipping export of $dir due to version mismatch"
+				} elseif {[catch {export_dependent_project $dir $arch} msg]} {
+					exit_with_error "failed to export depot archive $used_api: \n\t$msg"
+				}
+			}
+		}
+	}
+}
+
+
 ##
 # Return 1 if specified API is used
 #
@@ -1027,19 +1052,6 @@ if {$perform(run-dir)} {
 if {$perform(run)} {
 
 	run_genode
-}
-
-
-proc assert_definition_of_depot_user { } {
-
-	global depot_user
-	if {[info exists depot_user]} {
-		return }
-
-	exit_with_error "missing definition of depot user\n" \
-	                "\n You can define your depot user name by setting the 'depot_user'" \
-	                "\n variable in a goarc file, or by specifing the '--depot-user <name>'"\
-	                "\n command-line argument.\n"
 }
 
 

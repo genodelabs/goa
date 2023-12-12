@@ -715,3 +715,16 @@ proc download_archives { archives { no_err 0 }} {
 
 proc try_download_archives { archives } {
 	return [download_archives $archives 1] }
+
+
+proc assert_definition_of_depot_user { } {
+
+	global depot_user
+	if {[info exists depot_user]} {
+		return }
+
+	exit_with_error "missing definition of depot user\n" \
+	                "\n You can define your depot user name by setting the 'depot_user'" \
+	                "\n variable in a goarc file, or by specifing the '--depot-user <name>'"\
+	                "\n command-line argument.\n"
+}
