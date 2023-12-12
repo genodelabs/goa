@@ -1366,15 +1366,6 @@ if {$perform(export)} {
 
 		set used_apis [apply_versions [read_file_content_as_list used_apis]]
 
-		# create api archives listed in used_apis for depot user
-		foreach api $used_apis {
-			set target [file join $depot_dir $depot_user [regsub {^.*?/} $api ""]]
-			if ![file exists $target] {
-				file mkdir [file dirname $target]
-				file copy [file join $depot_dir $api] $target
-			}
-		}
-
 		set files { }
 		lappend files "src"
 
@@ -1397,8 +1388,7 @@ if {$perform(export)} {
 			# generate 'used_apis' file with specific versions
 			set fh [open [file join $dst_dir used_apis] "WRONLY CREAT TRUNC"]
 			foreach api $used_apis {
-				puts $fh [regsub {^.*?/.*?/} $api ""]
-			}
+				puts $fh $api }
 			close $fh
 
 			log "exported $dst_dir"
