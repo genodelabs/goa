@@ -16,7 +16,8 @@ proc create_or_update_build_dir { } {
 
 	set cmd { }
 	lappend cmd cmake
-	lappend cmd "-DCMAKE_MODULE_PATH=[file join $tool_dir cmake Modules]"
+	lappend cmd "-DCMAKE_IGNORE_PREFIX_PATH=/;/usr"
+	lappend cmd "-DCMAKE_MODULE_PATH=[join ${api_dirs} ";"];[file join $tool_dir cmake Modules]"
 	lappend cmd "-DCMAKE_SYSTEM_NAME=Genode"
 	lappend cmd "-DCMAKE_C_COMPILER=${cross_dev_prefix}gcc"
 	lappend cmd "-DCMAKE_CXX_COMPILER=${cross_dev_prefix}g++"
