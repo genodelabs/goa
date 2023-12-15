@@ -650,6 +650,7 @@ if {![file exists src]} {
 }
 
 
+set api_dirs { }
 set include_dirs { }
 set lib_src { }
 
@@ -703,6 +704,9 @@ if {$perform(build-dir)} {
 	# supplement 'cflags' with include directories too
 	foreach dir $include_dirs {
 		lappend cflags "-I$dir" }
+
+	foreach api $used_apis {
+		lappend api_dirs [file join $depot_dir $api] }
 
 	create_or_update_build_dir
 }

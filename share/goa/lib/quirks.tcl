@@ -82,13 +82,6 @@ if {[using_api sdl2]} {
 	set symlink_name [file join $abi_dir SDL2.lib.so]
 	if {![file exists $symlink_name]} {
 		file link -symbolic $symlink_name "sdl2.lib.so" }
-
-	# search for headers in the inlude/SDL sub directory
-	set sdl2_include_dir [file join [api_archive_dir sdl2] include SDL2]
-
-	# bring CMake on the right track to find the headers and library
-	lappend cmake_quirk_args "-DSDL2_INCLUDE_DIR=$sdl2_include_dir"
-	lappend cmake_quirk_args "-DSDL2_LIBRARY:STRING=':sdl2.lib.so'"
 }
 
 if {[using_api sdl2_mixer]} {
@@ -97,13 +90,6 @@ if {[using_api sdl2_mixer]} {
 	set symlink_name [file join $abi_dir SDL2_mixer.lib.so]
 	if {![file exists $symlink_name]} {
 		file link -symbolic $symlink_name "sdl2_mixer.lib.so" }
-
-	# search for headers in the inlude/SDL2 sub directory
-	set sdl2_mixer_include_dir [file join [api_archive_dir sdl2_mixer] include SDL2]
-
-	# bring CMake on the right track to find the headers and library
-	lappend cmake_quirk_args "-DSDL2_MIXER_INCLUDE_DIR=$sdl2_mixer_include_dir"
-	lappend cmake_quirk_args "-DSDL2_MIXER_LIBRARY:STRING=':sdl2_mixer.lib.so'"
 }
 
 if {[using_api sdl2_net]} {
@@ -112,13 +98,6 @@ if {[using_api sdl2_net]} {
 	set symlink_name [file join $abi_dir SDL2_net.lib.so]
 	if {![file exists $symlink_name]} {
 		file link -symbolic $symlink_name "sdl2_net.lib.so" }
-
-	# search for headers in the inlude/SDL2 sub directory
-	set sdl2_net_include_dir [file join [api_archive_dir sdl2_net] include SDL2]
-
-	# bring CMake on the right track to find the headers and library
-	lappend cmake_quirk_args "-DSDL2_NET_INCLUDE_DIR=$sdl2_net_include_dir"
-	lappend cmake_quirk_args "-DSDL2_NET_LIBRARY:STRING=':sdl2_net.lib.so'"
 }
 
 # Curl

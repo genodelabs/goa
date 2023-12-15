@@ -4,7 +4,7 @@ proc create_or_update_build_dir { } {
 	global build_dir project_dir abi_dir tool_dir cross_dev_prefix include_dirs
 	global cppflags cflags cxxflags ldflags ldflags_so ldlibs_common ldlibs_exe ldlibs_so project_name
 	global cmake_quirk_args
-	global env
+	global env api_dirs
 
 	if {![file exists $build_dir]} {
 		file mkdir $build_dir }
