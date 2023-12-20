@@ -97,6 +97,37 @@ the _runtime_ file's <provides> node:
   the runtime and configured to use the tap device <tap-name>.
 
 
+sculpt
+======
+
+This target uses a (remotely) running Sculpt OS to execute the project in a
+particularly crafted subsystem. The target system is expected to run a
+webdav-capable HTTP server and a Telnet server. The HTTP server allows Goa to
+upload the run directory whereas Goa receives the log output via the Telnet
+server. A blueprint for such a subsystem is provided by
+jschlatow/pkg/goa_testbed.
+
+The 'sculpt' target evaluates the following target-specific variables that you
+may set in your goarc file or provide as command-line arguments
+'--target-opt-<name>':
+
+:target_opt(sculpt-server):
+  Specifies the hostname or IP address of the target system
+  (Mandatory, no default value).
+
+:target_opt(sculpt-port-http):
+  Specifies the port of the HTTP server (Default: 80).
+
+:target_opt(sculpt-port-telnet):
+  Specifies the port of the Telnet server (Default: 23).
+
+The 'sculpt' target routes all runtime-required services to the parent except
+for the following:
+
+:<file_system label="fonts"/>:
+  This requirement is routed to a dedicates fonts_fs component.
+
+
 ADDING A CUSTOM TARGET TO GOA
 #############################
 
