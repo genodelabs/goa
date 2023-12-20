@@ -26,7 +26,7 @@ proc _acquire_config { runtime_file runtime_archives } {
 	set routes ""
 
 	catch {
-		set config [query_from_file /runtime/config $runtime_file]
+		set config [query_raw_from_file /runtime/config $runtime_file]
 		set config [desanitize_xml_characters $config]
 	}
 
@@ -52,7 +52,7 @@ proc _acquire_config { runtime_file runtime_archives } {
 		}
 
 		# load content into config variable
-		set config [query_from_file /* $config_file]
+		set config [query_raw_from_file /* $config_file]
 		set config [desanitize_xml_characters $config]
 	}
 

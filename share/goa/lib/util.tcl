@@ -652,6 +652,15 @@ proc query_attr_from_file { node_path attr_name xml_file }  {
 proc query_from_file { node_path xml_file }  {
 
 	set xpath "$node_path"
+	set content [exec xmllint --format --xpath $xpath $xml_file]
+
+	return $content
+}
+
+
+proc query_raw_from_file { node_path xml_file }  {
+
+	set xpath "$node_path"
 	set content [exec xmllint --xpath $xpath $xml_file]
 
 	return $content
