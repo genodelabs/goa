@@ -58,6 +58,11 @@ the _runtime_ file's <requires> node:
   device in use, only a single pair of linux_nic_drv and nic_router will be
   instantiated.
 
+  A '<nic>' node may contain an arbitrary number of '<tcp-forward>' and
+  '<udp-forward>' nodes, which are added to the Nic router's uplink domain.
+  Any additional '<policy>' and '<domain>' nodes are added to the Nic router's.
+  config.
+
 :<gpu/>:
   Any required _Gpu_ service is routed to a black-hole component.
 

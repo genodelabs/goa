@@ -148,12 +148,13 @@ proc bind_required_services { &services } {
 
 			if {$tap_name == ""} {
 				set tap_name "tap0"
-				log "Binding '$nic_node' to tap device '$tap_name'." \
+				set nic_node_short [string range $nic_node 0 [string first > $nic_node 0]]
+				log "Binding '$nic_node_short' to tap device '$tap_name'." \
 				    "You can change the used tap device by adding a 'tap_name' attribute."
 			}
 
 			if {![info exists networks($tap_name)]} {
-				set networks($tap_name) [_instantiate_network $tap_name $subnet_id start_nodes archives modules]
+				set networks($tap_name) [_instantiate_network $tap_name $subnet_id start_nodes archives modules nic_node]
 
 				incr subnet_id
 				if {$subnet_id > 255} {
@@ -442,15 +443,35 @@ proc _instantiate_nitpicker { &start_nodes &archives &modules } {
 }
 
 
-proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules } {
+proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules &nic_node } {
 	upvar 1 ${&start_nodes} start_nodes
 	upvar 1 ${&archives} archives
 	upvar 1 ${&modules} modules
+	upvar 1 ${&nic_node} nic_node
 
 	global run_as
 
 	set driver_name nic_drv_$tap_name
 	set router_name nic_router_$tap_name
+
+	set forward_rules { }
+	catch {
+		foreach rule [split [query_from_string /nic/tcp-forward $nic_node {}] \n] {
+			append forward_rules "\n\t\t\t\t\t\t[desanitize_xml_characters $rule]" } }
+
+	catch {
+		foreach rule [split [query_from_string /nic/udp-forward $nic_node {}] \n] {
+			append forward_rules "\n\t\t\t\t\t\t[desanitize_xml_characters $rule]" } }
+
+	set extra_domains { }
+	catch {
+		foreach domain [split [query_from_string /nic/domain $nic_node {}] \n] {
+			append extra_domains "\n\t\t\t\t\t[desanitize_xml_characters $domain]" } }
+
+	set extra_policies { }
+	catch {
+		foreach policy [split [query_from_string /nic/policy $nic_node {}] \n] {
+			append extra_policies "\n\t\t\t\t\t[desanitize_xml_characters $policy]" } }
 
 	append start_nodes {
 			<start name="} $driver_name {" caps="100" ld="no">
@@ -477,9 +498,9 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules }
 				</provides>
 				<config verbose_domain_state="yes">
 					<default-policy domain="default"/>
-					<policy label="} $driver_name { -> " domain="uplink"/>
+					<policy label="} $driver_name { -> " domain="uplink"/> } $extra_policies {
 					<domain name="uplink">
-						<nat domain="default" tcp-ports="1000" udp-ports="1000" icmp-ids="1000"/>
+						<nat domain="default" tcp-ports="1000" udp-ports="1000" icmp-ids="1000"/> } $forward_rules {
 					</domain>
 					<domain name="default" interface="10.0.} $subnet_id {.1/24">
 						<dhcp-server ip_first="10.0.} $subnet_id {.2" ip_last="10.0.} $subnet_id {.253" dns_config_from="uplink"/>
@@ -490,7 +511,7 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules }
 							<permit-any domain="uplink"/>
 						</udp>
 						<icmp dst="0.0.0.0/0" domain="uplink"/>
-					</domain>
+					</domain> } $extra_domains {
 				</config>
 				<route>
 					<service name="Timer"> <child name="timer"/> </service>
