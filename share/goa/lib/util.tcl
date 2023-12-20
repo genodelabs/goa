@@ -112,6 +112,32 @@ proc consume_optional_cmdline_switch { tag } {
 }
 
 
+##
+# Consume remaining command-line arguments with given prefix
+# results are stored in the provided array
+#
+proc consume_prefixed_cmdline_args { prefix &var } {
+	global argv
+
+	upvar 1 ${&var} var
+
+	set tag_idx_list [lsearch -all -glob $argv $prefix*]
+
+	if {[llength $tag_idx_list] == 0} {
+		return }
+
+	foreach tag_idx [lsort -integer -decreasing $tag_idx_list] {
+		set tagname [lindex $argv $tag_idx]
+		set tagvalue [_consume_cmdline_arg_at $tag_idx]
+
+		set name [string replace $tagname 0 [string length $prefix]-1 ""]
+		set var($name) $tagvalue
+	}
+
+	return
+}
+
+
 proc depot_policy { } {
 	global depot_overwrite depot_retain
 

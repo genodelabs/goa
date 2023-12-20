@@ -172,6 +172,7 @@ set depot_user               ""
 set run_as                   "genodelabs"
 set target                   "linux"
 set sculpt_version           ""
+array set target_opt {}
 
 # if /proc/cpuinfo exists, use number of CPUs as 'jobs'
 if {[file exists /proc/cpuinfo]} {
@@ -418,6 +419,12 @@ if {$perform(export)} {
 
 if {$perform(archive-versions)} {
 	set depot_user [consume_optional_cmdline_arg "--depot-user" $depot_user] }
+
+# consume target-specific arguments
+consume_prefixed_cmdline_args "--target-opt-" target_opt
+
+# consume package versions
+consume_prefixed_cmdline_args "--version-" version
 
 # back out if there is any unhandled argument
 if {[llength $argv] > 0} {

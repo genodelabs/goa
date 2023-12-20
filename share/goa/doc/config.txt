@@ -168,6 +168,18 @@ Goa evaluates the following configuration variables.
   configuration variable in a custom 'goarc' file or via the
   '--sculpt-version' command-line argument.
 
+:target:
+  Specifies the run target used for 'goa run'. The default value is 'linux'.
+  The value can be overridden by setting this configuration variable or by
+  providing the '--target' command-line argument. See 'goa help targets' for
+  more details.
+
+:target_opt(<option>):
+  The target_opt array stores target-specific configurations. Alternatively to
+  setting this variable in a custom 'goarc' file, you may provide
+  '--target-opt-<option>' command-line arguments. See 'goa help targets' for
+  more details.
+
 :version(<user>/<type>/<name>):
   The version array is indexed with a depot-archive path and contains the
   version to be assumed for this archive.
@@ -180,6 +192,8 @@ Goa evaluates the following configuration variables.
   from a Genode source tree by using the 'versions_from_genode_dir' variable.
   To display Goa's currently known version information, you may use the
   'goa archive-versions' command.
+  Version information can also be provided via '--version-<user>/<type>/<name>'
+  command-line arguments.
 
 :versions_from_genode_dir:
   If set to the root of a Genode source tree, Goa determines the package
