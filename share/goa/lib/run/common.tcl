@@ -92,7 +92,7 @@ proc _validate_init_config { config &required_services &provided_services } {
 			log "config <parent-provides> mentions a $parent_service service;" \
 			    "consider adding <$parent_service/> as a required runtime service"
 		}
-}
+	}
 
 	# get services from config
 	set services_from_config { }
@@ -362,15 +362,17 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	if {$config_route == ""} {
 		set inline_config $config }
 
+	set parent_provides ""
+	foreach s [parent_services] {
+		append parent_provides "\n\t\t\t\t" {<service name="} $s {"/>} }
+
 	install_config {
 		<config>
 			<parent-provides>
 				<service name="ROM"/>
 				<service name="PD"/>
-				<service name="RM"/>
 				<service name="CPU"/>
-				<service name="LOG"/>
-				<service name="TRACE"/>
+				<service name="LOG"/> } $parent_provides {
 			</parent-provides>
 
 			} $start_nodes {
@@ -382,7 +384,6 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 				<route>} $config_route $routes {
 					<service name="ROM">   <parent/> </service>
 					<service name="PD">    <parent/> </service>
-					<service name="RM">    <parent/> </service>
 					<service name="CPU">   <parent/> </service>
 					<service name="LOG">   <parent/> </service>
 				</route>

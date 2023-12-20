@@ -106,6 +106,9 @@ The file must implement the following procedures:
 :base_archives:
   Returns a list of those depot archives that are always needed.
 
+:parent_services:
+  Returns a list of services provided by the parent.
+
 :bind_required_services:
   Gets an array of required services as argument. The array entries are named
   after the lower-case service type. Each entry is a list of the corresponding

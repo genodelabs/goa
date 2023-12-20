@@ -17,6 +17,11 @@ proc run_genode { } {
 }
 
 
+proc parent_services { } {
+	return [list RM TRACE]
+}
+
+
 proc base_archives { } {
 	global run_as
 
@@ -67,22 +72,16 @@ proc bind_required_services { &services } {
 	set archives { }
 	set modules { }
 
-	# route trace to parent if required by runtime
-	if {[info exists services(trace)]} {
-		append routes "\n\t\t\t\t\t" \
-		              "<service name=\"TRACE\"> " \
-		              "<parent/> " \
-		              "</service>"
-		unset services(trace)
-	}
-
-	# route RM to parent if required by runtime
-	if {[info exists services(rm)]} {
-		append routes "\n\t\t\t\t\t" \
-		              "<service name=\"RM\"> " \
-		              "<parent/> " \
-		              "</service>"
-		unset services(rm)
+	# route parent services if required by runtime
+	foreach service_name [parent_services] {
+		set name_lc [string tolower $service_name]
+		if {[info exists services($name_lc)]} {
+			append routes "\n\t\t\t\t\t" \
+			              "<service name=\"$service_name\"> " \
+			              "<parent/> " \
+			              "</service>"
+			unset services($name_lc)
+		}
 	}
 
 	# always instantiate timer
