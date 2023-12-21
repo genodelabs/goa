@@ -183,10 +183,17 @@ proc bind_required_services { &services } {
 			set writeable [query_from_string string(*/@writeable) $fs_node  "no"]
 			set name      "${label}_fs"
 
-			append routes "\n\t\t\t\t\t" \
-				"<service name=\"File_system\" label=\"$label\"> " \
-				"<child name=\"$name\"/> " \
-				"</service>"
+			if {$label == ""} {
+				append routes "\n\t\t\t\t\t" \
+					"<service name=\"File_system\"> " \
+					"<child name=\"$name\"/> " \
+					"</service>"
+			} else {
+				append routes "\n\t\t\t\t\t" \
+					"<service name=\"File_system\" label=\"$label\"> " \
+					"<child name=\"$name\"/> " \
+					"</service>"
+			}
 
 			if {$label == "fonts"} {
 				_instantiate_fonts_fs start_nodes archives modules
@@ -565,6 +572,9 @@ proc _instantiate_file_system { name label writeable &start_nodes &archives &mod
 	upvar 1 ${&modules} modules
 
 	global var_dir run_as
+
+	# make sure label is not empty
+	if {$label == ""} { set label "_" }
 
 	append start_nodes {
 			<start name="} $name {" caps="100" ld="no">
