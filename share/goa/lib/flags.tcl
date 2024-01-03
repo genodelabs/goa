@@ -52,6 +52,7 @@ if {$debug} {
 # C++-compiler flags
 #
 set cxxflags $cflags
+lappend cxxflags -std=gnu++20
 
 if {[info exists warn_strict] && $warn_strict} {
 	lappend cxxflags -Wextra -Weffc++ -Werror -Wsuggest-override }
