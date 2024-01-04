@@ -728,3 +728,48 @@ proc assert_definition_of_depot_user { } {
 	                "\n variable in a goarc file, or by specifing the '--depot-user <name>'"\
 	                "\n command-line argument.\n"
 }
+
+
+##
+# Get a list of pkg+arch-list pairs from an index file
+#
+proc pkgs_from_index { index_file } {
+	global depot_user
+
+	set result ""
+
+	# get supported archs
+	if {[catch { set supported_archs [query_attrs_from_file /index/supports arch $index_file] }]} {
+		exit_with_error "missing <supports arch=\"...\"/> in index file" }
+
+	# helper proc to apply archs to paths found in a list of <pkg> nodes
+	proc _paths_with_arch { pkgs archs } {
+		set res ""
+		foreach pkg $pkgs {
+			set path [query_from_string string(/pkg/@path) $pkg ""]
+			set pkg_archs $archs
+			catch {
+				set pkg_archs [query_attrs_from_string /pkg arch $pkg] }
+
+			lappend res $path $pkg_archs
+		}
+		return $res
+	}
+
+	# iterate <pkg> nodes within <index> nodes with no 'arch' attribute
+	catch {
+		set pkgs [split [query_from_file /index/index\[not(@arch)\]/pkg $index_file] \n]
+		lappend result {*}[_paths_with_arch $pkgs $supported_archs]
+	}
+
+	# iterate 'arch' attributes of <index> nodes
+	catch {
+		set archs [query_attrs_from_file /index/index arch $index_file]
+		foreach pkg_arch [lsort -unique $archs] {
+			set pkgs [split [query_from_file /index/index\[@arch="$pkg_arch"\]/pkg $index_file] \n]
+			lappend result {*}[_paths_with_arch $pkgs [list $pkg_arch]]
+		}
+	}
+
+	return $result
+}
