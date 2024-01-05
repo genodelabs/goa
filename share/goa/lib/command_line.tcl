@@ -163,6 +163,7 @@ set olevel                   "-O2"
 set debug                    0
 set versions_from_genode_dir ""
 set common_var_dir           ""
+set search_dir               ""
 set depot_overwrite          0
 set depot_retain             0
 set license                  ""
@@ -203,7 +204,7 @@ set goarc_path [file separator]
 set path_var_names [list depot_dir public_dir cross_dev_prefix \
                          versions_from_genode_dir common_var_dir \
                          contrib_dir import_dir abi_dir build_dir \
-                         run_dir bin_dir]
+                         run_dir bin_dir search_dir]
 
 
 foreach path_elem $goarc_path_elements {
@@ -421,6 +422,7 @@ if {$perform(archive-versions)} {
 if {[llength $argv] > 0} {
 	exit_with_error "invalid argument: [join $argv { }]" }
 
+if {$search_dir               == ""} { set search_dir "$original_dir" }
 if {$versions_from_genode_dir == ""} { unset versions_from_genode_dir }
 if {$license                  == ""} { unset license }
 if {$depot_user               == ""} { unset depot_user }

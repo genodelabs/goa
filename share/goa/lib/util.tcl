@@ -160,7 +160,7 @@ proc read_file_content_as_list { path } {
 # called with -C
 #
 proc find_project_dir_for_archive { type name } {
-	global original_dir
+	global search_dir
 
 	set orig_pwd [pwd]
 	set candidates ""
@@ -170,7 +170,7 @@ proc find_project_dir_for_archive { type name } {
 	                        -and -not -path "*/build/*" \
 	                        -and -not -path "*/var/*"]
 
-	cd $original_dir
+	cd $search_dir
 	if {$type == "src" || $type == "bin"} {
 		set candidates [exec {*}$find_cmd_base -and \( -path */$name/src \
 		                                           -or -path */$name/import \
@@ -187,7 +187,7 @@ proc find_project_dir_for_archive { type name } {
 	regsub -line -all {(/(src|pkg/.*|raw|import|artifacts|api))$} $candidates "" candidates
 
 	foreach dir $candidates {
-		set absolute_path [file join $original_dir [string trimleft $dir "./"]]
+		set absolute_path [file join $search_dir [string trimleft $dir "./"]]
 		if {[looks_like_goa_project_dir $absolute_path]} {
 			return $absolute_path }
 	}
@@ -646,10 +646,10 @@ proc avail_goa_branches { } {
 #
 proc export_dependent_project { dir arch { pkg_name "" } } {
 	global argv0 jobs depot_user depot_dir versions_from_genode_dir
-	global public_dir common_var_dir var_dir verbose original_dir
+	global public_dir common_var_dir var_dir verbose search_dir
 
 	set orig_pwd [pwd]
-	cd $original_dir
+	cd $search_dir
 
 	set cmd { }
 	lappend cmd expect $argv0 export

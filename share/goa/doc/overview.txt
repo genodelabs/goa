@@ -194,7 +194,8 @@ OPTIONAL ARGUMENTS
 :-C <dir>:
   Change into project directory <dir> before executing the command. The
   working directory before the change determines the scope in which Goa
-  may locate dependent projects.
+  may locate dependent projects. This can be changed by setting the
+  'search_dir' variable.
 
 :-r:
   Recursively scan for project directories in the current working directory

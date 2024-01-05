@@ -188,6 +188,12 @@ Goa evaluates the following configuration variables.
   genodelabs depot, you probably want to guide Goa to your personal depot by
   setting the 'run_as' variable.
 
+:search_dir:
+  By default, Goa uses the original working directory for looking up versions
+  of other Goa projects. This can be changed by setting the 'search_dir'
+  variable in a custom 'goarc' file or by using the '--search-dir <dir>'
+  command-line argument.
+
 SEE ALSO
 ########
 
