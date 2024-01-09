@@ -537,11 +537,8 @@ proc update_depot_roms { archive_list } {
 	global depot_dir rom_modules
 
 	# append rom modules of runtimes
-	foreach archive [apply_versions $archive_list] {
-		set archive_runtime [file join $depot_dir $archive runtime]
-		if {[file exists $archive_runtime]} {
-			append rom_modules " " [query_attrs_from_file /runtime/content/rom label $archive_runtime]
-		}
+	foreach runtime_file [runtime_files [apply_versions $archive_list]] {
+		append rom_modules " " [query_attrs_from_file /runtime/content/rom label $runtime_file]
 	}
 }
 

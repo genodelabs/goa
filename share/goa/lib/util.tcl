@@ -338,6 +338,37 @@ proc binary_archives { archive_list } {
 
 
 ##
+# Return list of runtime files for a given list of versioned archives
+#
+proc runtime_files { archive_list } {
+	global arch depot_dir
+
+	set runtime_file_list { }
+	foreach archive $archive_list {
+
+		archive_parts $archive user type name version
+
+		if {$type == "pkg"} {
+			set pkg_archives_file [file join $depot_dir $archive archives]
+			set pkg_runtime_file  [file join $depot_dir $archive runtime]
+
+			if {[file exists $pkg_archives_file] && [file exists $pkg_runtime_file]} {
+
+				lappend runtime_file_list $pkg_runtime_file
+
+				#
+				# XXX detect cyclic dependencies between pkg archives
+				#
+				set pkg_archives [read_file_content_as_list $pkg_archives_file]
+				lappend bin_archives {*}[runtime_files $pkg_archives]
+			}
+		}
+	}
+	return $runtime_file_list
+}
+
+
+##
 # Extracts parts (user, type, name, version) of the specified archive path
 #
 # Valid archive paths are:

@@ -226,7 +226,12 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 			log "runtime explicitly requires <$service_name/>, which is always routed" }
 	}
 
+	# assemble list of rom modules from project's runtime file and all runtime
+	# files in the referenced pkg archives
 	set rom_modules [query_attrs_from_file "/runtime/content/rom" label $runtime_file]
+	foreach runtime_file [runtime_files [apply_versions $runtime_archives]] {
+		lappend rom_modules {*}[query_attrs_from_file "runtime/content/rom" label $runtime_file]
+	}
 
 	set default_rom_modules [list core ld.lib.so init]
 
