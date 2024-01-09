@@ -212,29 +212,29 @@ if {$perform(bump-version)} {
 	set version_file [file join $project_dir version]
 	if {[file exists $version_file]} {
 		set old_version ""
-		set new_version $target_version
 
 		catch {
 			set old_version [project_version $project_dir] }
 
 		# version already bumped?
-		if {[string first $new_version $old_version] == 0} {
+		if {[string first $target_version $old_version] == 0} {
 			set elements [split $old_version -]
 			set suffix [lindex $elements end]
 			if {[llength $elements] > 3 && [regexp {[a-y]} $suffix dummy]} {
 				# bump suffix
 				set new_suffix [format %c [expr [scan $suffix %c]+1]]
-				set new_version [join [lreplace $elements end end $new_suffix] -]
+				set target_version [join [lreplace $elements end end $new_suffix] -]
 			} else {
 				# add suffix
-				set new_version "$old_version-a"
+				set target_version "$old_version-a"
 			}
 		}
-
-		set fd [open $version_file w]
-		puts $fd $new_version
-		close $fd
 	}
+
+	set fd [open $version_file w]
+	puts $fd $target_version
+	close $fd
+
 	exit
 }
 
