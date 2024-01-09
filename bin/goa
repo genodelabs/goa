@@ -1292,12 +1292,14 @@ if {$perform(export)} {
 			if {[file exists $optional_file]} {
 				lappend files $optional_file } }
 
+		set license_file [license_file]
+
 		set dst_dir [prepare_project_archive_directory src]
 		if {$dst_dir != ""} {
 			foreach file $files {
 				file copy $file [file join $dst_dir [file tail $file]] }
 
-			file copy [license_file] [file join $dst_dir LICENSE]
+			file copy $license_file [file join $dst_dir LICENSE]
 
 			exec find $dst_dir ( -name "*~" \
 			                     -or -name "*.rej" \
