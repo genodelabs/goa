@@ -235,6 +235,14 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 
 	set default_rom_modules [list core ld.lib.so init]
 
+	# check presence of binary in rom_modules or default_rom_modules
+	if {[lsearch -exact $rom_modules $binary] < 0 &&
+		 [lsearch -exact $default_rom_modules $binary] < 0} {
+		exit_with_error "Binary '$binary' not mentioned as content ROM module. \n" \
+		                "\n You either need to add '<rom label=\"$binary\"/>' to the content ROM list" \
+		                "\n or add a pkg archive to the 'archives' file from which to inherit."
+	}
+
 	# check availability of content ROM modules
 	set binary_archives [binary_archives [apply_versions $runtime_archives]]
 	foreach rom $rom_modules {
