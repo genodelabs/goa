@@ -74,7 +74,8 @@ proc looks_like_goa_project_dir { dir } {
 		if {[llength $raw_files] == 0} {
 			return 0 } }
 
-	if {[has_src_but_no_artifacts $dir]} {
+	# no project if 'src/' is present but there is neither an 'artifacts' nor an 'import' file
+	if {[has_src_but_no_artifacts $dir] && ![file exists $dir/import]} {
 		return 0 }
 
 	return 1

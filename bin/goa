@@ -200,11 +200,7 @@ if {$perform(add-depot-user)} {
 # project.
 #
 if {![looks_like_goa_project_dir $project_dir]} {
-	if {[has_src_but_no_artifacts $project_dir]} {
-		exit_with_error "$project_dir has a 'src' directory but lacks an" \
-		                "'artifacts' file. You may start with an empty file."
-	} else {
-		exit_with_error "$project_dir does not look like a goa project" } }
+	exit_with_error "$project_dir does not look like a goa project" }
 
 
 ##
@@ -446,6 +442,11 @@ if {$perform(diff)} {
 
 set used_apis { }
 if {$perform(build-dir)} {
+	if {[has_src_but_no_artifacts $project_dir]} {
+		exit_with_error "$project_dir has a 'src' directory but lacks an" \
+		                "'artifacts' file. You may start with an empty file."
+	}
+
 	set used_apis [apply_versions [read_file_content_as_list used_apis]]
 	if {[llength $used_apis] > 0} {
 		diag "used APIs: $used_apis" }
