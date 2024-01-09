@@ -89,7 +89,7 @@ USAGE
 :goa help [<topic>]:
   Show the documentation about the specified topic.
   Available topics are 'overview' (this document), 'config', 'artifacts',
-  'add-depot-user', 'build-systems', 'targets'
+  'add-depot-user', 'build-systems', 'import', 'targets'
 
 :goa update-goa [<version>]:
   Update the Goa tool to the latest minor version if called without
