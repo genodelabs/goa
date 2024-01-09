@@ -982,7 +982,7 @@ if {$perform(extract-abi-symbols)} {
 		foreach library $libraries {
 			puts "  > `symbols/$library" }
 
-		puts "Please review the symbols files(s) and add them to your reporsitory."
+		puts "Please review the symbols files(s) and add them to your repository."
 	} else {
 		exit_with_error "No libraries listed in the artifacts." }
 }
