@@ -1,0 +1,10 @@
+genodelabs/src/posix
+genodelabs/src/libc
+genodelabs/src/vfs
+genodelabs/src/stdcxx
+genodelabs/src/zlib
+genodelabs/src/mesa
+genodelabs/src/expat
+genodelabs/src/libdrm
+genodelabs/src/vfs_gpu
+jschlatow/src/sdl2/2023-12-15-b

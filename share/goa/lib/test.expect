@@ -16,6 +16,7 @@ set tests {
 	cmake_step2:40
 	cmake_library
 	qt5_core:100
+	cmake_sdl2:40
 }
 
 
@@ -28,6 +29,7 @@ set test_output(cmake_step2)   {\[init -> cmake_step2\] The square root of 24 is
 set test_output(cmake_library) {libforty_two.lib.so}
 set test_output(qt5_core)      {\[init -> qt5_core\] Test done.}
 set test_output(hello_rust)    {\[init -> hello_rust\] Hello Genode Rust world!}
+set test_output(cmake_sdl2)    {\[init\] child "cmake_sdl2" exited with exit value 0}
 
 
 proc _find_tool_dir { } {

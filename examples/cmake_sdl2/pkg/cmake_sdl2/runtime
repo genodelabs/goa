@@ -1,0 +1,34 @@
+<runtime ram="10M" caps="1000" binary="sdl2_example">
+
+	<requires>
+		<timer/>
+		<gui/>
+	</requires>
+
+	<config>
+		<libc stdout="/dev/log" stderr="/dev/log"/>
+		<vfs>
+			<dir name="dev">
+				<log/>
+			</dir>
+		</vfs>
+	</config>
+
+	<content>
+		<rom label="posix.lib.so"/>
+		<rom label="libc.lib.so"/>
+		<rom label="libm.lib.so"/>
+		<rom label="stdcxx.lib.so"/>
+		<rom label="vfs.lib.so"/>
+		<rom label="zlib.lib.so"/>
+
+		<rom label="sdl2_example"/>
+		<rom label="sdl2.lib.so"/>
+		<rom label="egl.lib.so"/>
+		<rom label="glapi.lib.so"/>
+		<rom label="mesa.lib.so"/>
+		<rom label="libdrm.lib.so"/>
+		<rom label="expat.lib.so"/>
+		<rom label="vfs_gpu.lib.so"/>
+	</content>
+</runtime>
