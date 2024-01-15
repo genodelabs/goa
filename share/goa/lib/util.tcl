@@ -627,7 +627,10 @@ proc query_attrs_from_string { node_path attr_name xml }  {
 proc query_attrs_from_file { node_path attr_name xml_file }  {
 
 	set xpath "$node_path/attribute::$attr_name"
-	set attributes [exec xmllint --xpath $xpath $xml_file]
+
+	set attributes { }
+	catch {
+		set attributes [exec xmllint --xpath $xpath $xml_file] }
 
 	set values { }
 	foreach attr $attributes {
