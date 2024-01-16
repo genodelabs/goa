@@ -3,7 +3,7 @@ proc create_or_update_build_dir { } {
 
 	mirror_source_dir_to_build_dir
 
-	global build_dir cross_dev_prefix project_name project_dir
+	global build_dir cross_dev_prefix project_name project_dir api_dirs
 	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe
 
 	# invoke configure script only once
@@ -49,6 +49,8 @@ proc create_or_update_build_dir { } {
 	lappend cmd "RANLIB=${cross_dev_prefix}ranlib"
 	lappend cmd "AR=${cross_dev_prefix}ar"
 	lappend cmd "AS=${cross_dev_prefix}as"
+	lappend cmd "PKG_CONFIG_LIBDIR=''"
+	lappend cmd "PKG_CONFIG_PATH=[join ${api_dirs} ":"]"
 
 	#
 	# Some autoconf projects (e.g. OpenSC) unconditionally do checks
