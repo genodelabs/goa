@@ -100,12 +100,6 @@ if {[using_api sdl2_net]} {
 		file link -symbolic $symlink_name "sdl2_net.lib.so" }
 }
 
-# Curl
-
-if {$arch == "x86_64"} {
-	append_include_dir_for_api curl  src lib curl spec 64bit curl
-}
-
 # Genode's posix library
 
 if {[using_api posix]} {
