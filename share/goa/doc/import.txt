@@ -96,5 +96,5 @@ added to the 'import' file:
 SEE ALSO
 ########
 
-add-depot-user, api, artifacts, build-systems, config, overview, runtime, targets
+add-depot-user, api, artifacts, build-systems, config, index, overview, runtime, targets
 

@@ -44,4 +44,4 @@ directory are added as artifacts to 'include/spdlog' of the api archive.
 SEE ALSO
 ########
 
-add-depot-user, api, artifacts, build-systems, import, config, overview, runtime, targets
+add-depot-user, api, artifacts, build-systems, import, index, config, overview, runtime, targets

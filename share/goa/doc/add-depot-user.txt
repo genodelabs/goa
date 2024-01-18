@@ -35,5 +35,5 @@ ARGUMENTS
 SEE ALSO
 ########
 
-api, artifacts, build-systems, config, import, overview, runtime, targets
+api, artifacts, build-systems, config, import, index, overview, runtime, targets
 

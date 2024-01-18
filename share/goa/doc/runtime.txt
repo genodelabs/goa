@@ -99,5 +99,5 @@ binary to create a subsystem comprising multiple components:
 SEE ALSO
 ########
 
-add-depot-user, api, artifacts, build-systems, config, import, overview, targets
+add-depot-user, api, artifacts, build-systems, config, import, index, overview, targets
 

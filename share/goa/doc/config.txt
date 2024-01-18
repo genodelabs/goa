@@ -211,5 +211,5 @@ Goa evaluates the following configuration variables.
 SEE ALSO
 ########
 
-add-depot-user, api, artifacts, build-systems, import, overview, runtime, targets
+add-depot-user, api, artifacts, build-systems, import, index, overview, runtime, targets
 

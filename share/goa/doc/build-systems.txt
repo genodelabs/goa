@@ -92,4 +92,4 @@ Note that Goa writes the bitstream to a <project_name>.bit file.
 SEE ALSO
 ########
 
-add-depot-user, api, artifacts, config, import, overview, runtime, targets
+add-depot-user, api, artifacts, config, import, index, overview, runtime, targets

@@ -165,4 +165,4 @@ The file must implement the following procedures:
 SEE ALSO
 ########
 
-add-depot-user, api, artifacts, build-systems, import, config, runtime, overview
+add-depot-user, api, artifacts, build-systems, config, import, index, runtime, overview

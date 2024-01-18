@@ -1,0 +1,69 @@
+
+                                     Index
+
+
+                               Johannes Schlatow
+
+
+Goa supports exporting and publishing a depot index. If a directory contains
+an 'index' file, it will be considered an index project. Goa evaluates the
+'sculpt_version' variable to determine for which Sculpt version the index
+will be exported/published.
+
+
+DESCRIPTION
+###########
+
+The 'index' file contains XML data with an '<index>' node at top level.
+Each index file features a declaration of the CPU architectures supported by
+the package provider. Sculpt OS evaluates this to decide whether to display
+the depot index.
+
+! <index>
+!   <supports arch="x86_64"/>
+!   <supports arch="arm_v8a"/>
+!  ...
+
+An 'index' file further contains an arbitrary number of '<pkg>' nodes which
+define the packages provided in this depot. A '<pkg>' node contains the
+following attributes:
+
+:path: The 'path' attribute specifies the package name. Goa uses its built-in
+  mechanisms to determine the current version of this package
+  (see 'goa help config'). The package must either be present in the user's
+  depot or a corresponding Goa project must exist in the current search
+  directory.
+
+:info: The 'info' attribute contains a brief description of the package.
+
+:arch: The optional 'arch' attribute can be used to restrict the supported
+  CPU architectures for this particular package.
+
+A depot index may be structured by nesting named '<index>' nodes and thereby
+divide the provided packages into categories, e.g.:
+
+! <index>
+!   <supports arch="x86_64"/>
+!   <supports arch="arm_v8a"/>
+!
+!   <index name="GUI" arch="x86_64">
+!     <pkg path="sticks_blue_backdrop" info="default desktop background"/>
+!     <pkg path="themed_wm"            info="ready-to-use window manager"/>
+!   </index>
+!
+!   <index name="Tools">
+!     <pkg path="system_shell"    info="command-line interface to the system"/>
+!     <pkg path="system_clock-pc" info="real-time-clock service" arch="x86_64"/>
+!   </index>
+!
+! </index>
+
+As shown in the above example, each sub-index can be restricted to a particular
+CPU architecture.
+
+
+SEE ALSO
+########
+
+add-depot-user, api, artifacts, build-systems, config, import, overview, runtime, targets
+

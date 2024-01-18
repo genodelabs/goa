@@ -204,4 +204,4 @@ OPTIONAL ARGUMENTS
 SEE ALSO
 ########
 
-add-depot-user, api, artifacts, build-systems, import, config, runtime, targets
+add-depot-user, api, artifacts, build-systems, config, import, index, runtime, targets
