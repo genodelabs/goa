@@ -21,7 +21,7 @@ __goa()
     fileopts="--license|--pubkey-file|--cross-dev-prefix"
     diropts="-C|--versions-from-genode-dir|--depot-dir|--public-dir|--project-name|--contrib-dir|--build-dir|--abi-dir|--bin-dir|--run-dir|--common-var-dir|--search-dir"
     pkgopts="--pkg"
-    targetvals="linux"
+    targetvals="linux sculpt"
     archvals="x86_64 arm_v8a"
     olevelvals="-O0 -O1 -O2 -O3 -Ofast -Os"
     numopts="--jobs"
