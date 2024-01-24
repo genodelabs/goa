@@ -1143,7 +1143,7 @@ proc prepare_project_archive_directory { type { pkg_name "" } } {
 		} else {
 			exit_with_error "archive $archive already exists in the depot\n" \
 			                "\n You may specify '--depot-overwrite' to replace" \
-			                "or '-depot-retain' to keep the existing version.\n"
+			                "or '--depot-retain' to keep the existing version.\n"
 		}
 	}
 
