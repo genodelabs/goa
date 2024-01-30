@@ -101,6 +101,7 @@ $(PUBLIC_DIR)/%.xz.sig : $(PUBLIC_DIR)/%.xz
 	              ( rm -f $@; false )
 
 .PRECIOUS: $(TARGETS:.xz.sig=.xz)
+.NOTPARALLEL: $(TARGETS:.xz.sig=.xz)
 
 # archive
 $(PUBLIC_DIR)/%.tar.xz: $(DEPOT_DIR)/%
