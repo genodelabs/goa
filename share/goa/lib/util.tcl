@@ -805,8 +805,6 @@ proc assert_definition_of_depot_user { } {
 proc pkgs_from_index { index_file } {
 	global depot_user
 
-	set result ""
-
 	# get supported archs
 	if {[catch { set supported_archs [query_attrs_from_file /index/supports arch $index_file] }]} {
 		exit_with_error "missing <supports arch=\"...\"/> in index file" }
@@ -825,20 +823,21 @@ proc pkgs_from_index { index_file } {
 		return $res
 	}
 
-	# iterate <pkg> nodes within <index> nodes with no 'arch' attribute
-	catch {
-		set pkgs [split [query_from_file /index/index\[not(@arch)\]/pkg $index_file] \n]
-		lappend result {*}[_paths_with_arch $pkgs $supported_archs]
-	}
+	# helper for recursive processing of index nodes
+	proc _index_with_arch { xml archs result } {
+		# iterate <index> nodes
+		catch {
+			foreach index_xml [split [query_from_string /index/index $xml ""] \n] {
+				set index_archs [split [query_from_string string(/index/@arch) $index_xml "$archs"] " "]
+				set index_name [query_from_string string(/index/@name) $index_xml ""]
+				set pkgs [split [query_from_string /index/pkg $index_xml ""] \n]
+				lappend result {*}[_paths_with_arch $pkgs $index_archs]
 
-	# iterate 'arch' attributes of <index> nodes
-	catch {
-		set archs [query_attrs_from_file /index/index arch $index_file]
-		foreach pkg_arch [lsort -unique $archs] {
-			set pkgs [split [query_from_file /index/index\[@arch="$pkg_arch"\]/pkg $index_file] \n]
-			lappend result {*}[_paths_with_arch $pkgs [list $pkg_arch]]
+				set result [_index_with_arch $index_xml $index_archs $result]
+			}
 		}
+		return $result
 	}
 
-	return $result
+	return [_index_with_arch [query_from_file /index $index_file] $supported_archs ""]
 }
