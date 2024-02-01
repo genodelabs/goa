@@ -182,41 +182,85 @@ proc read_file_content_as_list { path } {
 
 
 ##
+# Build up cache of potential project directories
+#
+proc _build_project_dir_cache { type } {
+	global search_dir project_dir_cache
+
+	if {![array exists project_dir_cache]} {
+		array set project_dir_cache {} }
+
+	if {![info exists project_dir_cache($type)]} {
+		set orig_pwd [pwd]
+		set candidates ""
+
+		set find_cmd_base [list find -L -not -path "*/depot/*" \
+		                           -and -not -path "*/contrib/*" \
+		                           -and -not -path "*/build/*" \
+		                           -and -not -path "*/public/*" \
+		                           -and -not -path "*/var/*"]
+
+		cd $search_dir
+		if {$type == "src"} {
+			set candidates [exec {*}$find_cmd_base -and \( -path */src \
+			                                           -or -path */import \
+			                                           -or -path */artifacts \)]
+		} elseif {$type == "api"} {
+			set candidates [exec {*}$find_cmd_base -and -path */api -type f]
+		} elseif {$type == "pkg"} {
+			set candidates [exec {*}$find_cmd_base -and -path */pkg/* -type d]
+		} elseif {$type == "raw"} {
+			set candidates [exec {*}$find_cmd_base -and -path */raw -type d]
+		}
+		cd $orig_pwd
+
+		# make sure the last path element is the project name (except for type=pkg)
+		regsub -line -all {(/(src|raw|import|artifacts|api))$} $candidates "" candidates
+
+		# store candidates per type to make sure find is called only once per type
+		set project_dir_cache($type) $candidates
+
+		# helper for testing whether a relative path is a valid project directory
+		proc _abs_project_dir { dir } {
+			global search_dir
+			set absolute_path [file join $search_dir [string trimleft $dir "./"]]
+			if {[looks_like_goa_project_dir $absolute_path]} {
+				return $absolute_path }
+
+			return -code error
+		}
+
+		# store each valid project dir in project_dir_cache($type,$name)
+		if {$type == "pkg"} {
+			foreach dir $project_dir_cache($type) {
+				regexp {(.*)/pkg/(.*)$} $dir dummy path name
+				catch {
+					set project_dir_cache($type,$name) [_abs_project_dir $path] }
+			}
+		} else {
+			foreach dir $project_dir_cache($type) {
+				set name [file tail $dir]
+				catch {
+					set project_dir_cache($type,$name) [_abs_project_dir $dir] }
+			}
+		}
+	}
+}
+
+##
 # Find archive in directory tree starting from the directory where Goa was
-# called with -C
+# called with -C or from $search_dir
 #
 proc find_project_dir_for_archive { type name } {
-	global search_dir
+	global search_dir project_dir_cache
 
-	set orig_pwd [pwd]
-	set candidates ""
+	if {$type == "bin"} {
+		set type "src" }
 
-	set find_cmd_base [list find -L -not -path "*/depot/*" \
-	                        -and -not -path "*/contrib/*" \
-	                        -and -not -path "*/build/*" \
-	                        -and -not -path "*/var/*"]
+	_build_project_dir_cache $type
 
-	cd $search_dir
-	if {$type == "src" || $type == "bin"} {
-		set candidates [exec {*}$find_cmd_base -and \( -path */$name/src \
-		                                           -or -path */$name/import \
-		                                           -or -path */$name/artifacts \)]
-	} elseif {$type == "api"} {
-		set candidates [exec {*}$find_cmd_base -and -path */$name/api -type f]
-	} elseif {$type == "pkg"} {
-		set candidates [exec {*}$find_cmd_base -and -path */pkg/$name -type d]
-	} elseif {$type == "raw"} {
-		set candidates [exec {*}$find_cmd_base -and -path */$name/raw -type d]
-	}
-	cd $orig_pwd
-
-	regsub -line -all {(/(src|pkg/.*|raw|import|artifacts|api))$} $candidates "" candidates
-
-	foreach dir $candidates {
-		set absolute_path [file join $search_dir [string trimleft $dir "./"]]
-		if {[looks_like_goa_project_dir $absolute_path]} {
-			return $absolute_path }
-	}
+	if {[info exists project_dir_cache($type,$name)]} {
+		return $project_dir_cache($type,$name) }
 
 	return -code error
 }
