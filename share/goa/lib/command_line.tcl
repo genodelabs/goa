@@ -172,6 +172,7 @@ set depot_user               ""
 set run_as                   "genodelabs"
 set target                   "linux"
 set sculpt_version           ""
+set cc_cxx_opt_std           "-std=gnu++20"
 array set target_opt {}
 
 # if /proc/cpuinfo exists, use number of CPUs as 'jobs'
@@ -274,11 +275,11 @@ foreach var_name $path_var_names {
 		set $var_name [file normalize $path] }
 }
 
-set jobs     [consume_optional_cmdline_arg "--jobs" $jobs]
-set arch     [consume_optional_cmdline_arg "--arch" $arch]
-set ld_march [consume_optional_cmdline_arg "--ld-march" $ld_march]
-set cc_march [consume_optional_cmdline_arg "--cc-march" $cc_march]
-
+set jobs           [consume_optional_cmdline_arg "--jobs" $jobs]
+set arch           [consume_optional_cmdline_arg "--arch" $arch]
+set ld_march       [consume_optional_cmdline_arg "--ld-march" $ld_march]
+set cc_march       [consume_optional_cmdline_arg "--cc-march" $cc_march]
+set cc_cxx_opt_std [consume_optional_cmdline_arg "--cc-cxx-opt-std" $cc_cxx_opt_std]
 
 #
 # Define actions based on the primary command given at the command line

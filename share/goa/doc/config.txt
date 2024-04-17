@@ -208,6 +208,9 @@ Goa evaluates the following configuration variables.
   variable in a custom 'goarc' file or by using the '--search-dir <dir>'
   command-line argument.
 
+:cc_cxx_opt_std:
+  Overwrite C++ standard. The default is '-std=gnu++20'.
+
 SEE ALSO
 ########
 
