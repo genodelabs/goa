@@ -1532,11 +1532,49 @@ if {$perform(publish)} {
 		exit_with_error "failed to download dependencies of the following depot archives:\n" \
 		                [join $archives "\n "] }
 
+	# second, download archives from other users that are not present in public
+	set missing_archives ""
+	if {[llength $archives] > 0} {
+		set cmd "[file join $tool_dir depot dependencies]"
+		set cmd [concat $cmd $archives]
+		lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
+		lappend cmd "DEPOT_DIR=$depot_dir"
+		lappend cmd "PUBLIC_DIR=$public_dir"
+		lappend cmd "REPOSITORIES="
+
+		diag "acquiring dependencies via command: $cmd"
+
+		if {![catch { exec {*}$cmd 2> /dev/null } msg]} {
+			foreach line [split $msg \n] {
+				if {[catch {archive_parts [string trim $line] user type name vers}]} {
+					continue
+				}
+
+				if {$user == $depot_user} {
+					continue
+				}
+
+				if {[file exists [file join $public_dir $line ".tar.xz.sig"]]} {
+					continue }
+
+				# remove archive from depot_dir to trigger re-download
+				file delete -force [file join $depot_dir $line]
+				lappend missing_archives $line
+			}
+		}
+	}
+
+	# third, download missing archives
+	set missing_archives [lsort -unique $missing_archives]
+	if {[catch { download_archives $missing_archives }]} {
+		exit_with_error "failed to download the following depot archives:\n" \
+		                [join $missing_archives "\n "] }
+
 	# add index archive to archives
 	if {[info exists index_archive]} {
 		lappend archives $index_archive }
 
-	# second, try to publish archives
+	# fourth, try to publish archives
 	if {[llength $archives] > 0} {
 		set cmd "[file join $tool_dir depot publish]"
 		set cmd [concat $cmd $archives]
