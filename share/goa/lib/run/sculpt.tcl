@@ -63,7 +63,7 @@ proc run_genode { } {
 
 proc parent_services { } {
 	return [list TRACE RM VM Timer Rtc Gui Nic Event Capture \
-	             Audio_out Audio_in Usb Gpu Report File_system] }
+	             Audio_out Audio_in Play Record Usb Gpu Report File_system] }
 
 
 proc base_archives { } { return {} }

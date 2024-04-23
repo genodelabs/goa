@@ -80,6 +80,11 @@ the _runtime_ file's <requires> node:
 
 :<audio_in/> and <audio_out/>:
   Any required _Audio_in_ and _Audio_out_ service is routed to a black-hole
+  component. Note: These services are deprecated since 24.04 and will be removed
+  in the future.
+
+:<play/> and <record/>:
+  Any required _Play_ and _Record_ service is routed to a black-hole
   component.
 
 :<usb/>:

@@ -204,14 +204,15 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	# remaining services
 	set other_services [list Audio_in Audio_out Uplink Nic Capture Event Gui TRACE \
 	                         Block Platform IO_MEM IO_PORT IRQ File_system Timer \
-	                         Rtc Gpu Report ROM Usb Terminal VM Pin_ctrl Pin_state]
+	                         Rtc Gpu Report ROM Usb Terminal VM Pin_ctrl Pin_state \
+	                         Play Record]
 
 	# all known services
-	set known_services [concat $base_services $other_services]]
+	set known_services [concat $base_services $other_services]
 
 	# services supported by black_hole component
 	set blackhole_supported_services [list report audio_in audio_out event \
-	                                       capture gpu usb uplink]
+	                                       capture gpu usb uplink play record]
 
 	# check and acquire required/provided services from runtime file
 	lassign [_acquire_services [string tolower $known_services] \
