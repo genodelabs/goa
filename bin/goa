@@ -199,7 +199,7 @@ if {$perform(add-depot-user)} {
 # The following commands only work when the current working directory is a goa
 # project.
 #
-if {![looks_like_goa_project_dir $project_dir]} {
+if {![looks_like_goa_project_dir $project_dir] && ![has_src_but_no_artifacts $project_dir]} {
 	exit_with_error "$project_dir does not look like a goa project" }
 
 
