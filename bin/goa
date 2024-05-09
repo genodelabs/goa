@@ -638,6 +638,9 @@ proc detect_build_system { } {
 	if {[file exists [file join src vivado.tcl]]} {
 		return vivado }
 
+	if {[file exists [file join src meson.build]]} {
+		return meson }
+
 	exit_with_error "unable to determine build system for [pwd]"
 }
 

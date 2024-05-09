@@ -70,6 +70,9 @@ It can have the following ingredients:
   passed to Make when using a plain Makefile project or an Autoconf
   project.
 
+:meson_args: A file containing a list of project-specific arguments
+  passed to Meson.
+
 :configure_args: A file containing a list of project-specific arguments
   passed to the configure script of an Autoconf project.
 !

@@ -50,6 +50,13 @@ CMake is used, if Goa encounters a CMakeList.txt file in the src/ directory.
 Project-specific CMake configuration arguments are read from the cmake_args
 file.
 
+Meson
+=====
+
+Meson is used, if Goa encounters a meson.build file in the src/ directory.
+Project-specific Meson configuration arguments are read from the meson_args
+file.
+
 
 qmake (Qt)
 ==========
