@@ -1426,7 +1426,7 @@ if {$perform(export)} {
 
 
 	# determine dependent projects that need exporting
-	set export_projects ""
+	array set export_projects {}
 	if {[llength $exported_archives] > 0} {
 		set cmd "[file join $tool_dir depot dependencies]"
 		set cmd [concat $cmd $exported_archives]
@@ -1440,7 +1440,8 @@ if {$perform(export)} {
 		set archives_incomplete 0
 		if {[catch { exec {*}$cmd 2> /dev/null } msg]} {
 			foreach line [split $msg \n] {
-				if {[catch {archive_parts [string trim $line] user type name vers}]} {
+				set archive [string trim $line]
+				if {[catch {archive_parts $archive user type name vers}]} {
 					continue
 				}
 
@@ -1459,7 +1460,7 @@ if {$perform(export)} {
 						continue
 					}
 
-					lappend export_projects $dir
+					set export_projects($archive) $dir
 				} else {
 					set archives_incomplete 1
 					log "Unable to download or to find project directory for '[string trim $line]'"
@@ -1473,8 +1474,10 @@ if {$perform(export)} {
 	}
 
 	# export dependent projects
-	foreach dir [lsort -unique $export_projects] {
-		if {[catch { export_dependent_project $dir $arch } msg]} {
+	foreach archive [array names export_projects] {
+		set dir $export_projects($archive)
+		archive_name_and_arch $archive _pkg _arch
+		if {[catch { export_dependent_project $dir $_arch $_pkg} msg]} {
 			exit_with_error "failed to export project $dir: \n\t$msg" }
 	}
 }

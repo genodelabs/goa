@@ -472,6 +472,23 @@ proc archive_parts { archive &user &type &name &version } {
 
 
 ##
+# Extracts name and arch from specified archive path
+#
+proc archive_name_and_arch { archive &name &arch } {
+	set elements [split $archive /]
+
+	if {[llength $elements] != 5} {
+		return -code error "unexpected depot-archive path '$archive' (requires version and arch)" }
+
+	upvar 1 ${&name} name
+	upvar 1 ${&arch} arch
+
+	set arch [lindex $elements 2]
+	set name [lindex $elements 3]
+}
+
+
+##
 # Return type element of specified archive path
 #
 proc archive_version { archive } {
