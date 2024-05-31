@@ -46,8 +46,16 @@ proc run_genode { } {
 	if {[catch { exec {*}$cmd config >@stdout} msg]} {
 		exit_with_error $msg }
 
+	# spawn optional command if target-opt-sculpt-cmd is set
+	if {[info exists target_opt($target-cmd)]} {
+		set    opt_cmd "SERVER=$host;"
+		append opt_cmd {*}$target_opt($target-cmd)
+		spawn sh -c "$opt_cmd"
+		set cmd_spawn_id $spawn_id
+	}
+
 	eval spawn -noecho telnet $host $port_telnet
-#
+
 	set timeout -1
 	interact {
 		\003 {
@@ -57,6 +65,12 @@ proc run_genode { } {
 			exit
 		}
 		-i $spawn_id
+	}
+
+	# terminate optional command
+	if {[info exists cmd_spawn_id]} {
+		close -i $cmd_spawn_id
+		wait -i $cmd_spawn_id
 	}
 }
 
