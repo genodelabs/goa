@@ -467,7 +467,7 @@ if {$perform(export)} {
 
 			# first, try downloading
 			if {[catch { try_download_archives [list $used_api] }]} {
-				if {[project_version $dir] != $vers} {
+				if {"[exported_project_archive_version $dir $user/$type/$name]" != "$vers"} {
 					log "skipping export of $dir due to version mismatch"
 				} elseif {[catch {export_dependent_project $dir $arch} msg]} {
 					exit_with_error "failed to export depot archive $used_api: \n\t$msg"
@@ -1089,7 +1089,7 @@ proc versioned_project_archive { type { pkg_name ""} } {
 	}
 
 	catch {
-		set archive_version [project_version $project_dir]
+		set archive_version [project_version_from_file $project_dir]
 	}
 
 	#
@@ -1395,8 +1395,7 @@ if {$perform(export)} {
 
 			catch {
 				set dir [find_project_dir_for_archive pkg $pkg_name]
-				set version($archive) [project_version $dir]
-				set versioned_archive $archive/$version($archive)
+				set versioned_archive [lindex [apply_versions $archive] 0]
 
 				# download or export archive if it has not been exported
 				set dst_dir "[file join $depot_dir $versioned_archive]"
@@ -1406,9 +1405,14 @@ if {$perform(export)} {
 						if {![catch {try_download_archives [list [apply_arch $versioned_archive $pkg_arch]]}]} {
 							continue }
 
-						# export if download failed
+						# check that the expected version matches the exported version
+						set exported_archive_version [exported_project_archive_version $dir $archive]
+						if { "$archive/$exported_archive_version" != "$versioned_archive" } {
+							exit_with_error "unable to export $versioned_archive: project version is $exported_archive_version" }
+
 						if {[catch { export_dependent_project $dir $pkg_arch $pkg_name } msg]} {
 							exit_with_error "failed to export depot archive $archive: \n\t$msg" } }
+
 				} elseif {$dst_dir != "" && [file exists $dst_dir]} {
 					# mark arch-specific archives as exported to trigger dependency check
 					foreach pkg_arch $pkg_archs {
@@ -1455,7 +1459,7 @@ if {$perform(export)} {
 						continue
 					}
 
-					if {[project_version $dir] != $vers} {
+					if {"[exported_project_archive_version $dir $user/$type/$name]" != "$vers"} {
 						log "skipping export of $dir due to version mismatch"
 						continue
 					}

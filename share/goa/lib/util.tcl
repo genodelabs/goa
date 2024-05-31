@@ -269,7 +269,7 @@ proc find_project_dir_for_archive { type name } {
 ##
 # Acquire project version from 'version' file
 #
-proc project_version { dir } {
+proc project_version_from_file { dir } {
 
 	set version_file [file join $dir version]
 	if {[file exists $version_file]} {
@@ -286,6 +286,29 @@ proc project_version { dir } {
 	}
 
 	return -code error "file $version_file does not exist"
+}
+
+
+##
+# Determine project version for a particular archive during export
+#
+proc exported_project_archive_version { dir archive } {
+	global version
+
+	catch {
+		set archive_version [project_version_from_file $dir]
+	}
+
+	if {[info exists archive_version]} {
+		return $archive_version }
+
+	if {[info exists version($archive)]} {
+		return $version($archive) }
+
+	exit_with_error "version for archive $archive undefined\n" \
+	                "\n Create a 'version' file in '$dir', or" \
+	                "\n define 'set version($archive) <version>' in your goarc file," \
+	                "\n or specify '--version-$archive <version>' as argument\n"
 }
 
 
@@ -341,7 +364,7 @@ proc apply_versions { archive_list } {
 		if {![info exists version($archive)]} {
 			catch {
 				set dir [find_project_dir_for_archive $type $name]
-				set version($archive) [project_version $dir]
+				set version($archive) [project_version_from_file $dir]
 			}
 		}
 
