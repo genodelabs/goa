@@ -42,7 +42,7 @@ The '<runtime>' node may further contain the following sub nodes:
   top-level node has a 'config' attribute.
 
 :<content>: A list of required ROM modules. Each ROM module is specified by a
-  '<rom name="..."/>' sub node.
+  '<rom label="..."/>' sub node.
 
 
 EXAMPLES
