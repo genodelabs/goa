@@ -1,6 +1,28 @@
+#
+# Meson specific implementation
+#
+
+proc api_status { } {
+	global build_dir
+
+
+	set pkg_config_log [file join $build_dir "pkg-config.log"]
+	set module_status  [read_file_content_as_list $pkg_config_log]
+	set module_status  [lsort -unique $module_status]
+
+	if {[llength $module_status] == 0} { return }
+
+	log "pkg-config status:"
+	foreach module $module_status {
+		set status [split $module ":"]
+		set found [expr [lindex $status 1] == 1 ? "YES" : "NO" ]
+		log "\t[lindex $status 0] found: $found"
+	}
+}
+
 
 proc create_cross_file { dir } {
-	global cross_dev_prefix
+	global cross_dev_prefix tool_dir
 
 	set cross_file [file join $dir meson-cross-genode]
 
@@ -15,14 +37,15 @@ proc create_cross_file { dir } {
 	puts $fh "strip  = '${cross_dev_prefix}strip'"
 
 	#
-	# Setting the pkg-config command to '/bin/true'  will find all required
-	# packages, make sure to have all required libraries in used_apis
+	# Custom pkg-config command that checks if required libraries are present in
+	# abi_dir
 	#
-	puts $fh "pkg-config  = 'true'"
+	puts $fh "pkg-config = '$tool_dir/lib/pkg-config.tcl'"
 
 	puts $fh ""
 	puts $fh "\[properties\]"
 	puts $fh "needs_exec_wrapper = false"
+	puts $fh "pkg_config_libdir  = '$dir'"
 	puts $fh ""
 	puts $fh "\[host_machine\]"
 	puts $fh "system     = 'freebsd'"
@@ -36,7 +59,7 @@ proc create_cross_file { dir } {
 
 
 proc create_or_update_build_dir { } {
-	global build_dir project_dir project_name
+	global build_dir project_dir abi_dir project_name
 	global cross_dev_prefix
 	global cppflags cflags cxxflags cc_cxx_opt_std
 	global ldflags ldlibs_common ldlibs_exe
@@ -44,6 +67,17 @@ proc create_or_update_build_dir { } {
 
 	if {![file exists $build_dir]} {
 		file mkdir $build_dir }
+
+	# create/empty pkg-config.log
+	set pkg_config_log [file join $build_dir "pkg-config.log"]
+	set fh [open $pkg_config_log "WRONLY CREAT TRUNC"]
+	close $fh
+
+	# create link to abi to be processed by 'pkg-config.tcl'
+	set link_abi [file join $build_dir abi]
+	if {[expr ![file exists $link_abi]]} {
+		file link -symbolic $link_abi $abi_dir
+	}
 
 	set source_dir [file join $project_dir src]
 
@@ -61,7 +95,11 @@ proc create_or_update_build_dir { } {
 
 	# if debug -> enable assertion
 	set b_ndebug  "true"
-	if { $debug == 1 } { set b_ndebug "false" }
+	if { $debug == 1 } {
+		set b_ndebug "false"
+	} else {
+		lappend cmd "--strip"
+	}
 	lappend cmd "-Db_ndebug=$b_ndebug"
 
 	#
@@ -80,7 +118,7 @@ proc create_or_update_build_dir { } {
 	lappend cmd "-Dc_link_args=$ldflags $ldlibs_common $ldlibs_exe"
 	lappend cmd "-Dcpp_link_args=$ldflags $ldlibs_common $ldlibs_exe"
 
-	#add project-specific arguments read from 'meson_args' file
+	# add project-specific arguments read from 'meson_args' file
 	foreach arg [read_file_content_as_list [file join $project_dir meson_args]] {
 		lappend cmd $arg }
 
@@ -90,10 +128,12 @@ proc create_or_update_build_dir { } {
 	lappend cmd $build_dir
 	lappend cmd $source_dir
 
-	diag "create build directory via command: [pwd]" {*}$cmd
+	diag "create build directory via command: " {*}$cmd
 
 	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:meson\] /" >@ stdout} msg]} {
 		exit_with_error "build-directory creation via meson failed:\n" $msg }
+
+	api_status
 }
 
 
