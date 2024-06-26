@@ -1083,11 +1083,12 @@ if {$perform(run-dir)} {
 
 	# add content found in the project's raw/ subdirectory
 	symlink_directory_content $rom_modules [file join $project_dir raw] $run_dir
+
+	if { $debug } { prepare_gdb }
 }
 
 
 if {$perform(run)} {
-
 	run_genode
 }
 

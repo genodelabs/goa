@@ -75,6 +75,10 @@ proc run_genode { } {
 }
 
 
+proc prepare_gdb { } {
+}
+
+
 proc parent_services { } {
 	return [list TRACE RM VM Timer Rtc Gui Nic Event Capture \
 	             Audio_out Audio_in Play Record Usb Gpu Report File_system] }
