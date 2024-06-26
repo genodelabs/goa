@@ -502,7 +502,7 @@ proc depot_user { archive } { return [lindex [split $archive "/"] 0] }
 
 
 proc prepare_depot_with_archives { archive_list } {
-	global depot_dir public_dir tool_dir jobs
+	global depot_dir
 
 	# create list of depot users without duplicates
 	set depot_users { }
@@ -528,6 +528,23 @@ proc prepare_depot_with_archives { archive_list } {
 	if {[catch { download_archives $uninstalled_archives }]} {
 		exit_with_error "failed to download the following depot archives:\n" \
 		                [join $uninstalled_archives "\n "] }
+}
+
+
+proc prepare_depot_with_debug_archives { archive_list } {
+	global depot_dir
+
+	set missing_debug_archives {}
+	foreach archive $archive_list {
+		set is_bin [regsub {/bin/} $archive {/dbg/} debug_archive]
+		if { $is_bin && ![file exists [file join $depot_dir $debug_archive]]} {
+			if {[catch { try_download_debug_archives [list $archive] }]} {
+				lappend missing_debug_archives $debug_archive } }
+	}
+
+	if {[llength $missing_debug_archives]} {
+		log "unable to download the following debug archives:\n" \
+		    [join $missing_debug_archives "\n "] }
 }
 
 
@@ -1015,6 +1032,9 @@ if {$perform(run-dir)} {
 		file delete -force $run_dir }
 	file mkdir $run_dir
 
+	if { $debug } {
+		file mkdir [file join $run_dir .debug] }
+
 	#
 	# Generate Genode config depending on the pkg runtime specification. The
 	# procedure may extend the lists of 'runtime_archives' and 'rom_modules'.
@@ -1042,15 +1062,24 @@ if {$perform(run-dir)} {
 	# prepare depot with additional archives added by 'generate_runtime_config'
 	set binary_archives [binary_archives [apply_versions $runtime_archives]]
 	prepare_depot_with_archives $binary_archives
+	if { $debug } {
+		prepare_depot_with_debug_archives $binary_archives }
 
 	update_depot_roms $runtime_archives
 
 	# update 'binary_archives' with information available after installation
 	set binary_archives [binary_archives [apply_versions $runtime_archives]]
 
+	set debug_modules [lmap x $rom_modules {expr { "$x.debug" }}]
+
 	# populate run directory with depot content
 	foreach archive $binary_archives {
-		symlink_directory_content $rom_modules [file join $depot_dir $archive] $run_dir }
+		symlink_directory_content $rom_modules [file join $depot_dir $archive] $run_dir
+
+		# add debug info files
+		if { $debug && [regsub {/bin/} $archive {/dbg/} debug_archive] } {
+			symlink_directory_content $debug_modules [file join $depot_dir $debug_archive] [file join $run_dir .debug] }
+	}
 
 	# add artifacts as extracted from the build directory
 	symlink_directory_content $rom_modules $bin_dir $run_dir
