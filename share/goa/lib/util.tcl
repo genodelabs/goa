@@ -841,7 +841,7 @@ proc export_dependent_project { dir arch { pkg_name "" } } {
 }
 
 
-proc download_archives { archives { no_err 0 }} {
+proc download_archives { archives { no_err 0 } { dbg 0 }} {
 	global tool_dir depot_dir public_dir
 
 	if {[llength $archives] > 0} {
@@ -851,6 +851,8 @@ proc download_archives { archives { no_err 0 }} {
 		lappend cmd "DEPOT_DIR=$depot_dir"
 		lappend cmd "PUBLIC_DIR=$public_dir"
 		lappend cmd "REPOSITORIES="
+		if { $dbg } {
+			lappend cmd "DBG=1" }
 
 		diag "install depot archives via command: $cmd"
 
@@ -866,8 +868,13 @@ proc download_archives { archives { no_err 0 }} {
 	return -code ok
 }
 
+
 proc try_download_archives { archives } {
 	return [download_archives $archives 1] }
+
+
+proc try_download_debug_archives { archives } {
+	return [download_archives $archives 1 1] }
 
 
 proc assert_definition_of_depot_user { } {
