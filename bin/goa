@@ -870,7 +870,7 @@ proc artifact_is_library { artifact } {
 
 
 proc extract_artifacts_from_build_dir { } {
-	global project_dir build_dir bin_dir
+	global project_dir build_dir bin_dir dbg_dir debug
 	global library_artifacts
 
 	set artifacts_file_path [file join $project_dir artifacts]
@@ -878,11 +878,14 @@ proc extract_artifacts_from_build_dir { } {
 	# remove artifacts from last build
 	if {[file exists $bin_dir]} {
 		file delete -force $bin_dir }
+	if {[file exists $dbg_dir]} {
+		file delete -force $dbg_dir }
 
 	if {![file exists $artifacts_file_path]} {
 		return }
 
 	file mkdir $bin_dir
+	if { $debug } { file mkdir $dbg_dir }
 
 	set library_artifacts { }
 	foreach file [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
@@ -890,8 +893,13 @@ proc extract_artifacts_from_build_dir { } {
 		file link $symlink_path $file
 
 		if {[artifact_is_library $file]} {
-			lappend library_artifacts $file
-		}
+			lappend library_artifacts $file }
+
+		extract_debug_info $file
+		if { $debug && [file exists "$file.debug"]} {
+			file link [file join $dbg_dir "[file tail $file].debug"] "$file.debug" }
+
+		strip_binary $file
 	}
 
 	create_artifact_containers_from_list_file $artifacts_file_path $build_dir $bin_dir
@@ -1083,6 +1091,9 @@ if {$perform(run-dir)} {
 
 	# add artifacts as extracted from the build directory
 	symlink_directory_content $rom_modules $bin_dir $run_dir
+
+	# add debug info files as extracted from the build directory
+	symlink_directory_content $debug_modules $dbg_dir [file join $run_dir .debug]
 
 	# add content found in the project's raw/ subdirectory
 	symlink_directory_content $rom_modules [file join $project_dir raw] $run_dir

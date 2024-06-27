@@ -94,6 +94,9 @@ Goa evaluates the following configuration variables.
   the build directory upon the completion of the build process. The
   default is var/bin/<arch>/ within the project directory.
 
+:dbg_dir: The directory containing debug info files for the final build
+  artifacts. The default is var/dbg/<arch>/ within the project directory.
+
 :run_dir: The directory where Genode test scenarios are assembled when
   executing the 'run' command. The default is var/run/ within the project
   directory.
@@ -147,11 +150,13 @@ Goa evaluates the following configuration variables.
   configuration variable, or the '--license' command-line argument.
 
 :debug:
-  If set to 1, Goa uses debug build mode to produce binaries with debug
-  information (details depend on the build system). Goa uses release build
-  mode by default (i.e. debug is set to 0). Alternatively to defining the
-  configuration variable, the debug build mode can be enabled via the '--debug'
-  command-line argument.
+  If set to 1, Goa may use debug build mode to produce binaries with debug
+  information (details depend on the build system). Furthermore, Goa extracts
+  debug info files from the produced binaries and adds corresponding
+  .gnu_debuglink sections. The 'goa run' command tries downloading required dbg
+  archives and makes the contained debug info files available in the .debug
+  subdirectory of run_dir. Alternatively to defining the configuration variable,
+  the debug build mode can be enabled via the '--debug' command-line argument.
 
 :warn_strict:
   If set to 1, Goa passes Genode's default strict C++ warning flags to the

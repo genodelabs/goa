@@ -932,3 +932,69 @@ proc pkgs_from_index { index_file } {
 
 	return [_index_with_arch [query_from_file /index $index_file] $supported_archs ""]
 }
+
+
+##
+# strip debug symbols from binary
+#
+proc strip_binary { file } {
+	global cross_dev_prefix
+
+	set cmd "$cross_dev_prefix\strip"
+	lappend cmd "$file"
+
+	catch { exec {*}$cmd }
+}
+
+
+##
+# extract debug info files
+#
+proc extract_debug_info { file } {
+	global cross_dev_prefix dbg_dir
+
+	##
+	# check whether file has debug info and bail if not
+	#
+
+	set cmd "$cross_dev_prefix\objdump"
+	lappend cmd "-hj"
+	lappend cmd ".debug_info"
+	lappend cmd "$file"
+
+	if {[catch { exec {*}$cmd }]} {
+		diag "file \"$file\" has no debug info"
+		return }
+
+	##
+	# create debug info file
+	#
+
+	set cmd "$cross_dev_prefix\objcopy"
+	lappend cmd "--only-keep-debug"
+	lappend cmd "$file"
+	lappend cmd "$file.debug"
+
+	if {[catch { exec {*}$cmd }]} {
+		diag "unable to extract debug info file from $file"
+		return
+	}
+
+	##
+	# add gnu_debuglink section to binary
+	#
+
+	# change dir because --add-gnu-debuglink expect .debug file in working dir
+	set filename [file tail $file]
+	set orig_pwd [pwd]
+	cd [file dirname $file]
+
+	set cmd "$cross_dev_prefix\objcopy"
+	lappend cmd "--add-gnu-debuglink=$filename.debug"
+	lappend cmd "$filename"
+
+	if {[catch { exec {*}$cmd }]} {
+		diag "unable to add gnu_debuglink section to $file" }
+
+	cd $orig_pwd
+}

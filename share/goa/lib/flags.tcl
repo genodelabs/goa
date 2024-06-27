@@ -44,8 +44,9 @@ if {$cc_march != ""} {
 if {[info exists warn_strict] && $warn_strict} {
 	lappend cflags -Wall }
 
-if {$debug} {
-	lappend cflags -g }
+# we strip binaries later on, thus we can always build with -g
+lappend cflags -g
+lappend cflags -fdebug-prefix-map=$depot_dir=/data/depot
 
 
 #

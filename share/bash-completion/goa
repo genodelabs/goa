@@ -15,11 +15,11 @@ __goa()
     run_opts="--pkg --run-as --target"
     user_opts="--depot-url --gpg-user-id --pubkey-file"
 
-    globalopts="--arch --rebuild --debug --warn-strict --no-warn-strict -C --license --versions-from-genode-dir --depot-dir --public-dir --project-name --contrib-dir --build-dir --abi-dir --bin-dir --run-dir --common-var-dir --verbose -r --jobs --cross-dev-prefix --ld-march --olevel --search-dir"
+    globalopts="--arch --rebuild --debug --warn-strict --no-warn-strict -C --license --versions-from-genode-dir --depot-dir --public-dir --project-name --contrib-dir --build-dir --abi-dir --bin-dir --dbg-dir --run-dir --common-var-dir --verbose -r --jobs --cross-dev-prefix --ld-march --olevel --search-dir"
 
     stropts="--depot-url|--gpg-user-id|--depot-user|--ld-march|--run_as"
     fileopts="--license|--pubkey-file|--cross-dev-prefix"
-    diropts="-C|--versions-from-genode-dir|--depot-dir|--public-dir|--project-name|--contrib-dir|--build-dir|--abi-dir|--bin-dir|--run-dir|--common-var-dir|--search-dir"
+    diropts="-C|--versions-from-genode-dir|--depot-dir|--public-dir|--project-name|--contrib-dir|--build-dir|--abi-dir|--bin-dir|--dbg-dir|--run-dir|--common-var-dir|--search-dir"
     pkgopts="--pkg"
     targetvals="linux sculpt"
     archvals="x86_64 arm_v8a"
