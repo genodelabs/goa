@@ -403,6 +403,8 @@ if {$perform(build)} {
 	if {[consume_optional_cmdline_switch "--warn-strict"   ]} { set warn_strict 1 }
 	if {[consume_optional_cmdline_switch "--no-warn-strict"]} { set warn_strict 0 }
 
+	if {[consume_optional_cmdline_switch "--with-backtrace"]} { set with_backtrace 1 }
+
 	# override 'debug' variable via optional command-line switch
 	if {[consume_optional_cmdline_switch "--debug"]} { set debug 1 }
 

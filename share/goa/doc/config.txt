@@ -160,6 +160,12 @@ Goa evaluates the following configuration variables.
   Alternatively to defining the configuration variable, the debug build mode
   can be enabled via the '--debug' command-line argument.
 
+:with_backtrace:
+  If set to 1, Goa adds the flag '-fno-omit-frame-pointer' to the compiler
+  options in order to enable the use of backtraces. Alternatively to defining
+  the configuration variable, the option can be enabled via the
+  '--with-backtrace' command-line argument.
+
 :warn_strict:
   If set to 1, Goa passes Genode's default strict C++ warning flags to the
   build system. It is implicitly enabled whenever a project uses the Genode
