@@ -155,8 +155,10 @@ Goa evaluates the following configuration variables.
   debug info files from the produced binaries and adds corresponding
   .gnu_debuglink sections. The 'goa run' command tries downloading required dbg
   archives and makes the contained debug info files available in the .debug
-  subdirectory of run_dir. Alternatively to defining the configuration variable,
-  the debug build mode can be enabled via the '--debug' command-line argument.
+  subdirectory of run_dir. If set to 1, the 'goa export' and 'goa publish'
+  commands are instructed to publish dbg archives along with the bin archives.
+  Alternatively to defining the configuration variable, the debug build mode
+  can be enabled via the '--debug' command-line argument.
 
 :warn_strict:
   If set to 1, Goa passes Genode's default strict C++ warning flags to the

@@ -822,6 +822,8 @@ proc export_dependent_project { dir arch { pkg_name "" } } {
 	}
 	if {$verbose} {
 		lappend cmd --verbose }
+	if {$debug} {
+		lappend cmd --debug }
 	if {$pkg_name != ""} {
 		lappend cmd --pkg $pkg_name }
 

@@ -48,6 +48,12 @@ if {[info exists warn_strict] && $warn_strict} {
 lappend cflags -g
 lappend cflags -fdebug-prefix-map=$depot_dir=/data/depot
 
+# on export of dbg archives, replace build dir with depot dir
+if {$debug && [info exists depot_user]} {
+	set archive_version [exported_project_archive_version $project_dir $depot_user/src/$project_name]
+	lappend cflags -fdebug-prefix-map=$build_dir=/data/depot/$depot_user/src/$project_name/$archive_version
+}
+
 
 #
 # C++-compiler flags
