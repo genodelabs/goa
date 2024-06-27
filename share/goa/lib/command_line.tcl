@@ -207,7 +207,7 @@ set goarc_path [file separator]
 set path_var_names [list depot_dir public_dir cross_dev_prefix \
                          versions_from_genode_dir common_var_dir \
                          contrib_dir import_dir abi_dir build_dir \
-                         run_dir bin_dir search_dir]
+                         run_dir bin_dir dbg_dir search_dir]
 
 
 foreach path_elem $goarc_path_elements {
@@ -492,6 +492,7 @@ set_if_undefined import_dir  [file join $var_dir import]
 set_if_undefined build_dir   [file join $var_dir build $arch]
 set_if_undefined abi_dir     [file join $var_dir abi   $arch]
 set_if_undefined bin_dir     [file join $var_dir bin   $arch]
+set_if_undefined dbg_dir     [file join $var_dir dbg   $arch]
 set_if_undefined run_dir     [file join $var_dir run]
 set_if_undefined api_dir     [file join $var_dir api]
 
