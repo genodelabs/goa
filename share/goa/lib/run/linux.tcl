@@ -1,6 +1,21 @@
 proc run_genode { } {
-	global run_dir var_dir project_name
+	global run_dir var_dir project_name depot_dir debug
 
+	##
+	# create helper file for gdb
+	#
+	if { $debug } {
+		set gdb_file [file join $var_dir $project_name.gdb]
+
+		set fd [open $gdb_file w]
+		puts $fd "cd ./var/run"
+		puts $fd "set substitute-path /data/depot $depot_dir"
+		close $fd
+	}
+
+	##
+	# run the scenario
+	#
 	set orig_pwd [pwd]
 	cd $run_dir
 	eval spawn -noecho ./core
@@ -14,18 +29,6 @@ proc run_genode { } {
 		}
 		-i $spawn_id
 	}
-}
-
-
-proc prepare_gdb { } {
-	global var_dir depot_dir project_name
-
-	set gdb_file [file join $var_dir $project_name.gdb]
-
-	set fd [open $gdb_file w]
-	puts $fd "cd ./var/run"
-	puts $fd "set substitute-path /data/depot $depot_dir"
-	close $fd
 }
 
 
