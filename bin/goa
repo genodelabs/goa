@@ -1139,10 +1139,10 @@ proc versioned_project_archive { type { pkg_name ""} } {
 	# If a binary archive is requested, try to obtain its version from
 	# the corresponding source archive.
 	#
-	set binary_archive 0
-	if {$type == "bin"} {
+	set binary_type ""
+	if {$type == "bin" || $type == "dbg"} {
+		set binary_type $type
 		set type src
-		set binary_archive 1
 	}
 
 	set archive "$depot_user/$type/$name"
@@ -1158,8 +1158,8 @@ proc versioned_project_archive { type { pkg_name ""} } {
 		                "\n or specify '--version-$archive <version>' as argument\n"
 	}
 
-	if {$binary_archive} {
-		return "$depot_user/bin/$arch/$name/$archive_version" }
+	if {$binary_type != ""} {
+		return "$depot_user/$binary_type/$arch/$name/$archive_version" }
 
 	return "$depot_user/$type/$name/$archive_version"
 }
@@ -1428,6 +1428,20 @@ if {$perform(export)} {
 		lappend exported_archives [versioned_project_archive bin]
 	}
 
+	# create dbg archive
+	if {[file exists $dbg_dir] && [file isdirectory $dbg_dir]} {
+		set dst_dir [prepare_project_archive_directory dbg]
+		if {$dst_dir != ""} {
+			set files [glob -nocomplain -directory $dbg_dir *]
+			foreach file $files {
+				set file [file normalize $file]
+				catch { set file [file link  $file] }
+				file copy $file [file join $dst_dir [file tail $file]] }
+
+			log "exported $dst_dir"
+		}
+	}
+
 	# create index
 	if {[info exists index_file]} {
 		check_xml_syntax $index_file
@@ -1633,6 +1647,8 @@ if {$perform(publish)} {
 		lappend cmd "PUBLIC_DIR=$public_dir"
 		lappend cmd "REPOSITORIES="
 		lappend cmd "-j$jobs"
+		if { $debug } {
+			lappend cmd "DBG=1" }
 
 		diag "publish depot archives via command: $cmd"
 
