@@ -27,8 +27,7 @@ following topics:
 
 Those topics are covered by the tools that come with the Genode project and
 are described in Chapter 5 of the 
-[Genode Foundations book]
-(https://genode.org/documentation/genode-foundations/23.05/development/index.html)
+[Genode Foundations book](https://genode.org/documentation/genode-foundations/23.05/development/index.html)
 
 
 # Installation
@@ -82,17 +81,12 @@ $ goa help
 
 The following article series gets you started with using Goa.
 
-[Streamlining the development of Genode applications]
-(https://genodians.org/nfeske/2019-11-25-goa)
+[Streamlining the development of Genode applications](https://genodians.org/nfeske/2019-11-25-goa)
 
-[Sticking together a little Unix (part 1)]
-(https://genodians.org/nfeske/2019-12-13-goa-unix-bash)
+[Sticking together a little Unix (part 1)](https://genodians.org/nfeske/2019-12-13-goa-unix-bash)
 
-[Sticking together a little Unix (part 2)]
-(https://genodians.org/nfeske/2019-12-19-goa-unix-terminal)
+[Sticking together a little Unix (part 2)](https://genodians.org/nfeske/2019-12-19-goa-unix-terminal)
 
-[Sticking together a little Unix (part 3)]
-(https://genodians.org/nfeske/2019-12-22-goa-unix-pipes)
+[Sticking together a little Unix (part 3)](https://genodians.org/nfeske/2019-12-22-goa-unix-pipes)
 
-[Publishing packages]
-(https://genodians.org/nfeske/2020-01-16-goa-publish)
+[Publishing packages](https://genodians.org/nfeske/2020-01-16-goa-publish)
