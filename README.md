@@ -3,27 +3,27 @@
 Goa is a command-line-based workflow tool for the development of applications
 for the [Genode OS Framework](https://genode.org). It streamlines the work of
 cross-developing Genode application software using a GNU/Linux-based host
-system for development, in particular
+system for development, in particular:
 
-* Importing 3rd-party source code,
+* Importing 3rd-party source code
 
-* Building software using commodity build systems such as CMake,
+* Building software using commodity build systems such as CMake
 
-* Test-running software on the host system,
+* Test-running software on the host system
 
-* Crafting runtime configurations for deployment, and
+* Crafting runtime configurations for deployment
 
 * Packaging and publishing the software for the integration into Genode
-  systems like [Sculpt OS](https://genode.org/download/sculpt).
+  systems like [Sculpt OS](https://genode.org/download/sculpt)
 
 Goa is solely geared towards application software. It does ***not*** address the
 following topics:
 
-* Integration of complete Genode systems,
+* Integration of complete Genode systems
 
-* Test automation,
+* Test automation
 
-* Continuous testing and integration (CI).
+* Continuous testing and integration (CI)
 
 Those topics are covered by the tools that come with the Genode project and
 are described in Chapter 5 of the 
@@ -37,9 +37,9 @@ are described in Chapter 5 of the
   Ubuntu. Make sure that your installation satisfies the following
   requirements.
 
-  * _libSDL-dev_ needed to run system scenarios directly on your host OS,
-  * _tclsh_ and _expect_ needed by the tools,
-  * _xmllint_ for validating configurations,
+  * `libSDL-dev` needed to run system scenarios directly on your host OS,
+  * `tclsh` and `expect` needed by the tools,
+  * `xmllint` for validating configurations,
 
 ### Clone the Goa repository:
 
