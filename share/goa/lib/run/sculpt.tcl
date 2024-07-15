@@ -99,7 +99,17 @@ proc parent_services { } {
 	             Audio_out Audio_in Play Record Usb Gpu Report File_system] }
 
 
-proc base_archives { } { return {} }
+proc base_archives { } {
+	global run_as target target_opt
+
+	if {[info exists target_opt($target-kernel)]} {
+		set kernel $target_opt($target-kernel)
+		return [list "$run_as/src/base-$kernel"]
+	}
+
+	return {}
+}
+
 
 proc rom_route { } { return "<parent/>" }
 proc log_route { } { return "<parent/>" }
@@ -134,7 +144,7 @@ proc bind_provided_services { &services } {
 
 
 proc bind_required_services { &services } {
-	global run_pkg debug
+	global run_pkg debug target target_opt
 
 	# use upvar to access array
 	upvar 1 ${&services} services
@@ -151,6 +161,17 @@ proc bind_required_services { &services } {
 		append start_nodes "\n\t<monitor max_response=\"2K\">
 				<policy label_prefix=\"$run_pkg\" wait=\"no\" stop=\"no\" wx=\"yes\"/>
 			</monitor>\n"
+	}
+
+	if {[info exists target_opt($target-kernel)]} {
+		append routes "\n\t\t\t\t\t" \
+			"<service name=\"ROM\"    label_last=\"ld.lib.so\">" \
+			" <parent label=\"ld.lib.so.local\"/> " \
+			"</service>"
+		append routes "\n\t\t\t\t\t" \
+			"<service name=\"ROM\" unscoped_label=\"ld.lib.so\">" \
+			" <parent label=\"ld.lib.so.local\"/> " \
+			"</service>"
 	}
 
 	##

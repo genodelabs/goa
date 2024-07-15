@@ -129,6 +129,15 @@ may set in your goarc file or provide as command-line arguments
 :target_opt(sculpt-port-gdb):
   Specifies the port of the Telnet server (Default: 9999).
 
+:target_opt(sculpt-kernel):
+  Sets the kernel used by the remote system (e.g. "nova"). By default, the
+  remote system routes any ld.lib.so request to the Sculpt-provided library.
+  For debugging purposes, you may want to replace this library with a local
+  version. If the kernel is set, Goa makes the corresponding base-* archive
+  (including debug symbols) available and re-labels the ld.lib.so routes to
+  ld.lib.so.local so that these ROM requests can be routed to the uploaded
+  ld.lib.so library instead.
+
 :target_opt(sculpt-cmd):
   Specifies a command to be executed (e.g. starting a VNC client) before
   establishing the telnet connection. The command will be executed using the
