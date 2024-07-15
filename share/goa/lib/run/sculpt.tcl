@@ -280,18 +280,18 @@ proc _instantiate_fonts_fs { &start_nodes &archives &modules } {
 	global run_as
 
 	append start_nodes {
-		<start name="fonts_fs" caps="100">
-			<binary name="vfs"/>
-			<resource name="RAM" quantum="2M"/>
-			<provides> <service name="File_system"/> </provides>
-			<route>
-				<service name="ROM" label="config"> <parent label="fonts_fs.config"/> </service>
-				<service name="PD">  <parent/> </service>
-				<service name="CPU"> <parent/> </service>
-				<service name="LOG"> <parent/> </service>
-				<service name="ROM"> <parent/> </service>
-			</route>
-		</start>
+			<start name="fonts_fs" caps="100">
+				<binary name="vfs"/>
+				<resource name="RAM" quantum="2M"/>
+				<provides> <service name="File_system"/> </provides>
+				<route>
+					<service name="ROM" label="config"> <parent label="fonts_fs.config"/> </service>
+					<service name="PD">  <parent/> </service>
+					<service name="CPU"> <parent/> </service>
+					<service name="LOG"> <parent/> </service>
+					<service name="ROM"> <parent/> </service>
+				</route>
+			</start>
 	}
 
 	lappend modules vfs fonts_fs.config
