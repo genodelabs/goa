@@ -393,7 +393,6 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 		</config>
 	}
 
-	lappend runtime_archives "$run_as/src/init"
 	lappend runtime_archives {*}[base_archives]
 
 	# remove duplicates from rom_modules but keep sorting of runtime_archives

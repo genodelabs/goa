@@ -42,7 +42,7 @@ proc parent_services { } {
 proc base_archives { } {
 	global run_as
 
-	return [list "$run_as/src/base-linux"]
+	return [list "$run_as/src/base-linux" "$run_as/src/init"]
 }
 
 
