@@ -101,6 +101,25 @@ proc parent_services { } {
 
 proc base_archives { } { return {} }
 
+proc rom_route { } { return "<parent/>" }
+proc log_route { } { return "<parent/>" }
+
+
+proc pd_route  { } {
+	global debug
+	if { $debug } { return "<local/>" }
+
+	return "<parent/>"
+}
+
+
+proc cpu_route { } {
+	global debug
+	if { $debug } { return "<local/>" }
+
+	return "<parent/>"
+}
+
 
 proc bind_provided_services { &services } {
 	# use upvar to access array

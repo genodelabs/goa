@@ -175,6 +175,18 @@ The file must implement the following procedures:
   Is called after the run_dir has been prepared and the scenario is ready to be
   executed.
 
+:cpu_route:
+  Returns the route to the CPU service (typically "<parent\>").
+
+:log_route:
+  Returns the route to the LOG service (typically "<parent\>").
+
+:pd_route:
+  Returns the route to the PD service (typically "<parent\>").
+
+:rom_route:
+  Returns the route to the ROM service (typically "<parent\>").
+
 
 SEE ALSO
 ########

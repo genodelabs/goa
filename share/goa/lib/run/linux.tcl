@@ -46,6 +46,12 @@ proc base_archives { } {
 }
 
 
+proc rom_route { } { return "<parent/>" }
+proc log_route { } { return "<parent/>" }
+proc pd_route  { } { return "<parent/>" }
+proc cpu_route { } { return "<parent/>" }
+
+
 proc bind_provided_services { &services } {
 	# use upvar to access array
 	upvar 1 ${&services} services

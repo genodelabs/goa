@@ -383,10 +383,10 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 				<binary name="} $binary {"/>
 				<provides>} $provides {</provides>
 				<route>} $config_route $routes {
-					<service name="ROM">   <parent/> </service>
-					<service name="PD">    <parent/> </service>
-					<service name="CPU">   <parent/> </service>
-					<service name="LOG">   <parent/> </service>
+					<service name="ROM">   } [rom_route] { </service>
+					<service name="PD">    } [pd_route]  { </service>
+					<service name="CPU">   } [cpu_route] { </service>
+					<service name="LOG">   } [log_route] { </service>
 				</route>
 				} $inline_config {
 			</start>
