@@ -57,6 +57,7 @@ set  version(genodelabs/src/linux_nic_drv)               2024-04-11
 set  version(genodelabs/src/linux_rtc_drv)               2024-04-11
 set  version(genodelabs/src/lx_fs)                       2024-04-11
 set  version(genodelabs/src/mesa)                        2024-04-11
+set  version(genodelabs/src/monitor)                     2024-04-11
 set  version(genodelabs/src/ncurses)                     2024-04-11
 set  version(genodelabs/src/nic_router)                  2024-04-11
 set  version(genodelabs/src/nitpicker)                   2024-04-24
@@ -69,6 +70,7 @@ set  version(genodelabs/src/qt5_svg)                     2024-04-18
 set  version(genodelabs/src/report_rom)                  2024-04-11
 set  version(genodelabs/src/rom_filter)                  2024-04-11
 set  version(genodelabs/src/rom_reporter)                2024-04-11
+set  version(genodelabs/src/sandbox)                     2024-04-11
 set  version(genodelabs/src/sdl)                         2024-04-11
 set  version(genodelabs/src/sed)                         2024-04-11
 set  version(genodelabs/src/stdcxx)                      2024-04-11
