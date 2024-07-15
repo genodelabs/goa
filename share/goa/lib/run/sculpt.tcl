@@ -134,6 +134,8 @@ proc bind_provided_services { &services } {
 
 
 proc bind_required_services { &services } {
+	global run_pkg debug
+
 	# use upvar to access array
 	upvar 1 ${&services} services
 
@@ -144,6 +146,12 @@ proc bind_required_services { &services } {
 	set start_nodes { }
 	set archives { }
 	set modules { }
+
+	if { $debug } {
+		append start_nodes "\n\t<monitor max_response=\"2K\">
+				<policy label_prefix=\"$run_pkg\" wait=\"no\" stop=\"no\" wx=\"yes\"/>
+			</monitor>\n"
+	}
 
 	##
 	# instantiate fonts_fs
