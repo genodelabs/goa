@@ -126,6 +126,9 @@ may set in your goarc file or provide as command-line arguments
 :target_opt(sculpt-port-telnet):
   Specifies the port of the Telnet server (Default: 23).
 
+:target_opt(sculpt-port-gdb):
+  Specifies the port of the Telnet server (Default: 9999).
+
 :target_opt(sculpt-cmd):
   Specifies a command to be executed (e.g. starting a VNC client) before
   establishing the telnet connection. The command will be executed using the

@@ -1,5 +1,5 @@
 proc run_genode { } {
-	global run_dir tool_dir var_dir target target_opt
+	global run_dir tool_dir var_dir target target_opt project_name depot_dir debug
 
 	if {![info exists target_opt($target-server)]} {
 		exit_with_error "missing target option '$target-server'\n" \
@@ -14,9 +14,28 @@ proc run_genode { } {
 	if {![info exists target_opt($target-port-telnet)]} {
 		set target_opt($target-port-telnet) 23 }
 
+	if {![info exists target_opt($target-port-gdb)]} {
+		set target_opt($target-port-gdb) 9999 }
+
 	set host        $target_opt($target-server)
 	set port_http   $target_opt($target-port-http)
 	set port_telnet $target_opt($target-port-telnet)
+	set port_gdb    $target_opt($target-port-gdb)
+
+	##
+	# create helper file for gdb
+	#
+	if { $debug } {
+		set gdb_file [file join $var_dir $project_name.gdb]
+
+		set fd [open $gdb_file w]
+		puts $fd "cd $var_dir/run"
+		puts $fd "set non-stop on"
+		puts $fd "set substitute-path /data/depot $depot_dir"
+		puts $fd "set substitute-path /depot $depot_dir"
+		puts $fd "target extended-remote $host:$port_gdb"
+		close $fd
+	}
 
 	# create lambda to make config-deletion command re-usable
 	set clear_config {{cmd} {
