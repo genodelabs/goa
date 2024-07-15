@@ -40,6 +40,7 @@ set  version(genodelabs/raw/drivers_interactive-linux)   2023-10-03
 set  version(genodelabs/raw/terminal)                    2024-04-18
 set  version(genodelabs/raw/ttf-bitstream-vera-minimal)  2019-02-25
 set  version(genodelabs/src/base-linux)                  2024-04-24
+set  version(genodelabs/src/base-nova)                   2024-04-26
 set  version(genodelabs/src/bash)                        2024-04-11
 set  version(genodelabs/src/black_hole)                  2024-04-11
 set  version(genodelabs/src/coreutils)                   2024-04-11
