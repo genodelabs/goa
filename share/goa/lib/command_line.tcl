@@ -173,6 +173,7 @@ set run_as                   "genodelabs"
 set target                   "linux"
 set sculpt_version           ""
 set cc_cxx_opt_std           "-std=gnu++20"
+set binary_name              ""
 array set target_opt {}
 
 # if /proc/cpuinfo exists, use number of CPUs as 'jobs'
@@ -288,7 +289,7 @@ set cc_cxx_opt_std [consume_optional_cmdline_arg "--cc-cxx-opt-std" $cc_cxx_opt_
 if {[llength $argv] == 0} {
 	exit_with_error "missing command argument" }
 
-set avail_commands [list update-goa archive-versions import diff build-dir \
+set avail_commands [list update-goa archive-versions backtrace import diff build-dir \
                          build run run-dir export publish add-depot-user bump-version \
                          extract-abi-symbols help versions depot-dir]
 
@@ -314,6 +315,7 @@ proc action_dependency { action dependency } {
 
 action_dependency publish         export
 action_dependency export          build
+action_dependency backtrace       run
 action_dependency run             run-dir
 action_dependency run-dir         build
 action_dependency build           build-dir
@@ -332,6 +334,12 @@ if {$perform(update-goa)} {
 		set switch_to_goa_branch [lindex $argv 0]
 		set argv [lrange $argv 1 end]
 	}
+}
+
+if {$perform(backtrace)} {
+	set binary_name      [consume_optional_cmdline_arg "--binary-name" ""]
+	set with_backtrace 1
+	set debug 1
 }
 
 if {$perform(help)} {
@@ -442,6 +450,7 @@ if {$cross_dev_prefix         == ""} { unset cross_dev_prefix }
 if {$ld_march                 == ""} { unset ld_march }
 if {$cc_march                 == ""} { unset cc_march }
 if {$run_as                   == ""} { unset run_as }
+if {$binary_name              == ""} { unset binary_name }
 
 if {![info exists arch]} {
 	switch [exec uname -m] {

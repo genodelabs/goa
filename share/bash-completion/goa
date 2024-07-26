@@ -7,10 +7,10 @@ __goa()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions depot-dir run-dir bump-version"
+    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions depot-dir run-dir bump-version backtrace"
     help_commands="config api build-systems artifacts add-depot-user import targets runtime index"
     depot_commands="export|publish"
-    run_commands="run|run-dir"
+    run_commands="run|run-dir|backtrace"
     depot_opts="--depot-user --depot-overwrite --depot-retain --pkg"
     run_opts="--pkg --run-as --target"
     user_opts="--depot-url --gpg-user-id --pubkey-file"

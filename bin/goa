@@ -1111,6 +1111,35 @@ if {$perform(run)} {
 	# stop recording
 	log_file
 
+	if {$perform(backtrace)} {
+		if {![info exists binary_name]} {
+			# try extracting binary name from log
+			set fd [open $filename]
+			while {[gets $fd line] != -1} {
+				if {[regexp {\-\> (.*)\] backtrace} $line dummy binary_name]} {
+				}
+			}
+			close $fd
+		}
+
+		if {![info exists binary_name]} {
+			exit_with_error "unable to identify binary name for backtrace\n" \
+			                "\n You can define the binary name explicitly by " \
+			                "\n specifying the '--binary-name <name>' command-line " \
+			                "\n argument."
+		}
+
+		if {![file exists [file join $run_dir $binary_name]]} {
+			exit_with_error "binary '$binary_name' does not exist in run directory" \
+			                "\n You can define the binary name explicitly by " \
+			                "\n specifying the '--binary-name <name>' command-line " \
+			                "\n argument."
+		}
+
+		cd $run_dir
+		exec [file join $tool_dir lib backtrace] $binary_name >@ stdout < $filename
+	}
+
 	exit
 }
 
