@@ -92,7 +92,7 @@ proc scan_image {img base} {
 
 	set nm_output ""
 
-	if {[catch { set nm_output [exec [nm] -C $img.debug] } msg]} {
+	if {[catch { set nm_output [exec [nm] -C .debug/$img.debug] } msg]} {
 		puts "Warning: $msg"
 		return
 	}
@@ -153,16 +153,12 @@ proc print_func {addr} {
 
 foreach arg $::argv { scan_image $arg 0 }
 
-while {1} {
-
-	gets stdin line
+while {[gets stdin line] != -1} {
 
 	# prevent mixing of pasted input and generated output
 	after 10
 
-	puts ""
-
-	if {[regexp {^\[.*\]   (0x[0-9a-f]+).*?: (.*)$} $line -> base img]} {
+	if {[regexp {^\[.*\]   (0x[0-9a-f]+).*?: ([[:print:]]+)[[:cntrl:]0-9m\[]*$} $line -> base img]} {
 
 		# shared library info
 
@@ -176,19 +172,19 @@ while {1} {
 
 		scan_image $img $base
 
-	} elseif {[regexp {^\[.*]\s+[0-9a-f]+\s+([0-9a-f]+)$} $line -> addr]} {
+	} elseif {[regexp {^\[.*\]\s+[0-9a-f]+\s+([0-9a-f]+)[[:cntrl:]0-9m\[]*$} $line -> addr]} {
 
 		# backtrace address
 
 		print_func 0x$addr
 
-	} elseif {[regexp {^(0x[0-9a-f]+)$} $line -> addr]} {
+	} elseif {[regexp {^(0x[0-9a-f]+)[^[:print:]][[:cntrl:]0-9m\[]*$} $line -> addr]} {
 
 		# single hex address prefixed with 0x
 
 		print_func $addr
 
-	} elseif {[regexp {^([0-9a-f]+)$} $line -> addr]} {
+	} elseif {[regexp {^([0-9a-f]+)[^[:print:]][[:cntrl:]0-9m\[]*$} $line -> addr]} {
 
 		# single hex address not prefixed with 0x
 
