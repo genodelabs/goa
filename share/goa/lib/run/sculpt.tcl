@@ -81,7 +81,7 @@ proc run_genode { } {
 			send_user "Expect: 'interact' received 'strg+c' and was cancelled\n";
 			# delete config on remote target
 			apply $clear_config $cmd
-			exit
+			return
 		}
 		-i $spawn_id
 	}

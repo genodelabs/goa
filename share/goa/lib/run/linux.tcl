@@ -27,7 +27,7 @@ proc run_genode { } {
 	interact {
 		\003 {
 			send_user "Expect: 'interact' received 'strg+c' and was cancelled\n";
-			exit
+			return
 		}
 		-i $spawn_id
 	}
