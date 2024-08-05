@@ -220,16 +220,6 @@ proc _build_project_dir_cache { type } {
 		# store candidates per type to make sure find is called only once per type
 		set project_dir_cache($type) $candidates
 
-		# helper for testing whether a relative path is a valid project directory
-		proc _abs_project_dir { dir } {
-			global search_dir
-			set absolute_path [file join $search_dir [string trimleft $dir "./"]]
-			if {[looks_like_goa_project_dir $absolute_path]} {
-				return $absolute_path }
-
-			return -code error
-		}
-
 		# store each valid project dir in project_dir_cache($type,$name)
 		if {$type == "pkg"} {
 			foreach dir $project_dir_cache($type) {
@@ -239,9 +229,11 @@ proc _build_project_dir_cache { type } {
 			}
 		} else {
 			foreach dir $project_dir_cache($type) {
-				set name [file tail $dir]
-				catch {
-					set project_dir_cache($type,$name) [_abs_project_dir $dir] }
+				set absolute_path [file normalize [file join $search_dir $dir]]
+				set name          [file tail $absolute_path]
+
+				if {[looks_like_goa_project_dir $absolute_path]} {
+					set project_dir_cache($type,$name) $absolute_path }
 			}
 		}
 	}
