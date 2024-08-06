@@ -1103,7 +1103,7 @@ if {$perform(run-dir)} {
 if {$perform(run)} {
 
 	# start recording
-	set filename [file join $var_dir $project_dir.log]
+	set filename [file join $var_dir $project_name.log]
 	log_file -noappend $filename
 
 	run_genode
