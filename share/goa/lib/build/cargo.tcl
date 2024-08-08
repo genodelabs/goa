@@ -12,6 +12,9 @@ proc generate_static_stubs { libs } {
 	lappend cmd "CFLAGS=$cflags"
 	lappend cmd "CPPFLAGS=$cppflags"
 	lappend cmd "RUST_COMPAT_LIB=$lib_src"
+	if {$verbose == 1} {
+		lappend cmd "VERBOSE=''"
+	}
 	diag "generate static library stubs via command: [join $cmd { }]"
 
 	if {[catch { exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:stubs\] /" >@ stdout }]} {
@@ -64,8 +67,6 @@ proc build { } {
 	if {$verbose == 1} {
 		lappend cmd "-vv"
 		lappend copy "-v"
-	} else {
-		lappend cmd "-q"
 	}
 
 	set orig_pwd [pwd]
