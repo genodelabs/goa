@@ -28,7 +28,7 @@ proc build { } {
 
 	global build_dir cross_dev_prefix verbose debug project_name jobs project_dir
 	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe lib_src
-	global cc_march
+	global cc_march tool_dir
 
 	set rustflags { }
 	set gcc_unwind [exec $cross_dev_prefix\gcc $cc_march -print-file-name=libgcc_eh.a]
@@ -57,10 +57,13 @@ proc build { } {
 	lappend cmd cargo build
 	if {!$debug} {
 		lappend cmd "-r" }
-	lappend cmd "--target" x86_64-unknown-freebsd
-	lappend cmd --config target.x86_64-unknown-freebsd.linker="$cross_dev_prefix\gcc"
+	lappend cmd "--target" $tool_dir/cargo/x86_64-unknown-genode.json
+	lappend cmd --config target.x86_64-unknown-genode.linker="$cross_dev_prefix\gcc"
 	lappend cmd --config profile.release.panic="abort"
 	lappend cmd --config profile.dev.panic="abort"
+	# let cargo know we need to build panic_abort too, see
+	# https://github.com/rust-lang/wg-cargo-std-aware/issues/29
+	lappend cmd -Z build-std=std,panic_abort
 
 	set copy [list cp -f -l]
 
@@ -78,14 +81,14 @@ proc build { } {
 
 	if {$debug} {
 		diag "copy debug binaries"
-		set binaries [exec find target/x86_64-unknown-freebsd/debug -maxdepth 1 -type f -executable]
+		set binaries [exec find target/x86_64-unknown-genode/debug -maxdepth 1 -type f -executable]
 		lappend copy $binaries .
 
 		if {[catch {exec -ignorestderr {*}$copy | sed "s/^/\[$project_name:copy\] /" >@ stdout} msg]} {
 			exit_with_error "moving debug binary failed: $msg" }
 	} else {
 		diag "copy release binaries"
-		set binaries [exec find target/x86_64-unknown-freebsd/release -maxdepth 1 -type f -executable]
+		set binaries [exec find target/x86_64-unknown-genode/release -maxdepth 1 -type f -executable]
 		lappend copy $binaries .
 
 		if {[catch {exec -ignorestderr {*}$copy | sed "s/^/\[$project_name:copy\] /" >@ stdout} msg]} {
