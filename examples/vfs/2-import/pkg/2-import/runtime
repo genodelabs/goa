@@ -1,0 +1,49 @@
+<runtime ram="10M" caps="1000" binary="init">
+
+	<config>
+
+		<parent-provides>
+			<service name="ROM"/>
+			<service name="LOG"/>
+			<service name="RM"/>
+			<service name="CPU"/>
+			<service name="PD"/>
+		</parent-provides>
+
+		<default-route>
+			<any-service> <parent/> <any-child/> </any-service>
+		</default-route>
+		<default caps="100"/>
+
+		<start name="2-import" caps="120">
+			<resource name="RAM" quantum="2M"/>
+			<config>
+				<libc stdout="/dev/log"/>
+				<vfs>
+					<dir name="dev"> <log/> </dir>
+					<dir name="tmp">
+						<ram/>
+						<rom name="static" label="file_content" binary="no"/>
+					</dir>
+					<import>
+						<dir name="tmp">
+							<rom name="x" label="file_content" binary="no"/>
+						</dir>
+					</import>
+				</vfs>
+			</config>
+		</start>
+
+	</config>
+
+	<content>
+		<rom label="2-import"/>
+		<rom label="vfs.lib.so"/>
+		<rom label="vfs_import.lib.so"/>
+		<rom label="posix.lib.so"/>
+		<rom label="libc.lib.so"/>
+		<rom label="libm.lib.so"/>
+		<rom label="file_content"/>
+	</content>
+
+</runtime>

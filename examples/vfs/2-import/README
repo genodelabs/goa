@@ -1,0 +1,10 @@
+This example demonstrates the use of POSIX operations, the RAM file system and
+the VFS import plugin. The only component in this scenario is a POSIX
+application which performs a bunch of file operations. The component's VFS
+comprises a RAM file system, a ROM file '/tmp/static', and a special log file.
+The log file is used for connecting the C runtime's stdout to Genode's LOG
+session. The VFS import plugin is used to populate the RAM file system with a
+file '/tmp/x' with the content from a ROM module.
+
+The POSIX component tries writing to the immutable '/tmp/static' file,
+reads the content of '/tmp/x', and overwrites it with some new content.

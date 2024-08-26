@@ -1,0 +1,7 @@
+This is a very basic example of VFS usage. It demonstrates the VFS
+configuration by defining a directory structure and static files. The fs_query
+component is used for querying one or multiple directories. It outputs the
+result in form of a report that is shown by the report_rom component.
+
+Note that the fs_query component tries but fails watching the VFS for changes
+because the VFS is immutable.
