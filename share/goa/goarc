@@ -48,6 +48,7 @@ set  version(genodelabs/src/curl)                        2024-04-18
 set  version(genodelabs/src/event_filter)                2024-04-11
 set  version(genodelabs/src/expat)                       2024-04-11
 set  version(genodelabs/src/fb_sdl)                      2024-04-11
+set  version(genodelabs/src/fs_query)                    2024-04-11
 set  version(genodelabs/src/fs_rom)                      2024-04-11
 set  version(genodelabs/src/gui_fb)                      2024-04-11
 set  version(genodelabs/src/init)                        2024-04-11
@@ -78,6 +79,7 @@ set  version(genodelabs/src/stdcxx)                      2024-04-11
 set  version(genodelabs/src/terminal)                    2024-04-11
 set  version(genodelabs/src/vfs)                         2024-04-11
 set  version(genodelabs/src/vfs_gpu)                     2024-04-11
+set  version(genodelabs/src/vfs_import)                  2024-04-11
 set  version(genodelabs/src/vfs_lwip)                    2024-04-11
 set  version(genodelabs/src/vfs_pipe)                    2024-04-11
 set  version(genodelabs/src/vfs_ttf)                     2024-04-11
