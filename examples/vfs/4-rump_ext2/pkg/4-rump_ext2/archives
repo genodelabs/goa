@@ -1,0 +1,8 @@
+genodelabs/src/fs_query
+genodelabs/src/libc
+genodelabs/src/posix
+genodelabs/src/report_rom
+genodelabs/src/vfs
+genodelabs/src/vfs_block
+genodelabs/src/vfs_import
+genodelabs/src/rump

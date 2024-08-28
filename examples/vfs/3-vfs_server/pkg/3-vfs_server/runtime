@@ -1,0 +1,64 @@
+<runtime ram="10M" caps="1000" binary="init">
+
+	<config>
+
+		<parent-provides>
+			<service name="ROM"/>
+			<service name="LOG"/>
+			<service name="RM"/>
+			<service name="CPU"/>
+			<service name="PD"/>
+		</parent-provides>
+
+		<default-route>
+			<any-service> <parent/> <any-child/> </any-service>
+		</default-route>
+		<default caps="100"/>
+
+		<start name="report_rom">
+			<resource name="RAM" quantum="1M"/>
+			<provides> <service name="Report"/> <service name="ROM"/> </provides>
+			<config verbose="yes"/>
+		</start>
+
+		<start name="vfs">
+			<resource name="RAM" quantum="2M"/>
+			<provides> <service name="File_system"/> </provides>
+			<config>
+				<vfs>
+					<inline name="README">Mail me for the README!</inline>
+					<inline name="VERSION">2.16</inline>
+					<dir name="config">
+						<inline name="verbose">yes</inline>
+						<dir name="tcp_ports"/>
+						<dir name="udp_ports">
+							<inline name="69"><forward to="10.0.0.1"/></inline>
+						</dir>
+						<inline name="dns_servers"/>
+					</dir>
+				</vfs>
+				<default-policy root="/config" writeable="no"/>
+			</config>
+		</start>
+
+		<start name="fs_query" caps="120">
+			<resource name="RAM" quantum="2M"/>
+			<config>
+				<vfs>
+					<inline name="verbose">no</inline>
+					<fs/>
+				</vfs>
+				<query path="/" content="yes" size="yes"/>
+			</config>
+		</start>
+
+	</config>
+
+	<content>
+		<rom label="fs_query"/>
+		<rom label="report_rom"/>
+		<rom label="vfs"/>
+		<rom label="vfs.lib.so"/>
+	</content>
+
+</runtime>
