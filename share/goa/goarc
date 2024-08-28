@@ -72,12 +72,14 @@ set  version(genodelabs/src/qt5_svg)                     2024-04-18
 set  version(genodelabs/src/report_rom)                  2024-04-11
 set  version(genodelabs/src/rom_filter)                  2024-04-11
 set  version(genodelabs/src/rom_reporter)                2024-04-11
+set  version(genodelabs/src/rump)                        2024-04-11
 set  version(genodelabs/src/sandbox)                     2024-04-11
 set  version(genodelabs/src/sdl)                         2024-04-11
 set  version(genodelabs/src/sed)                         2024-04-11
 set  version(genodelabs/src/stdcxx)                      2024-04-11
 set  version(genodelabs/src/terminal)                    2024-04-11
 set  version(genodelabs/src/vfs)                         2024-04-11
+set  version(genodelabs/src/vfs_block)                   2024-04-11
 set  version(genodelabs/src/vfs_gpu)                     2024-04-11
 set  version(genodelabs/src/vfs_import)                  2024-04-11
 set  version(genodelabs/src/vfs_lwip)                    2024-04-11

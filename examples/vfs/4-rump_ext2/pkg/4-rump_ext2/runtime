@@ -1,0 +1,88 @@
+<runtime ram="40M" caps="1000" binary="init">
+
+	<requires> <timer/> </requires>
+
+	<config>
+
+		<parent-provides>
+			<service name="ROM"/>
+			<service name="LOG"/>
+			<service name="RM"/>
+			<service name="CPU"/>
+			<service name="PD"/>
+			<service name="Timer"/>
+		</parent-provides>
+
+		<default-route>
+			<any-service> <parent/> <any-child/> </any-service>
+		</default-route>
+		<default caps="100"/>
+
+		<start name="report_rom">
+			<resource name="RAM" quantum="1M"/>
+			<provides> <service name="Report"/> <service name="ROM"/> </provides>
+			<config verbose="yes"/>
+		</start>
+
+		<start name="vfs_block">
+			<resource name="RAM" quantum="12M"/>
+			<provides> <service name="Block"/> </provides>
+			<config>
+				<vfs>
+					<ram/>
+					<import> <rom name="disk" label="disk_ext2.img"/> </import>
+				</vfs>
+				<policy label_prefix="vfs" file="/disk" block_size="512" writeable="yes"/>
+			</config>
+		</start>
+
+		<start name="vfs" caps="150">
+			<resource name="RAM" quantum="20M"/>
+			<provides> <service name="File_system"/> </provides>
+			<config>
+				<vfs> <rump fs="ext2fs" ram="8M"/> </vfs>
+				<default-policy                      root="/" writeable="no"/>
+				<policy label_prefix="app" root="/" writeable="yes"/>
+			</config>
+		</start>
+
+		<start name="app">
+			<binary name="4-rump_ext2"/>
+			<resource name="RAM" quantum="2M"/>
+			<config>
+				<libc stdout="/dev/log"/>
+				<vfs>
+					<dir name="dev"> <log/> </dir>
+					<fs/>
+				</vfs>
+			</config>
+		</start>
+
+		<start name="fs_query" caps="120">
+			<resource name="RAM" quantum="2M"/>
+			<config>
+				<vfs> <fs/> </vfs>
+				<query path="/" content="yes" size="yes"/>
+			</config>
+		</start>
+
+	</config>
+
+	<content>
+		<rom label="fs_query"/>
+		<rom label="report_rom"/>
+		<rom label="vfs"/>
+		<rom label="vfs_block"/>
+		<rom label="vfs.lib.so"/>
+		<rom label="vfs_import.lib.so"/>
+		<rom label="vfs_rump.lib.so"/>
+		<rom label="rump.lib.so"/>
+		<rom label="rump_fs.lib.so"/>
+		<rom label="disk_ext2.img"/>
+		<rom label="4-rump_ext2"/>
+		<rom label="posix.lib.so"/>
+		<rom label="libc.lib.so"/>
+		<rom label="libm.lib.so"/>
+	</content>
+
+</runtime>

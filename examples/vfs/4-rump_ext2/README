@@ -1,0 +1,8 @@
+This is a basic example of using persistent file systems. The VFS server
+component uses the rump plugin to integrate an ext2 file system. The plugin
+requires a Block session, which is provided by the vfs_block component. Since
+the example uses a disk image file that is provided as a ROM module, we import
+the file into a RAM file system to make it writeable.
+
+The example also demonstrates how the VFS server is able to grant write
+access to individual clients by defining a client policy.

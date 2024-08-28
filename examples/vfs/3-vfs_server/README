@@ -1,0 +1,8 @@
+This is a basic example of VFS server usage. It demonstrates how
+the VFS component is able to serve a (virtual) file system to another component.
+In this example, an fs_query component integrates this file system into its
+own VFS.
+
+In particular, this example shows how the VFS server serves a subdirectory
+to the fs_query component and how the latter overlays the file "verbose" with
+its own version.
