@@ -1,0 +1,81 @@
+<runtime ram="16M" caps="1000" binary="init">
+
+	<requires> <timer/> </requires>
+
+	<config>
+
+		<parent-provides>
+			<service name="ROM"/>
+			<service name="LOG"/>
+			<service name="RM"/>
+			<service name="CPU"/>
+			<service name="PD"/>
+			<service name="Timer"/>
+		</parent-provides>
+
+		<default-route>
+			<any-service> <parent/> <any-child/> </any-service>
+		</default-route>
+		<default caps="100"/>
+
+		<start name="nic_router">
+			<resource name="RAM" quantum="2M"/>
+			<provides>
+				<service name="Nic"/>
+				<service name="Uplink"/>
+			</provides>
+			<config verbose_domain_state="yes">
+				<default-policy domain="default"/>
+				<domain name="default" interface="10.0.2.1/24"/>
+			</config>
+		</start>
+
+		<start name="sender">
+			<binary name="7-lwip"/>
+			<resource name="RAM" quantum="8M"/>
+			<config>
+				<vfs>
+					<dir name="dev">
+						<dir name="socket">
+							<lwip dhcp="no" ip_addr="10.0.2.2" netmask="255.255.255.0" gateway="10.0.2.1"/>
+						</dir>
+						<log/>
+					</dir>
+				</vfs>
+				<libc stdout="/dev/log" socket="/dev/socket"/>
+				<arg value="sendto"/>
+				<arg value="10.0.2.3"/>
+			</config>
+		</start>
+
+		<start name="receiver">
+			<binary name="7-lwip"/>
+			<resource name="RAM" quantum="8M"/>
+			<config>
+				<vfs>
+					<dir name="dev">
+						<dir name="socket">
+							<lwip dhcp="no" ip_addr="10.0.2.3" netmask="255.255.255.0" gateway="10.0.2.1"/>
+						</dir>
+						<log/>
+					</dir>
+				</vfs>
+				<libc stdout="/dev/log" socket="/dev/socket"/>
+				<arg value="recvfrom"/>
+				<arg value="10.0.2.2"/>
+			</config>
+		</start>
+
+	</config>
+
+	<content>
+		<rom label="nic_router"/>
+		<rom label="7-lwip"/>
+		<rom label="vfs.lib.so"/>
+		<rom label="vfs_lwip.lib.so"/>
+		<rom label="posix.lib.so"/>
+		<rom label="libc.lib.so"/>
+		<rom label="libm.lib.so"/>
+	</content>
+
+</runtime>
