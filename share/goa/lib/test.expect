@@ -18,20 +18,33 @@ set tests {
 	cmake_library
 	qt5_core:100
 	cmake_sdl2:40
+	vfs/1-fs_query
+	vfs/2-import
+	vfs/3-vfs_server
+	vfs/4-rump_ext2
+	vfs/5-pipe
+	vfs/6-terminal
+	vfs/7-lwip
 }
-
 
 #
 # expected output
 #
-set test_output(hello_make)    {\[init -> hello_make\] Hello}
-set test_output(hello_posix)   {\[init -> hello_posix\] Hello POSIX}
-set test_output(hello_meson)   {\[init -> hello_meson\] Hello Meson}
-set test_output(cmake_step2)   {\[init -> cmake_step2\] The square root of 24 is 4.89898}
-set test_output(cmake_library) {libforty_two.lib.so}
-set test_output(qt5_core)      {\[init -> qt5_core\] Test done.}
-set test_output(hello_rust)    {\[init -> hello_rust\] Hello Genode Rust world!}
-set test_output(cmake_sdl2)    {\[init\] child "cmake_sdl2" exited with exit value 0}
+set test_output(hello_make)       {\[init -> hello_make\] Hello}
+set test_output(hello_posix)      {\[init -> hello_posix\] Hello POSIX}
+set test_output(hello_meson)      {\[init -> hello_meson\] Hello Meson}
+set test_output(cmake_step2)      {\[init -> cmake_step2\] The square root of 24 is 4.89898}
+set test_output(cmake_library)    {libforty_two.lib.so}
+set test_output(qt5_core)         {\[init -> qt5_core\] Test done.}
+set test_output(hello_rust)       {\[init -> hello_rust\] Hello Genode Rust world!}
+set test_output(cmake_sdl2)       {\[init\] child "cmake_sdl2" exited with exit value 0}
+set test_output(vfs/1-fs_query)   {\[init -> 1-fs_query -> report_rom\]   </listing>}
+set test_output(vfs/2-import)     {child "2-import" exited with exit value 0}
+set test_output(vfs/3-vfs_server) {<file name="verbose" size="2">no</file>}
+set test_output(vfs/4-rump_ext2)  {Hello!Hello!}
+set test_output(vfs/5-pipe)       {Hi, this is a pipe test!}
+set test_output(vfs/6-terminal)   {Hi, this is a terminal test!}
+set test_output(vfs/7-lwip)       {Received message with: Hi, there!}
 
 
 proc _find_tool_dir { } {
@@ -107,7 +120,8 @@ proc run_goa_until {{test} {timeout_value 0}} {
 	#
 	# leave depot and public intact
 	#
-	exec rm -rf var/$test
+	set test_name [lindex [split $test "/"] end]
+	exec rm -rf var/$test_name
 
 	return $result
 }
@@ -145,7 +159,10 @@ foreach test $tests {
 
 	puts "\n--- $test ---"
 	set result [run_goa_until $test $timeout]
-	lappend results "$test:\t$result"
+
+	set col  [string repeat " " 25]
+	set name [string replace $col 0 [string length $test] "$test: "]
+	lappend results "$name$result"
 }
 
 set end [clock milliseconds]
