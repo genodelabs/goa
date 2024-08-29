@@ -1,0 +1,5 @@
+genodelabs/src/vfs
+genodelabs/src/vfs_lwip
+genodelabs/src/nic_router
+genodelabs/src/posix
+genodelabs/src/libc
