@@ -1,0 +1,5 @@
+genodelabs/src/vfs
+genodelabs/src/vfs_pipe
+genodelabs/src/posix
+genodelabs/src/libc
+genodelabs/src/stdin2out

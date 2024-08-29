@@ -1,0 +1,4 @@
+This example demonstrates the use of the VFS pipe plugin. A VFS server
+provides a file system with a named pipe that is shared between two client
+components. A producer components writes to the named pipe, and a consumer
+component reads from the named pipe and prints the data.
