@@ -1,0 +1,61 @@
+<runtime ram="16M" caps="1000" binary="init">
+
+	<requires> <timer/> </requires>
+
+	<config>
+
+		<parent-provides>
+			<service name="ROM"/>
+			<service name="LOG"/>
+			<service name="RM"/>
+			<service name="CPU"/>
+			<service name="PD"/>
+			<service name="Timer"/>
+		</parent-provides>
+
+		<default-route>
+			<any-service> <parent/> <any-child/> </any-service>
+		</default-route>
+		<default caps="100"/>
+
+		<start name="terminal_crosslink">
+			<resource name="RAM" quantum="4M"/>
+			<provides> <service name="Terminal"/> </provides>
+		</start>
+
+		<start name="producer">
+			<binary name="stdin2out"/>
+			<resource name="RAM" quantum="4M"/>
+			<config>
+				<vfs>
+					<inline name="source.txt">Hi, this is a terminal test!
+					</inline>
+					<dir name="dev"> <terminal/> </dir>
+				</vfs>
+				<libc stdin="/source.txt" stdout="/dev/terminal"/>
+			</config>
+		</start>
+
+		<start name="consumer">
+			<binary name="stdin2out"/>
+			<resource name="RAM" quantum="4M"/>
+			<config>
+				<vfs>
+					<dir name="dev"> <log/> <terminal/> </dir>
+				</vfs>
+				<libc stdin="/dev/terminal" stdout="/dev/log"/>
+			</config>
+		</start>
+
+	</config>
+
+	<content>
+		<rom label="vfs.lib.so"/>
+		<rom label="terminal_crosslink"/>
+		<rom label="stdin2out"/>
+		<rom label="posix.lib.so"/>
+		<rom label="libc.lib.so"/>
+		<rom label="libm.lib.so"/>
+	</content>
+
+</runtime>

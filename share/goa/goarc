@@ -77,7 +77,9 @@ set  version(genodelabs/src/sandbox)                     2024-04-11
 set  version(genodelabs/src/sdl)                         2024-04-11
 set  version(genodelabs/src/sed)                         2024-04-11
 set  version(genodelabs/src/stdcxx)                      2024-04-11
+set  version(genodelabs/src/stdin2out)                   2024-04-11
 set  version(genodelabs/src/terminal)                    2024-04-11
+set  version(genodelabs/src/terminal_crosslink)          2024-04-11
 set  version(genodelabs/src/vfs)                         2024-04-11
 set  version(genodelabs/src/vfs_block)                   2024-04-11
 set  version(genodelabs/src/vfs_gpu)                     2024-04-11

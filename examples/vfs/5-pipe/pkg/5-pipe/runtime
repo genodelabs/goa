@@ -1,0 +1,71 @@
+<runtime ram="16M" caps="1000" binary="init">
+
+	<requires> <timer/> </requires>
+
+	<config>
+
+		<parent-provides>
+			<service name="ROM"/>
+			<service name="LOG"/>
+			<service name="RM"/>
+			<service name="CPU"/>
+			<service name="PD"/>
+			<service name="Timer"/>
+		</parent-provides>
+
+		<default-route>
+			<any-service> <parent/> <any-child/> </any-service>
+		</default-route>
+		<default caps="100"/>
+
+		<start name="vfs">
+			<resource name="RAM" quantum="4M"/>
+			<provides> <service name="File_system"/> </provides>
+			<config>
+				<vfs>
+					<pipe>
+						<fifo name="named-pipe"/>
+					</pipe>
+				</vfs>
+				<default-policy root="/" writeable="yes"/>
+			</config>
+		</start>
+
+		<start name="producer">
+			<binary name="stdin2out"/>
+			<resource name="RAM" quantum="4M"/>
+			<config>
+				<vfs>
+					<inline name="source.txt">Hi, this is a pipe test!
+					</inline>
+					<dir name="pipe"> <fs/> </dir>
+				</vfs>
+				<libc stdin="/source.txt" stdout="/pipe/named-pipe"/>
+			</config>
+		</start>
+
+		<start name="consumer">
+			<binary name="stdin2out"/>
+			<resource name="RAM" quantum="4M"/>
+			<config>
+				<vfs>
+					<dir name="dev"> <log/> </dir>
+					<dir name="pipe"> <fs/> </dir>
+				</vfs>
+				<libc stdin="/pipe/named-pipe" stdout="/dev/log"/>
+			</config>
+		</start>
+
+	</config>
+
+	<content>
+		<rom label="vfs"/>
+		<rom label="vfs.lib.so"/>
+		<rom label="vfs_pipe.lib.so"/>
+		<rom label="stdin2out"/>
+		<rom label="posix.lib.so"/>
+		<rom label="libc.lib.so"/>
+		<rom label="libm.lib.so"/>
+	</content>
+
+</runtime>
