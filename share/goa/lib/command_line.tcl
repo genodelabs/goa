@@ -22,66 +22,6 @@ if {$targeted_dir != ""} {
 	cd $targeted_dir }
 
 
-##
-# Return 1 if project directory has src/ directory but no artifacts file
-#
-proc has_src_but_no_artifacts { dir } {
-
-	# 'src/' exists but there is no 'artifacts' file
-	if {[file exists $dir/src] && ![file isfile $dir/artifacts]} {
-		return 1}
-
-	return 0
-}
-
-
-##
-# Return 1 if directory is considered as goa project
-#
-proc looks_like_goa_project_dir { dir } {
-
-	# no project if neither 'src/' nor 'import' nor 'pkg/' nor 'raw/'
-	# nor 'index' exists
-	set ingredient 0
-	foreach name [list import src pkg raw index] {
-		if {[file exists $dir/$name]} {
-			set ingredient 1 } }
-	if {!$ingredient} {
-		return 0 }
-
-	# no project if 'index' is anything other than a file
-	if {[file exists $dir/index] && ![file isfile $dir/index]} {
-		return 0 }
-
-	# no project if 'import' is anything other than a file
-	if {[file exists $dir/import] && ![file isfile $dir/import]} {
-		return 0 }
-
-	# no project if 'src/' or 'pkg/' or 'raw/' is anything other than a directory
-	foreach name [list src pkg raw] {
-		if {[file exists $dir/$name] && ![file isdirectory $dir/$name]} {
-			return 0 } }
-
-	# no project if there is no subdirectory in 'pkg/' with a runtime file
-	if {[file exists $dir/pkg]} {
-		set runtime_files [glob -nocomplain -directory $dir/pkg -type f */runtime]
-		if {[llength $runtime_files] == 0} {
-			return 0 } }
-
-	# no project if raw/ is empty or has only *~ files or *.orig files
-	if {[file exists $dir/raw]} {
-		set raw_files [exec find $dir/raw -type f -and -not -name "*.orig" -and -not -name "*~"]
-		if {[llength $raw_files] == 0} {
-			return 0 } }
-
-	# no project if 'src/' is present but there is neither an 'artifacts' nor an 'import' file
-	if {[has_src_but_no_artifacts $dir] && ![file exists $dir/import]} {
-		return 0 }
-
-	return 1
-}
-
-
 #
 # Search directory tree for project directories
 #
