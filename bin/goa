@@ -107,8 +107,8 @@ if {$perform(add-depot-user)} {
 # The following commands only work when the current working directory is a goa
 # project.
 #
-if {![looks_like_goa_project_dir $project_dir] && ![has_src_but_no_artifacts $project_dir]} {
-	exit_with_error "$project_dir does not look like a goa project" }
+if {![looks_like_goa_project_dir $config::project_dir] && ![has_src_but_no_artifacts $config::project_dir]} {
+	exit_with_error "$config::project_dir does not look like a goa project" }
 
 
 source [file join $tool_dir lib actions versions.tcl]
@@ -161,8 +161,8 @@ source [file join $tool_dir lib actions build.tcl]
 source [file join $tool_dir lib actions depot.tcl]
 
 if {$perform(build-dir)} {
-	if {[has_src_but_no_artifacts $project_dir]} {
-		exit_with_error "$project_dir has a 'src' directory but lacks an" \
+	if {[has_src_but_no_artifacts $config::project_dir]} {
+		exit_with_error "$config::project_dir has a 'src' directory but lacks an" \
 		                "'artifacts' file. You may start with an empty file."
 	}
 }
@@ -189,7 +189,9 @@ if {![file exists src]} {
 if {$perform(build-dir)} {
 
 	# unless explicitly configured, enable strict warnings if using the base API
-	if {![info exists warn_strict] && [goa using_api base]} {
+	if {$config::warn_strict == "" && [goa using_api base]} {
+		set warn_strict 1
+	} elseif {$config::warn_strict == 1} {
 		set warn_strict 1
 	}
 
@@ -221,9 +223,9 @@ if {$perform(run-dir)} {
 
 	source [file join $tool_dir lib run common.tcl]
 
-	set target_file [file join $tool_dir lib run $target.tcl]
-	if {$target == "common" || ![file exists $target_file]} {
-		exit_with_error "Target '$target' not available (see 'goa help targets')" }
+	set target_file [file join $tool_dir lib run $config::target.tcl]
+	if {$config::target == "common" || ![file exists $target_file]} {
+		exit_with_error "Target '$config::target' not available (see 'goa help targets')" }
 
 	source $target_file
 
@@ -234,7 +236,7 @@ if {$perform(run-dir)} {
 if {$perform(run)} {
 
 	# start recording
-	set filename [file join $var_dir $project_name.log]
+	set filename [file join $config::var_dir $config::project_name.log]
 	log_file -noappend $filename
 
 	run_genode
@@ -243,7 +245,7 @@ if {$perform(run)} {
 	log_file
 
 	if {$perform(backtrace)} {
-		if {![info exists binary_name]} {
+		if {![info exists config::binary_name]} {
 			# try extracting binary name from log
 			set fd [open $filename]
 			while {[gets $fd line] != -1} {
@@ -253,22 +255,22 @@ if {$perform(run)} {
 			close $fd
 		}
 
-		if {![info exists binary_name]} {
+		if {![info exists config::binary_name]} {
 			exit_with_error "unable to identify binary name for backtrace\n" \
 			                "\n You can define the binary name explicitly by " \
 			                "\n specifying the '--binary-name <name>' command-line " \
 			                "\n argument."
 		}
 
-		if {![file exists [file join $run_dir $binary_name]]} {
-			exit_with_error "binary '$binary_name' does not exist in run directory" \
+		if {![file exists [file join $config::run_dir $config::binary_name]]} {
+			exit_with_error "binary '$config::binary_name' does not exist in run directory" \
 			                "\n You can define the binary name explicitly by " \
 			                "\n specifying the '--binary-name <name>' command-line " \
 			                "\n argument."
 		}
 
-		cd $run_dir
-		exec [file join $tool_dir lib backtrace] $binary_name >@ stdout < $filename
+		cd $config::run_dir
+		exec [file join $tool_dir lib backtrace] $config::binary_name >@ stdout < $filename
 	}
 
 	exit
@@ -285,7 +287,7 @@ if {$perform(export)} {
 	goa export-src
 	goa export-pkgs  exported_archives
 	goa export-bin   exported_archives
-	if {$debug} { goa export-dbg }
+	if {$config::debug} { goa export-dbg }
 	goa export-index exported_archives
 
 	array set export_projects { }
@@ -296,7 +298,7 @@ if {$perform(export)} {
 
 if {$perform(publish)} {
 
-	set pubkey_file [file join $depot_dir $depot_user pubkey]
+	set pubkey_file [file join $config::depot_dir $config::depot_user pubkey]
 	if {![file exists $pubkey_file]} {
 		exit_with_error "missing public key at $pubkey_file\n" \
 		                "\n You may use the 'goa add-depot-user' command." \

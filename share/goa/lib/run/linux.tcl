@@ -1,5 +1,5 @@
 proc run_genode { } {
-	global run_dir var_dir project_name depot_dir debug
+	global config::run_dir config::var_dir config::project_name config::depot_dir config::debug
 
 	##
 	# create helper file for gdb
@@ -40,7 +40,7 @@ proc parent_services { } {
 
 
 proc base_archives { } {
-	global run_as
+	global config::run_as
 
 	return [list "$run_as/src/base-linux" "$run_as/src/init"]
 }
@@ -225,7 +225,7 @@ proc bind_required_services { &services } {
 			}
 		}
 
-		global run_dir var_dir
+		global config::run_dir config::var_dir
 		# link all file systems to run_dir
 		file link -symbolic "$run_dir/fs" "$var_dir/fs"
 
@@ -321,7 +321,7 @@ proc bind_required_services { &services } {
 			_instantiate_rom_provider start_nodes archives modules
 
 			# link the rom directory
-			global run_dir var_dir
+			global config::run_dir config::var_dir
 			file link -symbolic "$run_dir/rom" "$var_dir/rom"
 		}
 	}
@@ -357,7 +357,7 @@ proc _instantiate_nitpicker { &start_nodes &archives &modules } {
 	upvar 1 ${&archives} archives
 	upvar 1 ${&modules} modules
 
-	global run_as
+	global config::run_as
 
 	append start_nodes {
 			<start name="drivers" caps="1000">
@@ -471,7 +471,7 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules &
 	upvar 1 ${&modules} modules
 	upvar 1 ${&nic_node} nic_node
 
-	global run_as
+	global config::run_as
 
 	set driver_name nic_$tap_name
 	set router_name nic_router_$tap_name
@@ -556,7 +556,7 @@ proc _instantiate_uplink_client { uplink_label &start_nodes &archives &modules }
 	upvar 1 ${&archives} archives
 	upvar 1 ${&modules} modules
 
-	global project_name run_as
+	global config::project_name config::run_as
 
 	append start_nodes "\n" {
 			<start name="nic" caps="100" ld="no">
@@ -586,7 +586,7 @@ proc _instantiate_fonts_fs { &start_nodes &archives &modules } {
 	upvar 1 ${&archives} archives
 	upvar 1 ${&modules} modules
 
-	global run_as
+	global config::run_as
 
 	append start_nodes {
 		<start name="fonts_fs" caps="100">
@@ -614,7 +614,7 @@ proc _instantiate_file_system { name label writeable &start_nodes &archives &mod
 	upvar 1 ${&archives} archives
 	upvar 1 ${&modules} modules
 
-	global var_dir run_as
+	global config::var_dir config::run_as
 
 	# make sure label is not empty
 	if {$label == ""} { set label "_" }
@@ -654,7 +654,7 @@ proc _instantiate_rom_provider { &start_nodes &archives &modules } {
 	upvar 1 ${&archives} archives
 	upvar 1 ${&modules} modules
 
-	global run_as var_dir
+	global config::run_as config::var_dir
 
 	append start_nodes {
 			<start name="rom_fs" ld="no" caps="100">
@@ -705,7 +705,7 @@ proc _instantiate_rtc { &start_nodes &archives &modules } {
 	upvar 1 ${&archives} archives
 	upvar 1 ${&modules} modules
 
-	global run_as
+	global config::run_as
 
 	append start_nodes {
 			<start name="rtc" caps="100" ld="no">
@@ -727,7 +727,7 @@ proc _instantiate_clipboard { &start_nodes &archives &modules } {
 	upvar 1 ${&archives} archives
 	upvar 1 ${&modules} modules
 
-	global project_name run_as
+	global config::project_name config::run_as
 
 	append start_nodes {
 			<start name="clipboard" caps="100">

@@ -7,7 +7,7 @@ namespace eval goa {
 
 	proc calc_import_hash { } {
 
-		global tool_dir project_dir
+		global tool_dir config::project_dir
 
 		set     cmd "make"
 		lappend cmd "-f" [file join $tool_dir ports mk print_hash.mk]
@@ -25,7 +25,7 @@ namespace eval goa {
 	#
 	proc check_modified { subdir } {
 
-		global contrib_dir
+		global config::contrib_dir
 
 		set dir_a [file join $contrib_dir $subdir]
 		set dir_b [file join $subdir]
@@ -43,7 +43,7 @@ namespace eval goa {
 	# Diff between originally imported contrib code and local edits
 	#
 	proc diff { subdir } {
-		global contrib_dir
+		global config::contrib_dir
 
 		set dir_a [file join $contrib_dir $subdir]
 		set dir_b [file join $subdir]
@@ -70,7 +70,9 @@ namespace eval goa {
 	#
 	proc import { } {
 
-		global contrib_dir verbose jobs project_dir build_dir tool_dir import_dir
+		global verbose tool_dir
+		global config::contrib_dir config::jobs config::project_dir
+		global config::build_dir config::import_dir
 
 		if {![file exists import] || ![file isfile import]} {
 			exit_with_error "missing 'import' file" }

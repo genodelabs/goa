@@ -1,7 +1,8 @@
 proc _make_cmd { } {
-	global build_dir cross_dev_prefix verbose jobs project_dir api_dirs
+	global verbose
 	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe lib_src
-	global ldflags_so ldlibs_so
+	global ldflags_so ldlibs_so api_dirs
+	global config::build_dir config::cross_dev_prefix config::jobs config::project_dir
 
 	set cmd { }
 
@@ -32,7 +33,7 @@ proc _make_cmd { } {
 
 
 proc create_or_update_build_dir { } {
-	global build_dir
+	global config::build_dir
 
 	# compare make command and clear directory if anything changed
 	set signature_file [file join $build_dir ".goa_make_command"]
@@ -60,7 +61,7 @@ proc create_or_update_build_dir { } {
 
 
 proc build { } {
-	global project_name
+	global config::project_name
 
 	set cmd [_make_cmd]
 

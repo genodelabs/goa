@@ -48,7 +48,7 @@ if {$cc_march != ""} {
 	lappend cflags $cc_march }
 
 global warn_strict
-if {[info exists warn_strict] && $warn_strict} {
+if {[info exists ::warn_strict] && $warn_strict} {
 	lappend cflags -Wall }
 
 if {[info exists with_backtrace] && $with_backtrace} {
@@ -72,7 +72,7 @@ global cxxflags
 set cxxflags $cflags
 lappend cxxflags $cc_cxx_opt_std
 
-if {[info exists warn_strict] && $warn_strict} {
+if {[info exists ::warn_strict] && $warn_strict} {
 	lappend cxxflags -Wextra -Weffc++ -Werror -Wsuggest-override }
 
 

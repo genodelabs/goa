@@ -1,5 +1,7 @@
 proc run_genode { } {
-	global run_dir tool_dir var_dir target target_opt project_name depot_dir debug
+	global tool_dir
+	global config::run_dir config::var_dir config::target config::target_opt
+	global config::project_name config::depot_dir config::debug
 
 	if {![info exists target_opt($target-server)]} {
 		exit_with_error "missing target option '$target-server'\n" \
@@ -8,19 +10,19 @@ proc run_genode { } {
 		                "\n as command-line argument\n"
 	}
 
-	if {![info exists target_opt($target-port-http)]} {
-		set target_opt($target-port-http) 80 }
+	set port_http 80
+	if {[info exists target_opt($target-port-http)]} {
+		set port_http $target_opt($target-port-http) }
 
-	if {![info exists target_opt($target-port-telnet)]} {
-		set target_opt($target-port-telnet) 23 }
+	set port_telnet 23
+	if {[info exists target_opt($target-port-telnet)]} {
+		set port_telnet $target_opt($target-port-telnet) }
 
-	if {![info exists target_opt($target-port-gdb)]} {
-		set target_opt($target-port-gdb) 9999 }
+	set port_gdb 9999
+	if {[info exists target_opt($target-port-gdb)]} {
+		set port_gdb $target_opt($target-port-gdb) }
 
 	set host        $target_opt($target-server)
-	set port_http   $target_opt($target-port-http)
-	set port_telnet $target_opt($target-port-telnet)
-	set port_gdb    $target_opt($target-port-gdb)
 
 	##
 	# create helper file for gdb
@@ -95,12 +97,12 @@ proc run_genode { } {
 
 
 proc parent_services { } {
-	return [list TRACE RM VM Timer Rtc Gui Nic Event Capture \
+	return [list TRACE RM VM Timer Rtc Gui Nic Event Capture Platform \
 	             Audio_out Audio_in Play Record Usb Gpu Report File_system] }
 
 
 proc base_archives { } {
-	global run_as target target_opt
+	global config::run_as config::target config::target_opt
 
 	if {[info exists target_opt($target-kernel)]} {
 		set kernel $target_opt($target-kernel)
@@ -116,7 +118,7 @@ proc log_route { } { return "<parent/>" }
 
 
 proc pd_route  { } {
-	global debug
+	global config::debug
 	if { $debug } { return "<local/>" }
 
 	return "<parent/>"
@@ -124,7 +126,7 @@ proc pd_route  { } {
 
 
 proc cpu_route { } {
-	global debug
+	global config::debug
 	if { $debug } { return "<local/>" }
 
 	return "<parent/>"
@@ -144,7 +146,8 @@ proc bind_provided_services { &services } {
 
 
 proc bind_required_services { &services } {
-	global run_pkg debug target target_opt
+	global args
+	global config::debug config::target config::target_opt
 
 	# use upvar to access array
 	upvar 1 ${&services} services
@@ -159,7 +162,7 @@ proc bind_required_services { &services } {
 
 	if { $debug } {
 		append start_nodes "\n\t<monitor max_response=\"2K\">
-				<policy label_prefix=\"$run_pkg\" wait=\"no\" stop=\"no\" wx=\"yes\"/>
+				<policy label_prefix=\"$args(run_pkg)\" wait=\"no\" stop=\"no\" wx=\"yes\"/>
 			</monitor>\n"
 	}
 
@@ -277,7 +280,7 @@ proc _instantiate_fonts_fs { &start_nodes &archives &modules } {
 	upvar 1 ${&archives} archives
 	upvar 1 ${&modules} modules
 
-	global run_as
+	global config::run_as
 
 	append start_nodes {
 			<start name="fonts_fs" caps="100">

@@ -3,8 +3,7 @@
 #
 
 proc api_status { } {
-	global build_dir
-
+	global config::build_dir
 
 	set pkg_config_log [file join $build_dir "pkg-config.log"]
 	set module_status  [read_file_content_as_list $pkg_config_log]
@@ -22,7 +21,8 @@ proc api_status { } {
 
 
 proc create_cross_file { dir } {
-	global cross_dev_prefix tool_dir
+	global tool_dir
+	global config::cross_dev_prefix
 
 	set cross_file [file join $dir meson-cross-genode]
 
@@ -59,11 +59,10 @@ proc create_cross_file { dir } {
 
 
 proc create_or_update_build_dir { } {
-	global build_dir project_dir abi_dir project_name
-	global cross_dev_prefix
-	global cppflags cflags cxxflags cc_cxx_opt_std
+	global cppflags cflags cxxflags
 	global ldflags ldlibs_common ldlibs_exe
-	global debug
+	global config::build_dir config::project_dir config::abi_dir config::project_name
+	global config::cross_dev_prefix config::cc_cxx_opt_std config::debug
 
 	if {![file exists $build_dir]} {
 		file mkdir $build_dir }
@@ -138,7 +137,8 @@ proc create_or_update_build_dir { } {
 
 
 proc build { } {
-	global build_dir jobs project_name verbose
+	global verbose
+	global config::build_dir config::jobs config::project_name
 
 	set cmd [list ninja -C $build_dir "-j $jobs"]
 

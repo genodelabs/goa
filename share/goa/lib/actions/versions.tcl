@@ -7,7 +7,7 @@ namespace eval goa {
 
 	proc bump-version { target_version } {
 
-		global project_dir
+		global config::project_dir
 
 		set version_file [file join $project_dir version]
 		if {[file exists $version_file]} {
@@ -41,7 +41,7 @@ namespace eval goa {
 	# Get a list of pkg+arch-list pairs from an index file
 	#
 	proc pkgs_from_index { index_file } {
-		global depot_user
+		global config::depot_user
 
 		# get supported archs
 		if {[catch { set supported_archs [query_attrs_from_file /index/supports arch $index_file] }]} {
@@ -83,7 +83,8 @@ namespace eval goa {
 
 	proc archive-versions { } {
 
-		global versions_from_genode_dir depot_user version project_dir
+		global config::versions_from_genode_dir config::depot_user config::version
+		global config::project_dir
 
 		if {[info exists versions_from_genode_dir] && [info exists depot_user]} {
 

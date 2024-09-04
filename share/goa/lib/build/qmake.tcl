@@ -1,9 +1,10 @@
 
 proc create_or_update_build_dir { } {
 
-	global build_dir project_dir abi_dir cross_dev_prefix arch
 	global cppflags cxxflags ldflags ldflags_so ldlibs_common
-	global ldlibs_exe ldlibs_so project_name env
+	global ldlibs_exe ldlibs_so env
+	global config::build_dir config::project_dir config::abi_dir
+	global config::cross_dev_prefix config::arch config::project_name
 
 	if { [regexp qt5_base [used_apis]] } {
 		set qt_version qt5
@@ -95,7 +96,8 @@ proc create_or_update_build_dir { } {
 
 
 proc build { } {
-	global build_dir jobs project_name verbose
+	global verbose
+	global config::build_dir config::jobs config::project_name
 
 	set cmd [list make -C $build_dir "-j$jobs"]
 

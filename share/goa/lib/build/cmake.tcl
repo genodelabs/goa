@@ -1,10 +1,12 @@
 
 proc create_or_update_build_dir { } {
 
-	global build_dir project_dir abi_dir tool_dir cross_dev_prefix include_dirs
-	global cppflags cflags cxxflags ldflags ldflags_so ldlibs_common ldlibs_exe ldlibs_so project_name
-	global cmake_quirk_args
-	global env api_dirs
+	global tool_dir
+	global cppflags cflags cxxflags ldflags ldflags_so ldlibs_common ldlibs_exe
+	global ldlibs_so env cmake_quirk_args
+	global config::build_dir config::project_dir config::abi_dir
+	global config::cross_dev_prefix config::include_dirs config::project_name
+	global api_dirs
 
 	if {![file exists $build_dir]} {
 		file mkdir $build_dir }
@@ -49,7 +51,8 @@ proc create_or_update_build_dir { } {
 
 
 proc build { } {
-	global build_dir jobs project_name verbose
+	global verbose
+	global config::build_dir config::jobs config::project_name
 
 	set cmd [list make -C $build_dir "-j$jobs"]
 

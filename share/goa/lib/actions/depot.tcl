@@ -13,8 +13,10 @@ namespace eval goa {
 	# Run `goa export` in specified project directory
 	#
 	proc export_dependent_project { dir arch { pkg_name "" } } {
-		global argv0 jobs depot_user depot_dir versions_from_genode_dir
-		global public_dir common_var_dir var_dir verbose search_dir debug
+		global argv0 config::jobs config::depot_user config::depot_dir
+		global config::versions_from_genode_dir config::public_dir config::debug
+		global config::common_var_dir config::var_dir verbose
+		global config::search_dir
 
 		set orig_pwd [pwd]
 		cd $search_dir
@@ -59,7 +61,7 @@ namespace eval goa {
 
 
 	proc download_archives { archives { no_err 0 } { dbg 0 }} {
-		global tool_dir depot_dir public_dir
+		global tool_dir config::depot_dir config::public_dir
 
 		if {[llength $archives] > 0} {
 			set cmd "[file join $tool_dir depot download]"
@@ -99,7 +101,7 @@ namespace eval goa {
 	#
 	proc prepare_depot_with_apis { } {
 
-		global depot_user arch
+		global config::depot_user config::arch
 
 		assert_definition_of_depot_user
 
@@ -128,7 +130,7 @@ namespace eval goa {
 	# Download archives into depot
 	#
 	proc prepare_depot_with_archives { archive_list } {
-		global depot_dir
+		global config::depot_dir
 
 		# create list of depot users without duplicates
 		set depot_users { }
@@ -161,7 +163,7 @@ namespace eval goa {
 	# Try downloading debug archives into depot
 	#
 	proc prepare_depot_with_debug_archives { archive_list } {
-		global depot_dir
+		global config::depot_dir
 
 		set missing_debug_archives {}
 		foreach archive $archive_list {
@@ -183,7 +185,8 @@ namespace eval goa {
 	#
 	proc versioned_project_archive { type { pkg_name ""} } {
 	
-		global depot_user project_dir project_name version arch sculpt_version
+		global config::depot_user config::project_dir config::project_name
+		global config::version config::arch config::sculpt_version
 	
 		set name $project_name
 	
@@ -242,7 +245,7 @@ namespace eval goa {
 	# \return path to the archive directory (or file if type=="index")
 	#
 	proc prepare_project_archive_directory { type { pkg_name "" } } {
-		global depot_dir
+		global config::depot_dir
 	
 		set policy [depot_policy]
 		set archive [versioned_project_archive $type $pkg_name]
@@ -274,7 +277,7 @@ namespace eval goa {
 	# Return path to the license file as defined for the project
 	#
 	proc license_file { } {
-		global project_dir license
+		global config::project_dir config::license
 	
 		set local_license_file [file join $project_dir LICENSE]
 		if {[file exists $local_license_file]} {
@@ -298,7 +301,7 @@ namespace eval goa {
 	# Supplement index file pkg paths with user and version information
 	#
 	proc augment_index_versions { src_file dst_file } {
-		global depot_user
+		global config::depot_user
 	
 		# read src_file
 		set fd [open $src_file r]
@@ -321,7 +324,7 @@ namespace eval goa {
 
 	proc export-api { } {
 
-		global api_dir project_dir
+		global config::api_dir config::project_dir
 
 		if {[file exists $api_dir] && [file isdirectory $api_dir]} {
 
@@ -374,7 +377,7 @@ namespace eval goa {
 
 	proc export-raw { } {
 
-		global project_dir
+		global config::project_dir
 
 		set raw_dir [file join $project_dir raw]
 		if {[file exists $raw_dir] && [file isdirectory $raw_dir]} {
@@ -392,7 +395,7 @@ namespace eval goa {
 
 	proc export-src { } {
 
-		global project_dir
+		global config::project_dir
 
 		# create src archive
 		set src_dir [file join $project_dir src]
@@ -435,12 +438,12 @@ namespace eval goa {
 
 	proc export-pkgs { &exported_archives } {
 
-		global publish_pkg arch project_dir
+		global args config::arch config::project_dir
 		upvar  ${&exported_archives} exported_archives
 
 		set pkg_expr "*"
-		if {$publish_pkg != ""} {
-			set pkg_expr $publish_pkg }
+		if {$args(publish_pkg) != ""} {
+			set pkg_expr $args(publish_pkg) }
 		set pkgs [glob -nocomplain -directory pkg -tail $pkg_expr -type d]
 		foreach pkg $pkgs {
 	
@@ -494,7 +497,7 @@ namespace eval goa {
 
 	proc export-bin { &exported_archives } {
 
-		global bin_dir
+		global config::bin_dir
 		upvar  ${&exported_archives} exported_archives
 
 		# create bin archive
@@ -516,7 +519,7 @@ namespace eval goa {
 
 	proc export-dbg { } {
 
-		global dbg_dir
+		global config::dbg_dir
 
 		# create dbg archive
 		if {[file exists $dbg_dir] && [file isdirectory $dbg_dir]} {
@@ -535,7 +538,7 @@ namespace eval goa {
 
 	proc export-index { &exported_archives } {
 
-		global project_dir depot_user depot_dir
+		global config::project_dir config::depot_user config::depot_dir
 		upvar  ${&exported_archives} exported_archives
 
 		set index_file [file join $project_dir index]
@@ -590,7 +593,8 @@ namespace eval goa {
 
 	proc import-dependencies { exported_archives &export_projects} {
 
-		global tool_dir depot_dir public_dir depot_user
+		global tool_dir
+		global config::depot_dir config::public_dir config::depot_user config::arch
 		upvar  ${&export_projects} export_projects
 	
 		# determine dependent projects that need exporting
@@ -652,7 +656,7 @@ namespace eval goa {
 
 	proc export-dependencies { &export_projects } {
 
-		global arch
+		global config::arch
 		upvar ${&export_projects} export_projects
 
 		# export bin/pkg archives first and delay arch-independent archives
@@ -692,7 +696,8 @@ namespace eval goa {
 
 	proc published-archives { } {
 
-		global project_dir publish_pkg bin_dir api_dir arch depot_dir
+		global args
+		global config::project_dir config::bin_dir config::api_dir config::arch config::depot_dir
 		set archives { }
 		set index_archive ""
 	
@@ -710,8 +715,8 @@ namespace eval goa {
 		if {[file exists $api_dir] && [file isdirectory $api_dir]} {
 			lappend archives [versioned_project_archive api] }
 	
-		if {$publish_pkg != ""} {
-			lappend archives [apply_arch [versioned_project_archive pkg $publish_pkg] $arch]
+		if {$args(publish_pkg) != ""} {
+			lappend archives [apply_arch [versioned_project_archive pkg $args(publish_pkg)] $arch]
 		} else {
 			set pkgs [glob -nocomplain -directory pkg -tail * -type d]
 			foreach pkg $pkgs {
@@ -737,7 +742,7 @@ namespace eval goa {
 
 	proc download-foreign { archives } {
 
-		global tool_dir depot_dir public_dir depot_user
+		global tool_dir config::depot_dir config::public_dir config::depot_user
 
 		set missing_archives ""
 		if {[llength $archives] > 0} {
@@ -784,7 +789,8 @@ namespace eval goa {
 
 	proc publish { archives } {
 
-		global tool_dir depot_dir public_dir debug jobs
+		global tool_dir
+		global config::depot_dir config::public_dir config::debug config::jobs
 
 		if {[llength $archives] > 0} {
 			set cmd "[file join $tool_dir depot publish]"

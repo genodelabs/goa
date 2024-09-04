@@ -4,7 +4,7 @@
 # Otherwise it returns an empty string.
 #
 proc _find_rom_in_archives { rom_name binary_archives } {
-	global depot_dir
+	global config::depot_dir
 
 	foreach archive $binary_archives {
 		set file_path [file join $depot_dir $archive $rom_name]
@@ -189,7 +189,7 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	upvar 1 ${&runtime_archives} runtime_archives
 	upvar 1 ${&rom_modules} rom_modules
 
-	global run_pkg run_dir var_dir run_as bin_dir
+	global args config::run_dir config::var_dir config::run_as config::bin_dir
 
 	set ram    [try_query_attr_from_file $runtime_file ram]
 	set caps   [try_query_attr_from_file $runtime_file caps]
@@ -378,7 +378,7 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 
 			} $start_nodes {
 
-			<start name="} $run_pkg {" caps="} $caps {">
+			<start name="} $args(run_pkg) {" caps="} $caps {">
 				<resource name="RAM" quantum="} $ram {"/>
 				<binary name="} $binary {"/>
 				<provides>} $provides {</provides>

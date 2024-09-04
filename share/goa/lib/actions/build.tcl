@@ -83,7 +83,9 @@ namespace eval goa {
 	#
 	proc prepare_abi_stubs { used_apis } {
 
-		global tool_dir depot_dir abi_dir cross_dev_prefix ld_march cc_march verbose project_name arch
+		global tool_dir verbose
+		global config::depot_dir config::abi_dir config::cross_dev_prefix
+		global config::ld_march config::cc_march config::project_name config::arch
 
 		set     cmd "make -f $tool_dir/lib/gen_abi_stubs.mk"
 		lappend cmd "TOOL_DIR=$tool_dir"
@@ -110,7 +112,9 @@ namespace eval goa {
 	#
 	proc prepare_ldso_support_stub { used_apis } {
 
-		global tool_dir depot_dir abi_dir cross_dev_prefix cc_march verbose project_name arch
+		global tool_dir verbose
+		global config::depot_dir config::abi_dir config::cross_dev_prefix
+		global config::cc_march config::project_name config::arch
 
 		set so_api { }
 		foreach api_path $used_apis {
@@ -145,8 +149,13 @@ namespace eval goa {
 	#
 	proc build-dir { } {
 
-		global cross_dev_prefix tool_dir depot_dir rebuild arch olevel cc_march
-		global debug cc_cxx_opt_std ld_march abi_dir build_dir api_dirs
+		global tool_dir
+		global config::cross_dev_prefix config::depot_dir config::rebuild
+		global config::arch config::olevel config::cc_march config::debug
+		global config::cc_cxx_opt_std config::ld_march config::abi_dir
+		global config::build_dir api_dirs
+		global config::with_backtrace config::warn_strict config::depot_user
+		global config::project_name config::project_dir
 
 		#
 		# Check for availability of the Genode tool chain
@@ -339,8 +348,9 @@ namespace eval goa {
 	
 	proc extract_artifacts_from_build_dir { } {
 
-		global project_dir build_dir bin_dir dbg_dir debug
-		global library_artifacts
+		global config::project_dir config::build_dir config::bin_dir
+		global config::dbg_dir config::debug
+		variable library_artifacts { }
 	
 		set artifacts_file_path [file join $project_dir artifacts]
 	
@@ -356,7 +366,6 @@ namespace eval goa {
 		file mkdir $bin_dir
 		if { $debug } { file mkdir $dbg_dir }
 	
-		set library_artifacts { }
 		foreach file [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
 			set symlink_path [file join $bin_dir [file tail $file]]
 			file link $symlink_path [fullnormalize $file]
@@ -377,7 +386,9 @@ namespace eval goa {
 	
 	proc check_abis { } {
 
-		global arch project_dir tool_dir library_artifacts cross_dev_prefix
+		global tool_dir
+		global config::arch config::project_dir config::cross_dev_prefix
+		variable library_artifacts
 	
 		foreach library $library_artifacts {
 	
@@ -411,7 +422,7 @@ namespace eval goa {
 
 	proc extract_api_artifacts { } {
 
-		global project_dir build_dir api_dir
+		global config::project_dir config::build_dir config::api_dir
 	
 		set api_file_path [file join $project_dir api]
 	
@@ -441,7 +452,8 @@ namespace eval goa {
 	
 	proc extract_library_symbols { } {
 
-		global build_dir project_dir tool_dir
+		global tool_dir
+		global config::build_dir config::project_dir
 	
 		set artifacts_file_path [file join $project_dir artifacts]
 	

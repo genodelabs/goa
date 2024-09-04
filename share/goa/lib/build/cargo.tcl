@@ -2,7 +2,9 @@
 proc create_or_update_build_dir { } { mirror_source_dir_to_build_dir }
 
 proc generate_static_stubs { libs } {
-	global tool_dir abi_dir cross_dev_prefix cc_march cflags cppflags verbose project_name lib_src
+	global tool_dir verbose cflags cppflags lib_src
+	global config::abi_dir config::cross_dev_prefix config::cc_march config::project_name
+
 	set     cmd "make -f $tool_dir/lib/gen_static_stubs.mk"
 	lappend cmd "LIBS=[join $libs { }]"
 	lappend cmd "TOOL_DIR=$tool_dir"
@@ -26,9 +28,10 @@ proc generate_static_stubs { libs } {
 
 proc build { } {
 
-	global build_dir cross_dev_prefix verbose debug project_name jobs project_dir
+	global verbose tool_dir
 	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe lib_src
-	global cc_march tool_dir
+	global config::build_dir config::cross_dev_prefix config::debug
+	global config::project_name config::jobs config::project_dir config::cc_march
 
 	set rustflags { }
 	set gcc_unwind [exec $cross_dev_prefix\gcc $cc_march -print-file-name=libgcc_eh.a]

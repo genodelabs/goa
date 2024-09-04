@@ -69,7 +69,7 @@ namespace eval goa {
 	#
 	proc _depot_exists { } {
 
-		global depot_dir
+		global config::depot_dir
 		return [expr {[file exists $depot_dir] && [file isdirectory $depot_dir]}]
 	}
 
@@ -91,7 +91,7 @@ namespace eval goa {
 	proc depot-dir { } {
 
 		global tool_dir
-		global depot_dir
+		global config::depot_dir
 
 		# create default depot
 		if {![_depot_exists]} {
@@ -106,7 +106,7 @@ namespace eval goa {
 	#
 	proc add-depot-user { new_depot_user depot_url pubkey_file gpg_user_id } {
 
-		global depot_dir
+		global config::depot_dir
 
 		set policy [depot_policy]
 

@@ -232,6 +232,18 @@ Goa evaluates the following configuration variables.
 :cc_cxx_opt_std:
   Overwrite C++ standard. The default is "-std=gnu++20".
 
+SECURITY
+########
+
+Since Goa configuration files are interpreted by Tcl, executing Goa projects
+from untrusted sources could harm the integrity of your system. Goa, however,
+uses a safe interpreter to load configuration files in order to hide sensitive
+commands such as 'exec', 'open', 'cd', 'glob' and 'socket'. Moreover, Goa
+restricts the 'set' command to only affect Goa's configuration variables. As
+mentioned above, path variables are checked against a list of allowed paths
+to make sure that untrusted configuration files cannot trick Goa into undesired
+file operations.
+
 SEE ALSO
 ########
 

@@ -3,8 +3,9 @@ proc create_or_update_build_dir { } {
 
 	mirror_source_dir_to_build_dir
 
-	global build_dir cross_dev_prefix project_name project_dir api_dirs
-	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe ldlibs_so
+	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe ldlibs_so api_dirs
+	global config::build_dir config::cross_dev_prefix config::project_name
+	global config::project_dir
 
 	# invoke configure script only once
 	if {[file exists [file join $build_dir config.status]]} {
@@ -77,7 +78,8 @@ proc create_or_update_build_dir { } {
 
 proc build { } {
 
-	global build_dir verbose project_name jobs project_dir ldlibs_common ldlibs_exe ldlibs_so
+	global verbose ldlibs_common ldlibs_exe ldlibs_so
+	global config::build_dir config::project_name config::jobs config::project_dir
 
 	set cmd { }
 

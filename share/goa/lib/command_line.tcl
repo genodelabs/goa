@@ -1,8 +1,26 @@
 #
+# Trace callback preventing write access to immutable variables
+# Note: TCL 9.0 will supposedly support const variables.
+#
+proc const_var { n1 n2 op } {
+	exit_with_error "Write access to const variable $n1" }
+
+#
+# Trace callback for sanitizing version information
+#
+proc version_var { n1 n2 op } {
+	global config::version
+	set value [string trim $version($n2)]
+	set version($n2) $value
+	if {[string first / $value] >= 0} {
+		exit_with_error "Value of 'version($n2)' must not contain slashes" }
+}
+
+#
 # Determine verbosity level as evaluated by 'diag'
 #
 set verbose [consume_optional_cmdline_switch "--verbose"]
-
+trace add variable verbose write const_var
 
 ##
 # Print version and exit
@@ -12,7 +30,6 @@ if {[consume_optional_cmdline_switch "--version"]} {
 	exit 0
 }
 
-
 #
 # Handle -C argument, changing the current working directory
 #
@@ -20,7 +37,7 @@ set original_dir [pwd]
 set targeted_dir [consume_optional_cmdline_arg "-C" ""]
 if {$targeted_dir != ""} {
 	cd $targeted_dir }
-
+unset targeted_dir
 
 #
 # Search directory tree for project directories
@@ -90,137 +107,35 @@ if {[consume_optional_cmdline_switch "-r"]} {
 # Goa was called without '-r' argument, process a single project directory
 #
 
-set project_dir [pwd]
-set project_name [file tail $project_dir]
+source [file join $tool_dir lib config.tcl]
 
-# defaults, potentially being overwritten by 'goarc' files
-set arch                     ""
-set cross_dev_prefix         ""
-set rebuild                  0
-set jobs                     1
-set ld_march                 ""
-set cc_march                 ""
-set olevel                   "-O2"
-set debug                    0
-set versions_from_genode_dir ""
-set common_var_dir           ""
-set search_dir               ""
-set depot_overwrite          0
-set depot_retain             0
-set license                  ""
-set depot_user               ""
-set run_as                   "genodelabs"
-set target                   "linux"
-set sculpt_version           ""
-set cc_cxx_opt_std           "-std=gnu++20"
-set binary_name              ""
-array set target_opt {}
+diag "process project '$config::project_name' with arguments: $argv"
 
-# if /proc/cpuinfo exists, use number of CPUs as 'jobs'
-if {[file exists /proc/cpuinfo]} {
-	catch {
-		set num_cpus [exec grep "processor.*:" /proc/cpuinfo | wc -l]
-		set jobs $num_cpus
-		diag "use $jobs jobs according to /proc/cpuinfo"
-	}
-}
-
-
-source $tool_dir/goarc
-
-diag "process project '$project_name' with arguments: $argv"
-
-
-#
-# Read the hierarcy of 'goarc' files
-#
-
-set goarc_path_elements [file split $project_dir]
-set goarc_name "goarc"
-set goarc_path [file separator]
-
-
-#
-# The goarc file may contain paths relative to the local directory
-# or relative to the home directory ('~' character). Convert those
-# to absolute paths.
-#
-set path_var_names [list depot_dir public_dir cross_dev_prefix \
-                         versions_from_genode_dir common_var_dir \
-                         contrib_dir import_dir abi_dir build_dir \
-                         run_dir bin_dir dbg_dir search_dir]
-
-
-foreach path_elem $goarc_path_elements {
-
-	set goarc_path           [file join $goarc_path $path_elem]
-	set goarc_path_candidate [file join $goarc_path $goarc_name]
-	set deprecated_goarc     [file join $goarc_path .$goarc_name]
-
-	if {[file exists $deprecated_goarc]} {
-		log "ignoring hidden '.goarc' file at $goarc_path\n" \
-		    "\n Consider renaming the file to 'goarc' instead\n" }
-
-	if {[file exists $goarc_path_candidate]} {
-
-		set goarc_file_path [file join $goarc_path $goarc_name]
-
-		#
-		# Change to the directory of the goarc file before including it
-		# so that the commands of the file are executed in the expected
-		# directory.
-		#
-		cd $goarc_path
-
-		source $goarc_file_path
-
-		foreach var_name $path_var_names {
-
-			if {![info exists $var_name]} {
-				continue }
-
-			set path [set $var_name]
-
-			if {[llength $path] > 1} {
-				exit_with_error "$goarc_file_path contains malformed" \
-				                "definition of $var_name" }
-
-			# de-reference home directory
-			regsub {^~} $env(HOME) path
-
-			# convert relative path to absolute path
-			set path [file normalize $path]
-
-			set $var_name $path
-		}
-	}
-}
-
-# revert original current working directory
-cd $project_dir
-
+config load_goarc_files
 
 #
 # Override values with command-line arguments
 #
 # Change to the original PWD to resolve relative path names correctly.
 #
+foreach var_name [config path_var_names] {
 
-foreach var_name $path_var_names {
-
+	set var_name [lindex [split $var_name :] end]
 	regsub -all {_} $var_name "-" tag_name
 
 	set path [consume_optional_cmdline_arg "--$tag_name" ""]
 
 	if {$path != ""} {
-		set $var_name [file normalize $path] }
+		set config::$var_name [file normalize $path] }
 }
 
-set jobs           [consume_optional_cmdline_arg "--jobs" $jobs]
-set arch           [consume_optional_cmdline_arg "--arch" $arch]
-set ld_march       [consume_optional_cmdline_arg "--ld-march" $ld_march]
-set cc_march       [consume_optional_cmdline_arg "--cc-march" $cc_march]
-set cc_cxx_opt_std [consume_optional_cmdline_arg "--cc-cxx-opt-std" $cc_cxx_opt_std]
+namespace eval config {
+	set jobs           [consume_optional_cmdline_arg "--jobs" $jobs]
+	set arch           [consume_optional_cmdline_arg "--arch" $arch]
+	set ld_march       [consume_optional_cmdline_arg "--ld-march" $ld_march]
+	set cc_march       [consume_optional_cmdline_arg "--cc-march" $cc_march]
+	set cc_cxx_opt_std [consume_optional_cmdline_arg "--cc-cxx-opt-std" $cc_cxx_opt_std]
+}
 
 #
 # Define actions based on the primary command given at the command line
@@ -278,9 +193,9 @@ if {$perform(update-goa)} {
 }
 
 if {$perform(backtrace)} {
-	set binary_name      [consume_optional_cmdline_arg "--binary-name" ""]
-	set with_backtrace 1
-	set debug 1
+	set config::binary_name [consume_optional_cmdline_arg "--binary-name" ""]
+	set config::with_backtrace 1
+	set config::debug 1
 }
 
 if {$perform(help)} {
@@ -301,16 +216,16 @@ if {$perform(bump-version)} {
 
 if {$perform(add-depot-user)} {
 
-	set args(depot_url)       [consume_optional_cmdline_arg    "--depot-url"   ""]
-	set args(pubkey_file)     [consume_optional_cmdline_arg    "--pubkey-file" ""]
-	set args(gpg_user_id)     [consume_optional_cmdline_arg    "--gpg-user-id" ""]
-	set depot_overwrite [consume_optional_cmdline_switch "--depot-overwrite"]
-	set depot_retain    [consume_optional_cmdline_switch "--depot-retain"]
+	set args(depot_url)         [consume_optional_cmdline_arg    "--depot-url"   ""]
+	set args(pubkey_file)       [consume_optional_cmdline_arg    "--pubkey-file" ""]
+	set args(gpg_user_id)       [consume_optional_cmdline_arg    "--gpg-user-id" ""]
+	set config::depot_overwrite [consume_optional_cmdline_switch "--depot-overwrite"]
+	set config::depot_retain    [consume_optional_cmdline_switch "--depot-retain"]
 
 	set hint ""
 	append hint "\n Expected command:\n" \
-	            "\n goa add-depot-user <name> --depot-url <url>" \
-	            "\[--pubkey-file <file> | --gpg-user-id <id>\]\n"
+            	"\n goa add-depot-user <name> --depot-url <url>" \
+            	"\[--pubkey-file <file> | --gpg-user-id <id>\]\n"
 
 	if {[llength $argv] == 0} {
 		exit_with_error "missing user-name argument\n$hint" }
@@ -328,8 +243,8 @@ if {$perform(add-depot-user)} {
 
 	if {$args(pubkey_file) != "" && $args(gpg_user_id) != ""} {
 		exit_with_error "public key argument is ambigious\n" \
-		                "\n You may either specify a pubkey file or a" \
-		                "GPG user ID but not both.\n$hint" }
+	                	 "\n You may either specify a pubkey file or a" \
+	                	 "GPG user ID but not both.\n$hint" }
 
 	if {$args(pubkey_file) != "" && ![file exists $args(pubkey_file)]} {
 		exit_with_error "public-key file $args(pubkey_file) does not exist" }
@@ -338,120 +253,60 @@ if {$perform(add-depot-user)} {
 # override 'rebuild' variable via optional command-line switch
 if {$perform(build-dir)} {
 	if {[consume_optional_cmdline_switch "--rebuild"]} {
-		set rebuild 1 }
+		set config::rebuild 1 }
 }
 
 if {$perform(run-dir)} {
-	set target [consume_optional_cmdline_arg "--target" $target]
-	set run_as  [consume_optional_cmdline_arg "--run-as" $run_as]
+	set config::target [consume_optional_cmdline_arg "--target" $config::target]
+	set config::run_as [consume_optional_cmdline_arg "--run-as" $config::run_as]
 	# unless given as additional argument, run the pkg named after the project
-	set run_pkg [consume_optional_cmdline_arg "--pkg" $project_name]
+	set args(run_pkg)  [consume_optional_cmdline_arg "--pkg"    $config::project_name]
 }
 
 if {$perform(build)} {
-	if {[consume_optional_cmdline_switch "--warn-strict"   ]} { set warn_strict 1 }
-	if {[consume_optional_cmdline_switch "--no-warn-strict"]} { set warn_strict 0 }
+	if {[consume_optional_cmdline_switch "--warn-strict"   ]} { set config::warn_strict 1 }
+	if {[consume_optional_cmdline_switch "--no-warn-strict"]} { set config::warn_strict 0 }
 
-	if {[consume_optional_cmdline_switch "--with-backtrace"]} { set with_backtrace 1 }
+	if {[consume_optional_cmdline_switch "--with-backtrace"]} { set config::with_backtrace 1 }
 
 	# override 'debug' variable via optional command-line switch
-	if {[consume_optional_cmdline_switch "--debug"]} { set debug 1 }
+	if {[consume_optional_cmdline_switch "--debug"]}          { set config::debug 1 }
 
-	set olevel [consume_optional_cmdline_arg "--olevel" $olevel]
+	set config::olevel [consume_optional_cmdline_arg "--olevel" $config::olevel]
 }
 
 if {$perform(export)} {
-	set depot_overwrite [consume_optional_cmdline_switch "--depot-overwrite"]
-	set depot_retain    [consume_optional_cmdline_switch "--depot-retain"]
-	set depot_user      [consume_optional_cmdline_arg "--depot-user"     $depot_user]
-	set license         [consume_optional_cmdline_arg "--license"        $license]
-	set publish_pkg     [consume_optional_cmdline_arg "--pkg"            ""]
-	set sculpt_version  [consume_optional_cmdline_arg "--sculpt-version" $sculpt_version]
+	set config::depot_overwrite [consume_optional_cmdline_switch "--depot-overwrite"]
+	set config::depot_retain    [consume_optional_cmdline_switch "--depot-retain"]
+	set config::depot_user      [consume_optional_cmdline_arg "--depot-user"     $config::depot_user]
+	set config::license         [consume_optional_cmdline_arg "--license"        $config::license]
+	set config::sculpt_version  [consume_optional_cmdline_arg "--sculpt-version" $config::sculpt_version]
+	set args(publish_pkg)       [consume_optional_cmdline_arg "--pkg"            ""]
 }
 
 if {$perform(archive-versions)} {
-	set depot_user [consume_optional_cmdline_arg "--depot-user" $depot_user] }
+	set config::depot_user [consume_optional_cmdline_arg "--depot-user" $config::depot_user] }
 
 # consume target-specific arguments
-consume_prefixed_cmdline_args "--target-opt-" target_opt
+consume_prefixed_cmdline_args "--target-opt-" config::target_opt
 
 # consume package versions
-consume_prefixed_cmdline_args "--version-" version
+consume_prefixed_cmdline_args "--version-" config::version
 
 # back out if there is any unhandled argument
 if {[llength $argv] > 0} {
 	exit_with_error "invalid argument: [join $argv { }]" }
 
-if {$search_dir               == ""} { set search_dir "$original_dir" }
-if {$versions_from_genode_dir == ""} { unset versions_from_genode_dir }
-if {$license                  == ""} { unset license }
-if {$depot_user               == ""} { unset depot_user }
-if {$arch                     == ""} { unset arch }
-if {$cross_dev_prefix         == ""} { unset cross_dev_prefix }
-if {$ld_march                 == ""} { unset ld_march }
-if {$cc_march                 == ""} { unset cc_march }
-if {$run_as                   == ""} { unset run_as }
-if {$binary_name              == ""} { unset binary_name }
+config set_late_defaults
 
-if {![info exists arch]} {
-	switch [exec uname -m] {
-	aarch64 { set arch "arm_v8a" }
-	x86_64  { set arch "x86_64"  }
-	default { exit_with_error "CPU architecture is not defined" }
+unset original_dir
+
+# make all variables (except version array) in config namespace immutable
+foreach var [info vars ::config::*] {
+	if {$var == "::config::version"} {
+		trace add variable $var write version_var
+	} else {
+		trace add variable $var write const_var
 	}
 }
 
-if {![info exists cross_dev_prefix]} {
-	switch $arch {
-	arm_v8a { set cross_dev_prefix "/usr/local/genode/tool/23.05/bin/genode-aarch64-" }
-	x86_64  { set cross_dev_prefix "/usr/local/genode/tool/23.05/bin/genode-x86-"  }
-	default { exit_with_error "tool-chain prefix is not defined" }
-	}
-}
-
-if {![info exists ld_march]} {
-	switch $arch {
-	x86_64  { set ld_march "-melf_x86_64"  }
-	default { set ld_march "" }
-	}
-}
-
-if {![info exists cc_march]} {
-	switch $arch {
-	x86_64  { set cc_march "-m64"  }
-	default { set cc_march "" }
-	}
-}
-
-set var_dir [file join $project_dir var]
-if {$common_var_dir != ""} {
-	set var_dir [file join $common_var_dir $project_name] }
-
-proc set_if_undefined { var_name value } {
-
-	upvar default_$var_name default_var
-	set default_var $value
-
-	upvar $var_name var
-	if {![info exists var]} {
-		set var $value }
-}
-
-set_if_undefined depot_dir   [file join $var_dir depot]
-set_if_undefined public_dir  [file join $var_dir public]
-set_if_undefined contrib_dir [file join $var_dir contrib]
-set_if_undefined import_dir  [file join $var_dir import]
-set_if_undefined build_dir   [file join $var_dir build $arch]
-set_if_undefined abi_dir     [file join $var_dir abi   $arch]
-set_if_undefined bin_dir     [file join $var_dir bin   $arch]
-set_if_undefined dbg_dir     [file join $var_dir dbg   $arch]
-set_if_undefined run_dir     [file join $var_dir run]
-set_if_undefined api_dir     [file join $var_dir api]
-
-##
-# Return true if variable 'var_name' has not its default value
-#
-proc customized_variable { var_name } {
-	global $var_name "default_$var_name"
-	return [expr {[set $var_name] != [set "default_$var_name"]}]
-}
