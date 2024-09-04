@@ -597,11 +597,20 @@ proc archive_name { archive } {
 }
 
 
+##
+# Return depot user of specified archive path
+#
+proc archive_user { archive } {
+	archive_parts $archive user type name version
+	return $user
+}
+
+
 proc api_archive_dir { api_name } {
 	global used_apis depot_dir
-	foreach archive $used_apis {
-		set elements [split $archive "/"]
-		if {[llength $elements] == 4 && [lindex $elements 2] == $api_name} {
+	foreach archive [goa used_apis] {
+		archive_parts $archive user type name version
+		if {$version != "" && $name == $api_name} {
 			return [file join $depot_dir $archive] }
 	}
 	exit_with_error "could not find matching $api_name API in depot"
@@ -862,91 +871,6 @@ proc avail_goa_branches { } {
 }
 
 
-##
-# Run `goa export` in specified project directory
-#
-proc export_dependent_project { dir arch { pkg_name "" } } {
-	global argv0 jobs depot_user depot_dir versions_from_genode_dir
-	global public_dir common_var_dir var_dir verbose search_dir debug
-
-	set orig_pwd [pwd]
-	cd $search_dir
-
-	set cmd { }
-	lappend cmd expect $argv0 export
-	lappend cmd -C $dir
-	lappend cmd --jobs $jobs
-	lappend cmd --arch $arch
-	lappend cmd --depot-user     $depot_user
-	lappend cmd --depot-dir      $depot_dir
-	lappend cmd --public-dir     $public_dir
-	if {$common_var_dir != ""} {
-		lappend cmd --common-var-dir $common_var_dir
-	} else {
-		lappend cmd --common-var-dir $var_dir
-	}
-	if {[info exists versions_from_genode_dir]} {
-		lappend cmd --versions-from-genode-dir $versions_from_genode_dir
-	}
-	if {$verbose} {
-		lappend cmd --verbose }
-	if {$debug} {
-		lappend cmd --debug }
-	if {$pkg_name != ""} {
-		lappend cmd --pkg $pkg_name }
-
-	# keep existing exports of dependent projects untouched
-	lappend cmd --depot-retain
-
-	if {!$verbose} {
-		log "exporting project $dir" }
-
-	diag "exporting project $dir via cmd: $cmd"
-
-	exec -ignorestderr {*}$cmd >@ stdout
-
-	cd $orig_pwd
-
-	return -code ok
-}
-
-
-proc download_archives { archives { no_err 0 } { dbg 0 }} {
-	global tool_dir depot_dir public_dir
-
-	if {[llength $archives] > 0} {
-		set cmd "[file join $tool_dir depot download]"
-		set cmd [concat $cmd $archives]
-		lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
-		lappend cmd "DEPOT_DIR=$depot_dir"
-		lappend cmd "PUBLIC_DIR=$public_dir"
-		lappend cmd "REPOSITORIES="
-		if { $dbg } {
-			lappend cmd "DBG=1" }
-
-		diag "install depot archives via command: $cmd"
-
-		if { $no_err } {
-			if {[catch { exec {*}$cmd | sed "s/^Error://" >@ stdout }]} {
-				return -code error }
-		} else {
-			if {[catch { exec {*}$cmd >@ stdout }]} {
-				return -code error }
-		}
-	}
-
-	return -code ok
-}
-
-
-proc try_download_archives { archives } {
-	return [download_archives $archives 1] }
-
-
-proc try_download_debug_archives { archives } {
-	return [download_archives $archives 1 1] }
-
-
 proc assert_definition_of_depot_user { } {
 
 	global depot_user
@@ -957,50 +881,6 @@ proc assert_definition_of_depot_user { } {
 	                "\n You can define your depot user name by setting the 'depot_user'" \
 	                "\n variable in a goarc file, or by specifing the '--depot-user <name>'"\
 	                "\n command-line argument.\n"
-}
-
-
-##
-# Get a list of pkg+arch-list pairs from an index file
-#
-proc pkgs_from_index { index_file } {
-	global depot_user
-
-	# get supported archs
-	if {[catch { set supported_archs [query_attrs_from_file /index/supports arch $index_file] }]} {
-		exit_with_error "missing <supports arch=\"...\"/> in index file" }
-
-	# helper proc to apply archs to paths found in a list of <pkg> nodes
-	proc _paths_with_arch { pkgs archs } {
-		set res ""
-		foreach pkg $pkgs {
-			set path [query_from_string string(/pkg/@path) $pkg ""]
-			set pkg_archs $archs
-			catch {
-				set pkg_archs [query_attrs_from_string /pkg arch $pkg] }
-
-			lappend res $path $pkg_archs
-		}
-		return $res
-	}
-
-	# helper for recursive processing of index nodes
-	proc _index_with_arch { xml archs result } {
-		# iterate <index> nodes
-		catch {
-			foreach index_xml [split [query_from_string /index/index $xml ""] \n] {
-				set index_archs [split [query_from_string string(/index/@arch) $index_xml "$archs"] " "]
-				set index_name [query_from_string string(/index/@name) $index_xml ""]
-				set pkgs [split [query_from_string /index/pkg $index_xml ""] \n]
-				lappend result {*}[_paths_with_arch $pkgs $index_archs]
-
-				set result [_index_with_arch $index_xml $index_archs $result]
-			}
-		}
-		return $result
-	}
-
-	return [_index_with_arch [query_from_file /index $index_file] $supported_archs ""]
 }
 
 

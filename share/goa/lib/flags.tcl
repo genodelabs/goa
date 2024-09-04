@@ -1,8 +1,9 @@
 #
 # CPP flags
 #
+global include_dirs
 set include_dirs { }
-foreach api $used_apis {
+foreach api [used_apis] {
 	set dir [file join $depot_dir $api include]
 
 	if {$arch == "x86_64"} {
@@ -21,6 +22,7 @@ set libgcc_include [file join [file dirname $libgcc_path] include]
 
 lappend include_dirs [file normalize $libgcc_include]
 
+global cppflags
 set cppflags { }
 lappend cppflags "-nostdinc"
 
@@ -33,6 +35,7 @@ lappend cppflags "-nostdinc"
 #
 # C-compiler flags
 #
+global cflags
 set cflags { }
 lappend cflags -fPIC
 lappend cflags $olevel
@@ -61,6 +64,7 @@ if {$debug && [info exists depot_user]} {
 #
 # C++-compiler flags
 #
+global cxxflags
 set cxxflags $cflags
 lappend cxxflags $cc_cxx_opt_std
 
@@ -73,6 +77,7 @@ if {[info exists warn_strict] && $warn_strict} {
 #
 set ld_script_dir [file join $tool_dir ld]
 
+global  ldflags
 set     ldflags { }
 lappend ldflags -gc-sections
 lappend ldflags -z max-page-size=0x1000
@@ -88,17 +93,20 @@ foreach flag $ldflags {
 set ldflags $prefixed_flags
 
 # set -Ttext flag only for executables
-set ldflags_so [list {*}$ldflags]
+global ldflags_so
+set    ldflags_so [list {*}$ldflags]
 lappend ldflags -Wl,-Ttext=0x01000000
 
 
 #
 # Library arguments for the linker
 #
+global  ldlibs_common
 set     ldlibs_common { }
 lappend ldlibs_common -nostartfiles -nodefaultlibs -lgcc
 lappend ldlibs_common -L$abi_dir
 
+global  ldlibs_exe
 set     ldlibs_exe    { }
 lappend ldlibs_exe   -Wl,--dynamic-linker=ld.lib.so
 #
@@ -108,6 +116,7 @@ lappend ldlibs_exe   -Wl,--dynamic-linker=ld.lib.so
 lappend ldlibs_exe    -Wl,--dynamic-list=[file join $ld_script_dir genode_dyn.dl]
 lappend ldlibs_exe    -T [file join $ld_script_dir genode_dyn.ld]
 
+global  ldlibs_so
 set     ldlibs_so     { }
 lappend ldlibs_so     -Wl,-shared
 lappend ldlibs_so     -Wl,--whole-archive -Wl,-l:ldso_so_support.lib.a -Wl,--no-whole-archive
@@ -115,7 +124,7 @@ lappend ldlibs_so     -T [file join $ld_script_dir genode_rel.ld]
 
 # determine ABIs to link against the executable
 set abis { }
-foreach api $used_apis {
+foreach api [used_apis] {
 	set symbol_files [glob -nocomplain -directory [file join $depot_dir $api lib symbols] *]
 	foreach symbol_file $symbol_files {
 		lappend abis [file tail $symbol_file] } }

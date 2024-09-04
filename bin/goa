@@ -43,6 +43,7 @@ exit_if_not_installed xmllint git find sed make diff tar wget
 
 source [file join $tool_dir lib command_line.tcl]
 
+source [file join $tool_dir lib actions generic.tcl]
 
 ##################
 ## Main program ##
@@ -53,17 +54,7 @@ source [file join $tool_dir lib command_line.tcl]
 ##
 
 if {$perform(help)} {
-	set file [file join $tool_dir doc $help_topic.txt]
-	if {![file exists $file]} {
-		set topics [glob -directory [file join $tool_dir doc] -tail *.txt]
-		regsub -all {.txt} $topics "" topics
-		exit_with_error "help topic '$help_topic' does not exist\n"\
-		                "\n Available topics are: [join $topics {, }]\n"
-	}
-	set     cmd [file join $tool_dir gosh gosh]
-	lappend cmd --style man $file | man -l -
-	spawn -noecho sh -c "$cmd"
-	interact
+	goa help $args(help_topic)
 	exit
 }
 
@@ -73,34 +64,7 @@ if {$perform(help)} {
 ##
 
 if {$perform(update-goa)} {
-
-	set status [exec git -C [file dirname [file dirname $tool_dir]] status -s]
-	if {$status != ""} {
-		exit_with_error "aborting Goa update because it was changed locally\n\n$status" }
-
-	if {[catch { goa_git fetch origin } msg]} {
-		exit_with_error "Goa update could not fetch new version:\n$msg" }
-
-	if {[info exists switch_to_goa_branch]} {
-
-		set remote_branches [avail_goa_branches]
-
-		if {[lsearch $remote_branches $switch_to_goa_branch] == -1} {
-			exit_with_error "Goa version $switch_to_goa_branch does not exist\n" \
-			                "\n Available versions are: [join $remote_branches {, }]\n"
-		}
-
-		set git_branch_output [goa_git branch | sed "s/^..//"]
-		set local_branches [split $git_branch_output "\n"]
-
-		if {[lsearch $local_branches $switch_to_goa_branch] == -1} {
-			goa_git checkout -q -b $switch_to_goa_branch origin/$switch_to_goa_branch
-		} else {
-			goa_git checkout -q $switch_to_goa_branch
-		}
-	}
-
-	goa_git merge --ff-only origin/[current_goa_branch]
+	goa update $args(switch_to_goa_branch)
 	exit
 }
 
@@ -110,30 +74,11 @@ if {$perform(update-goa)} {
 ##
 
 if {$perform(versions)} {
-
 	puts [avail_goa_branches]
 	exit
 }
 
 
-##
-# Return 1 if depot_dir exists
-#
-proc depot_exists { } {
-	global depot_dir
-	return [expr {[file exists $depot_dir] && [file isdirectory $depot_dir]}]
-}
-
-
-##
-# Set writeable permission for specified path and its subdirectories
-#
-proc make_writeable { path } {
-	file attributes $path -permissions "+w"
-	if {[file isdirectory $path]} {
-		foreach entry [glob [file join $path "*"]] {
-			make_writeable $entry } }
-}
 
 
 ##
@@ -141,13 +86,7 @@ proc make_writeable { path } {
 ##
 
 if {$perform(depot-dir)} {
-
-	# create default depot
-	if {![depot_exists]} {
-		file mkdir [file dirname $depot_dir]
-		file copy [file join $tool_dir default_depot] $depot_dir
-		make_writeable $depot_dir
-	}
+	goa depot-dir
 }
 
 
@@ -156,41 +95,8 @@ if {$perform(depot-dir)} {
 ##
 
 if {$perform(add-depot-user)} {
-
-	set policy [depot_policy]
-
-	set new_depot_user_dir [file join $depot_dir $new_depot_user]
-	if {[file exists $new_depot_user_dir]} {
-		if {$policy == "overwrite"} {
-			file delete -force $new_depot_user_dir
-		} elseif {$policy == "retain"} {
-			log "depot user directory $new_depot_user_dir already exists"
-			return
-		} else {
-			exit_with_error "depot user directory $new_depot_user_dir already exists\n" \
-			                "\n You may specify '--depot-overwrite' to replace" \
-			                "or '--depot-retain' to keep the existing directory.\n"
-		}
-	}
-
-	file mkdir $new_depot_user_dir
-
-	set fh [open [file join $new_depot_user_dir download] "WRONLY CREAT TRUNC"]
-	puts $fh $depot_url
-	close $fh
-
-	set new_pubkey_file [file join $new_depot_user_dir pubkey]
-
-	if {$pubkey_file != ""} {
-		file copy $pubkey_file $new_pubkey_file }
-
-	if {$gpg_user_id != ""} {
-		exit_if_not_installed gpg
-		if {[catch { exec gpg --armor --export $gpg_user_id > $new_pubkey_file } msg]} {
-			file delete -force $new_depot_user_dir
-			exit_with_error "exporting the public key from the GPG keyring failed\n$msg"
-		}
-	}
+	goa add-depot-user $args(new_depot_user) $args(depot_url) \
+	                   $args(pubkey_file) $args(gpg_user_id)
 	exit
 }
 
@@ -203,38 +109,14 @@ if {![looks_like_goa_project_dir $project_dir] && ![has_src_but_no_artifacts $pr
 	exit_with_error "$project_dir does not look like a goa project" }
 
 
+source [file join $tool_dir lib actions versions.tcl]
+
 ##
 # Bump project version
 #
 
 if {$perform(bump-version)} {
-
-	set version_file [file join $project_dir version]
-	if {[file exists $version_file]} {
-		set old_version ""
-
-		catch {
-			set old_version [project_version $project_dir] }
-
-		# version already bumped?
-		if {[string first $target_version $old_version] == 0} {
-			set elements [split $old_version -]
-			set suffix [lindex $elements end]
-			if {[llength $elements] > 3 && [regexp {[a-y]} $suffix dummy]} {
-				# bump suffix
-				set new_suffix [format %c [expr [scan $suffix %c]+1]]
-				set target_version [join [lreplace $elements end end $new_suffix] -]
-			} else {
-				# add suffix
-				set target_version "$old_version-a"
-			}
-		}
-	}
-
-	set fd [open $version_file w]
-	puts $fd $target_version
-	close $fd
-
+	goa bump-version $args(target_version)
 	exit
 }
 
@@ -244,422 +126,53 @@ if {$perform(bump-version)} {
 ##
 
 if {$perform(archive-versions)} {
+	goa archive-versions
+	exit
+}
 
-	if {[info exists versions_from_genode_dir] && [info exists depot_user]} {
 
-		puts "#\n# depot-archive versions from $versions_from_genode_dir\n#"
-		set repos [glob -nocomplain [file join $versions_from_genode_dir repos *]]
-		foreach rep_dir $repos {
-			set hash_files [glob -nocomplain [file join $rep_dir recipes * * hash]]
-			if {[llength $hash_files] > 0} {
-				puts "\n# repos/[file tail $rep_dir]"
-				set lines { }
-				foreach hash_file $hash_files {
-					set name [file tail [file dirname $hash_file]]
-					set type [file tail [file dirname [file dirname $hash_file]]]
-					set vers [lindex [read_file_content $hash_file] 0]
-					lappend lines "set version($depot_user/$type/$name) $vers"
-				}
-				set lines [lsort $lines]
-				foreach line $lines {
-					puts "$line"
-				}
-			}
-		}
-	}
+source [file join $tool_dir lib actions import.tcl]
 
-	puts "\n#\n# depot-archive versions referenced by $project_dir\n#"
-	set archives [read_file_content_as_list used_apis]
-	set archive_files [glob -nocomplain [file join $project_dir pkg * archives]]
-	foreach file $archive_files {
-		set archives [concat $archives [read_file_content_as_list $file]] }
-
-	set index_file [file join $project_dir index]
-	if {[file exists $index_file] && [info exists depot_user]} {
-		foreach { pkg_name pkg_archs } [pkgs_from_index $index_file] {
-			lappend archives "$depot_user/pkg/$pkg_name" }
-	}
-
-	set archives [lsort -unique $archives]
-	set versioned_archives [apply_versions $archives]
-	foreach a $archives v $versioned_archives {
-		set vers [archive_version $v]
-		puts "set version($a) $vers"
-	}
-
-	puts "\n#\n# additional depot-archive versions from goarc\n#"
-	if {[info exists version]} {
-		foreach archive [array names version] {
-			if {[lsearch -exact $archives $archive] < 0} {
-				puts "set version($archive) $version($archive)" } } }
-	puts ""
+##
+## Diff
+##
+if {$perform(diff)} {
+	goa diff src
+	goa diff raw
+	exit
 }
 
 
 ##
 ## Import
 ##
-
-proc calc_import_hash { } {
-	global tool_dir project_dir
-
-	set     cmd "make"
-	lappend cmd "-f" [file join $tool_dir ports mk print_hash.mk]
-	lappend cmd "-s"
-	lappend cmd "PORT=[file join $project_dir import]"
-	lappend cmd "REP_DIR=$project_dir"
-	lappend cmd "PORTS_TOOL_DIR=[file join $tool_dir ports]"
-
-	return [exec {*}$cmd]
-}
-
-
-##
-# Return 1 if the specified src/ or raw/ sub directory contains local changes
-#
-proc check_modified { subdir } {
-	global contrib_dir
-
-	set dir_a [file join $contrib_dir $subdir]
-	set dir_b [file join $subdir]
-
-	if {![file exists $dir_a] || ![file isdirectory $dir_a]} { return 0 }
-	if {![file exists $dir_b] || ![file isdirectory $dir_b]} { return 0 }
-
-	return [catch {
-		exec -ignorestderr diff -u -r --exclude=.git --exclude=*~ $dir_a $dir_b
-	}]
-}
-
-
 if {$perform(import)} {
-
-	if {![file exists import] || ![file isfile import]} {
-		exit_with_error "missing 'import' file" }
-
-	# quick-check the import.hash to detect the need for re-import
-	set need_fresh_import 0
-	set existing_hash [read_file_content_as_list [file join $contrib_dir import.hash]]
-
-	if {$existing_hash != [calc_import_hash]} {
-		set need_fresh_import 1 }
-
-	if {$need_fresh_import} {
-
-		# abort import if there are local changes in src/ or raw/
-		foreach subdir [list src raw] {
-			if {[check_modified $subdir]} {
-				exit_with_error "$subdir/ contains local changes," \
-				                "review via 'goa diff'" } }
-
-		if {[file exists $contrib_dir]} {
-			file delete -force $contrib_dir }
-
-		file mkdir $contrib_dir
-
-		set     cmd "make"
-		lappend cmd "-f" [file join $tool_dir ports mk install.mk]
-		lappend cmd "-C" $contrib_dir
-		lappend cmd "-j$jobs"
-		lappend cmd "-s"
-		lappend cmd "PORT=[file join $project_dir import]"
-		lappend cmd "REP_DIR=$project_dir"
-		lappend cmd "PORTS_TOOL_DIR=[file join $tool_dir ports]"
-		lappend cmd "GENODE_CONTRIB_CACHE=$import_dir"
-
-		if {$verbose} {
-			lappend cmd "VERBOSE=" }
-
-		diag "import via command: $cmd"
-
-		if {[catch { exec {*}$cmd >@ stdout 2>@ stdout }]} {
-			exit_with_error "import failed" }
-
-		foreach subdir [list src raw] {
-
-			set src_dir [file join $contrib_dir $subdir]
-			set dst_dir [file join $project_dir $subdir]
-
-			if {[file exists $src_dir] && [file exists $dst_dir]} {
-				file delete -force $dst_dir }
-
-			if {[file exists $src_dir]} {
-				file copy -force $src_dir $dst_dir }
-		}
-
-		file delete -force $build_dir
-
-	} else {
-
-		foreach subdir [list src raw] {
-
-			set src_dir [file join $contrib_dir $subdir]
-			set dst_dir [file join $project_dir $subdir]
-
-			if {[file exists $src_dir] && ![file exists $dst_dir]} {
-				file copy -force $src_dir $dst_dir }
-		}
-	}
-}
-
-
-##
-## Diff between originally imported contrib code and local edits
-##
-proc show_diff { subdir } {
-	global contrib_dir
-
-	set dir_a [file join $contrib_dir $subdir]
-	set dir_b [file join $subdir]
-
-	if {![file exists $dir_a] || ![file isdirectory $dir_a]} { return }
-	if {![file exists $dir_b] || ![file isdirectory $dir_b]} { return }
-
-	catch {
-		#
-		# Filter the diff output via tail to strip the first two lines from the
-		# output. Those lines would show the diff command and the absolute path
-		# to 'contrib_dir'.
-		#
-		# The argument -N is specified o show the content new files.
-		#
-		exec -ignorestderr diff -N -u -r --exclude=.git --exclude=*~ $dir_a $dir_b \
-		                 | tail -n +3 >@ stdout
-	}
-}
-
-if {$perform(diff)} {
-	show_diff src
-	show_diff raw
+	goa import
 }
 
 
 ##
 ## Build-directory preparation
 ##
-## At this point, we assume that the 'src/' directory exists
-##
 
-set used_apis { }
+source [file join $tool_dir lib actions build.tcl]
+source [file join $tool_dir lib actions depot.tcl]
+
 if {$perform(build-dir)} {
 	if {[has_src_but_no_artifacts $project_dir]} {
 		exit_with_error "$project_dir has a 'src' directory but lacks an" \
 		                "'artifacts' file. You may start with an empty file."
 	}
-
-	set used_apis [apply_versions [read_file_content_as_list used_apis]]
-	if {[llength $used_apis] > 0} {
-		diag "used APIs: $used_apis" }
 }
-
 
 if {$perform(export)} {
 
-	assert_definition_of_depot_user
-
-	foreach used_api $used_apis {
-		archive_parts $used_api user type name vers
-		if {$user != $depot_user} {
-			continue }
-
-		catch {
-			set dir [find_project_dir_for_archive $type $name]
-
-			# first, try downloading
-			if {[catch { try_download_archives [list $used_api] }]} {
-				if {"[exported_project_archive_version $dir $user/$type/$name]" != "$vers"} {
-					log "skipping export of $dir due to version mismatch"
-				} elseif {[catch {export_dependent_project $dir $arch} msg]} {
-					exit_with_error "failed to export depot archive $used_api: \n\t$msg"
-				}
-			}
-		}
-	}
+	goa prepare_depot_with_apis
 }
-
-
-##
-# Return 1 if specified API is used
-#
-proc using_api { api } {
-	global used_apis
-	foreach used_api $used_apis {
-		if {[archive_name $used_api] == $api} {
-			return 1 } }
-	return 0
-}
-
 
 # unless explicitly configured, enable strict warnings if using the base API
-if {![info exists warn_strict] && [using_api base]} {
+if {![info exists warn_strict] && [goa using_api base]} {
 	set warn_strict 1 }
-
-
-##
-# Return depot user for archive path
-#
-proc depot_user { archive } { return [lindex [split $archive "/"] 0] }
-
-
-proc prepare_depot_with_archives { archive_list } {
-	global depot_dir
-
-	# create list of depot users without duplicates
-	set depot_users { }
-	foreach archive $archive_list {
-		lappend depot_users [depot_user $archive] }
-	set depot_users [lsort -unique $depot_users]
-
-	# check if all depot users are present in the depot
-	foreach user $depot_users {
-		if {![file exists [file join $depot_dir $user]]} {
-			exit_with_error "depot user '$user' is not known" \
-			                "in depot at $depot_dir" } }
-
-	# create list of uninstalled archives
-	set uninstalled_archives { }
-	foreach archive $archive_list {
-		if {![file exists [file join $depot_dir $archive]]} {
-			lappend uninstalled_archives $archive } }
-
-	set uninstalled_archives [lsort -unique $uninstalled_archives]
-
-	# download uninstalled archives
-	if {[catch { download_archives $uninstalled_archives }]} {
-		exit_with_error "failed to download the following depot archives:\n" \
-		                [join $uninstalled_archives "\n "] }
-}
-
-
-proc prepare_depot_with_debug_archives { archive_list } {
-	global depot_dir
-
-	set missing_debug_archives {}
-	foreach archive $archive_list {
-		set is_bin [regsub {/bin/} $archive {/dbg/} debug_archive]
-		if { $is_bin && ![file exists [file join $depot_dir $debug_archive]]} {
-			if {[catch { try_download_debug_archives [list $archive] }]} {
-				lappend missing_debug_archives $debug_archive } }
-	}
-
-	if {[llength $missing_debug_archives]} {
-		log "unable to download the following debug archives:\n" \
-		    [join $missing_debug_archives "\n "] }
-}
-
-
-#
-# set roms found in depot runtime files
-#
-proc update_depot_roms { archive_list } {
-	global depot_dir rom_modules
-
-	# append rom modules of runtimes
-	foreach runtime_file [runtime_files [apply_versions $archive_list]] {
-		append rom_modules " " [query_attrs_from_file /runtime/content/rom label $runtime_file]
-	}
-}
-
-
-proc prepare_abi_stubs { used_apis } {
-	global tool_dir depot_dir abi_dir cross_dev_prefix ld_march cc_march verbose project_name arch
-
-	set     cmd "make -f $tool_dir/lib/gen_abi_stubs.mk"
-	lappend cmd "TOOL_DIR=$tool_dir"
-	lappend cmd "DEPOT_DIR=$depot_dir"
-	lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
-	lappend cmd "APIS=[join $used_apis { }]"
-	lappend cmd "ABI_DIR=$abi_dir"
-	lappend cmd "ARCH=$arch"
-	lappend cmd "LD_MARCH=[join $ld_march { }]"
-	lappend cmd "CC_MARCH=[join $cc_march { }]"
-	if {$verbose == 0} {
-		lappend cmd "-s" }
-
-	diag "generate ABI stubs via command: [join $cmd { }]"
-
-	if {[catch { exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:abi\] /" >@ stdout }]} {
-		exit_with_error "failed to generate ABI stubs for the following" \
-		                "depot archives:\n" [join $used_apis "\n "] }
-}
-
-
-proc prepare_ldso_support_stub { used_apis } {
-	global tool_dir depot_dir abi_dir cross_dev_prefix cc_march verbose project_name arch
-
-	set so_api { }
-	foreach api_path $used_apis {
-		set parts [file split $api_path]
-		set api [lindex $parts 2]
-		if {[string compare $api "so"] == 0} {
-			lappend so_api $api_path
-		}
-	}
-
-	if {[llength $so_api] == 0} {
-		return }
-
-	set     cmd "make -f $tool_dir/lib/gen_ldso_support.mk"
-	lappend cmd "TOOL_DIR=$tool_dir"
-	lappend cmd "DEPOT_DIR=$depot_dir"
-	lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
-	lappend cmd "APIS=[join $so_api { }]"
-	lappend cmd "ABI_DIR=$abi_dir"
-	lappend cmd "CC_MARCH=[join $cc_march { }]"
-	if {$verbose == 0} {
-		lappend cmd "-s" }
-
-	diag "generate ldso_support.lib.a via command: [join $cmd { }]"
-
-	if {[catch { exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:abi\] /" >@ stdout }]} {
-		exit_with_error "failed to generate ldso_support.lib.a "] }
-}
-
-
-##
-# Return type of build system used in the source directory
-#
-proc detect_build_system { } {
-
-	# XXX autoconf (configure.ac)
-	# XXX autoconf (configure.ac configure), e.g., bash
-	# XXX custom configure (no configure.ac configure), e.g., Vim
-	# XXX Genode build system (src dir, any target.mk)
-
-	if {[file exists [file join src CMakeLists.txt]]} {
-		return cmake }
-
-	if {[file exists [file join src configure]]} {
-		return autoconf }
-
-	#
-	# If there is only the configure.ac file, it's an autoconf project
-	# but autoreconf has to be called first in order to generate the
-	# configure file.
-	#
-	if {[file exists [file join src configure.ac]]} {
-		return autoconf }
-
-	if {[file exists [glob -nocomplain [file join src *.pro]]]} {
-		return qmake }
-
-	if {[file exists [file join src Makefile]]} {
-		return make }
-
-	if {[file exists [file join src Cargo.toml]]} {
-		return cargo }
-
-	if {[file exists [file join src makefile]]} {
-		return make }
-
-	if {[file exists [file join src vivado.tcl]]} {
-		return vivado }
-
-	if {[file exists [file join src meson.build]]} {
-		return meson }
-
-	exit_with_error "unable to determine build system for [pwd]"
-}
 
 
 #
@@ -674,347 +187,31 @@ if {![file exists src]} {
 }
 
 
-set api_dirs { }
-set include_dirs { }
-set lib_src { }
-
 if {$perform(build-dir)} {
 
-	#
-	# Check for availability of the Genode tool chain
-	#
-	if {![have_installed ${cross_dev_prefix}gcc]} {
-		exit_with_error "the tool chain ${cross_dev_prefix}" \
-		                "is required but not installed." \
-		                "Please refer to https://genode.org/download/tool-chain" \
-		                "for more information."
-	}
+	set api_dirs { }
+	set lib_src { }
 
-	#
-	# Prepare depot content for the used APIs and generate ABI stubs
-	#
-	# This must happen before assembling the compile flags and creating /
-	# configuring the build directory so that the build system's automatic
-	# configuration magic finds the APIs and libraries.
-	#
-	prepare_depot_with_archives $used_apis
-
-	source [file join $tool_dir lib flags.tcl]
-
-	set build_system [detect_build_system]
-	diag "build system: $build_system"
-
-	source [file join $tool_dir lib build $build_system.tcl]
-
-	# wipe build directory when rebuilding
-	if {$rebuild && [file exists $build_dir]} {
-		file delete -force $build_dir }
-
-	prepare_abi_stubs $used_apis
-	prepare_ldso_support_stub $used_apis
-
-	source [file join $tool_dir lib quirks.tcl]
-
-	# filter out non-existing include directories
-	foreach dir $include_dirs {
-		if {[file exists $dir]} {
-			lappend existing_include_dirs $dir } }
-	set include_dirs $existing_include_dirs
-
-	# supplement 'cppflags' with include directories
-	foreach dir $include_dirs {
-		lappend cppflags "-I$dir" }
-
-	# supplement 'cflags' with include directories too
-	foreach dir $include_dirs {
-		lappend cflags "-I$dir" }
-
-	foreach api $used_apis {
-		lappend api_dirs [file join $depot_dir $api] }
-
-	create_or_update_build_dir
-}
-
-
-proc artifact_file_list_from_list_file { list_file_path artifact_path } {
-
-	set artifact_files { }
-	set artifacts [read_file_content_as_list $list_file_path]
-
-	foreach artifact $artifacts {
-
-		# strip comments and empty lines
-		regsub "#.*"   $artifact "" artifact
-		regsub {^\s*$} $artifact "" artifact
-		if {$artifact == ""} {
-			continue }
-
-		if {![regexp {^(.+:)?\s*(.+)$} $artifact dummy container selector]} {
-			exit_with_error "invalid artifact declaration in $list_file_path:\n" \
-			                "$artifact" }
-
-		regsub {\s*:$} $container "" container
-
-		# accept files and directories for archives, but only files for ROM modules
-		set selected_types "f d"
-		if {$container == ""} {
-			set selected_types "f" }
-
-		# determine list of selected files
-		if {[regexp {/$} $selector dummy]} {
-			# selector refers to the content of a directory
-			regsub {/$} $selector "" selector
-			set selected_dir [file join $artifact_path $selector]
-			set files [glob -directory $selected_dir -nocomplain -types $selected_types *]
-		} else {
-			# selector refers to single file
-			set files [list [file join $artifact_path $selector]]
-		}
-
-		# ROM module(s)
-		if {$container == ""} {
-
-			set missing_files { }
-			set invalid_files { }
-			foreach file $files {
-				if {![file exists $file]} {
-					append missing_files "\n $file" }
-				if {[file isdirectory $file]} {
-					append invalid_files "\n $file" }
-			}
-
-			if {[llength $missing_files] > 0} {
-				exit_with_error "build artifact does not exist at $artifact_path:" \
-				                "$missing_files" }
-
-			if {[llength $invalid_files] > 0} {
-				exit_with_error "build artifact is not a file: $invalid_files" }
-
-			foreach file $files {
-				lappend artifact_files $file
-			}
-		}
-	}
-
-	return $artifact_files
-}
-
-
-proc create_artifact_containers_from_list_file { list_file_path artifact_path tar_path } {
-
-	set artifact_files { }
-	set artifacts [read_file_content_as_list $list_file_path]
-
-	foreach artifact $artifacts {
-
-		# strip comments and empty lines
-		regsub "#.*"   $artifact "" artifact
-		regsub {^\s*$} $artifact "" artifact
-		if {$artifact == ""} {
-			continue }
-
-		if {![regexp {^(.+:)?\s*(.+)$} $artifact dummy container selector]} {
-			exit_with_error "invalid artifact declaration in $list_file_path:\n" \
-			                "$artifact" }
-
-		regsub {\s*:$} $container "" container
-
-		# accept files and directories for archives, but only files for ROM modules
-		set selected_types "f d"
-		if {$container == ""} {
-			set selected_types "f" }
-
-		# determine list of selected files
-		if {[regexp {/$} $selector dummy]} {
-			# selector refers to the content of a directory
-			regsub {/$} $selector "" selector
-			set selected_dir [file join $artifact_path $selector]
-			set files [glob -directory $selected_dir -nocomplain -types $selected_types *]
-		} else {
-			# selector refers to single file
-			set files [list [file join $artifact_path $selector]]
-		}
-
-		# tar archive
-		if {[regexp {^([^:]+\.tar)(/.*/)?} $container dummy archive_name archive_sub_dir]} {
-
-			# strip leading slash from archive sub directory
-			regsub {^/} $archive_sub_dir "" archive_sub_dir
-
-			set archive_path [file join $tar_path "$archive_name"]
-
-			diag "create $archive_path"
-
-			foreach file $files {
-				set cmd "tar rf $archive_path"
-				lappend cmd -C [file dirname $file]
-				lappend cmd --dereference
-				lappend cmd --transform "s#^#$archive_sub_dir#"
-				lappend cmd [file tail $file]
-
-				if {[catch { exec -ignorestderr {*}$cmd }]} {
-					exit_with_error "creation of tar artifact failed" }
-			}
-		}
-	}
-}
-
-
-proc artifact_is_library { artifact } {
-
-	set so_extension ".lib.so"
-	set so_pattern "*$so_extension"
-
-	return [string match $so_pattern $artifact];
-}
-
-
-proc extract_artifacts_from_build_dir { } {
-	global project_dir build_dir bin_dir dbg_dir debug
-	global library_artifacts
-
-	set artifacts_file_path [file join $project_dir artifacts]
-
-	# remove artifacts from last build
-	if {[file exists $bin_dir]} {
-		file delete -force $bin_dir }
-	if {[file exists $dbg_dir]} {
-		file delete -force $dbg_dir }
-
-	if {![file exists $artifacts_file_path]} {
-		return }
-
-	file mkdir $bin_dir
-	if { $debug } { file mkdir $dbg_dir }
-
-	set library_artifacts { }
-	foreach file [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
-		set symlink_path [file join $bin_dir [file tail $file]]
-		file link $symlink_path $file
-
-		if {[artifact_is_library $file]} {
-			lappend library_artifacts $file }
-
-		extract_debug_info $file
-		if { $debug && [file exists "$file.debug"]} {
-			file link [file join $dbg_dir "[file tail $file].debug"] "$file.debug" }
-
-		strip_binary $file
-	}
-
-	create_artifact_containers_from_list_file $artifacts_file_path $build_dir $bin_dir
-}
-
-
-proc check_abis { } {
-	global arch project_dir tool_dir library_artifacts
-
-	foreach library $library_artifacts {
-
-		set so_extension ".lib.so"
-		regsub $so_extension [file tail $library] "" symbols_file
-		set symbols_file_name [file join $project_dir symbols $symbols_file]
-
-		if {![file exists $symbols_file_name]} {
-			exit_with_error "missing symbols file '$symbols_file'\n" \
-			                "\n You can generate this file by running 'goa extract-abi-symbols'."
-		}
-
-		if {[catch { exec [file join $tool_dir abi check_abi] $library $symbols_file_name } msg]} {
-			exit_with_error $msg
-		}
-	}
-}
-
-
-proc extract_api_artifacts { } {
-	global project_dir build_dir api_dir
-
-	set api_file_path [file join $project_dir api]
-
-	# remove artifacts from last build
-	if {[file exists $api_dir]} {
-		file delete -force $api_dir }
-
-	if {![file exists $api_file_path]} {
-		return }
-
-	file mkdir $api_dir
-
-	foreach file [artifact_file_list_from_list_file $api_file_path $build_dir] {
-		regsub "$build_dir/" $file "" link_src
-		regsub "install/" $link_src "" link_src
-		set dir [file dirname $link_src]
-		set target_dir [file join $api_dir $dir]
-		set link_target [file join $target_dir [file tail $file]]
-
-		if {![file exists $target_dir]} {
-			file mkdir $target_dir
-		}
-		file copy $file $link_target
-	}
-}
-
-
-proc extract_library_symbols { } {
-	global build_dir project_dir tool_dir
-
-	set artifacts_file_path [file join $project_dir artifacts]
-
-	if {![file exists $artifacts_file_path]} {
-		return }
-
-	set so_extension ".lib.so"
-	set symbols_dir [file join $project_dir symbols]
-
-	set libraries { }
-	foreach artifact [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
-
-		if {[artifact_is_library $artifact]} {
-
-			# remove library extension
-			regsub $so_extension $artifact "" symbols_file_name
-
-			set symbols_file_name [file tail $symbols_file_name]
-			set library_file_path [file join $build_dir $artifact]
-			if {![file exists $library_file_path]} {
-				exit_with_error "build artifact does not exist $artifact"}
-
-			file mkdir $symbols_dir
-			set symbols_file_path [file join $symbols_dir $symbols_file_name]
-			if {[catch { exec [file join $tool_dir abi abi_symbols] $library_file_path > $symbols_file_path}]} {
-				exit_with_error "unable to extract abi symbols"
-			}
-
-			lappend libraries $symbols_file_name
-		}
-	}
-	return $libraries
+	goa build-dir
 }
 
 
 if {$perform(build)} {
-	build
-	extract_artifacts_from_build_dir
-	check_abis
-	extract_api_artifacts
+
+	goa build
+	goa extract_artifacts_from_build_dir
+	goa check_abis
+	goa extract_api_artifacts
 }
 
 
 if {$perform(extract-abi-symbols)} {
 
-	set libraries [extract_library_symbols]
-	if {[llength $libraries] > 0} {
-
-		puts "The following library symbols file(s) were created:"
-		foreach library $libraries {
-			puts "  > `symbols/$library" }
-
-		puts "Please review the symbols files(s) and add them to your repository."
-	} else {
-		exit_with_error "No libraries listed in the artifacts." }
+	goa extract-abi-symbols
 }
 
+
+source [file join $tool_dir lib actions run.tcl]
 
 if {$perform(run-dir)} {
 
@@ -1026,77 +223,7 @@ if {$perform(run-dir)} {
 
 	source $target_file
 
-	set pkg_dir [file join $project_dir pkg $run_pkg]
-
-	if {![file exists $pkg_dir]} {
-		exit_with_error "no runtime defined at $pkg_dir" }
-
-	# install depot content needed according to the pkg's archives definition
-	set archives_file [file join $pkg_dir archives]
-	set runtime_archives [read_file_content_as_list $archives_file]
-
-	# init empty run directory
-	if {[file exists $run_dir]} {
-		file delete -force $run_dir }
-	file mkdir $run_dir
-
-	if { $debug } {
-		file mkdir [file join $run_dir .debug] }
-
-	#
-	# Generate Genode config depending on the pkg runtime specification. The
-	# procedure may extend the lists of 'runtime_archives' and 'rom_modules'.
-	#
-	set runtime_file [file join $pkg_dir runtime]
-
-	if {![file exists $runtime_file]} {
-		exit_with_error "missing runtime configuration at: $runtime_file" }
-
-	# check XML syntax of runtime config and config file at raw/
-	check_xml_syntax $runtime_file
-	foreach config_file [glob -nocomplain [file join raw *.config]] {
-		check_xml_syntax $config_file }
-	
-	#
-	# Partially prepare depot before calling 'generate_runtime_config'.
-	# For plausability checks, the latter needs access to the included ROM modules.
-	#
-	set binary_archives [binary_archives [apply_versions $runtime_archives]]
-	prepare_depot_with_archives $binary_archives
-
-	set rom_modules { }
-	generate_runtime_config $runtime_file runtime_archives rom_modules
-
-	# prepare depot with additional archives added by 'generate_runtime_config'
-	set binary_archives [binary_archives [apply_versions $runtime_archives]]
-	prepare_depot_with_archives $binary_archives
-	if { $debug } {
-		prepare_depot_with_debug_archives $binary_archives }
-
-	update_depot_roms $runtime_archives
-
-	# update 'binary_archives' with information available after installation
-	set binary_archives [binary_archives [apply_versions $runtime_archives]]
-
-	set debug_modules [lmap x $rom_modules {expr { "$x.debug" }}]
-
-	# populate run directory with depot content
-	foreach archive $binary_archives {
-		symlink_directory_content $rom_modules [file join $depot_dir $archive] $run_dir
-
-		# add debug info files
-		if { $debug && [regsub {/bin/} $archive {/dbg/} debug_archive] } {
-			symlink_directory_content $debug_modules [file join $depot_dir $debug_archive] [file join $run_dir .debug] }
-	}
-
-	# add artifacts as extracted from the build directory
-	symlink_directory_content $rom_modules $bin_dir $run_dir
-
-	# add debug info files as extracted from the build directory
-	symlink_directory_content $debug_modules $dbg_dir [file join $run_dir .debug]
-
-	# add content found in the project's raw/ subdirectory
-	symlink_directory_content $rom_modules [file join $project_dir raw] $run_dir
+	goa run-dir
 }
 
 
@@ -1144,466 +271,26 @@ if {$perform(run)} {
 }
 
 
-##
-# Return versioned archive path for a project's archive of the specified type
-# (raw, src, pkg, bin, index)
-#
-proc versioned_project_archive { type { pkg_name ""} } {
-
-	global depot_user project_dir project_name version arch sculpt_version
-
-	set name $project_name
-
-	if {$type == "pkg" && $pkg_name != ""} {
-		set name $pkg_name }
-
-	assert_definition_of_depot_user
-
-	if {$type == "index"} {
-		if {$sculpt_version == ""} {
-			exit_with_error "missing definition of sculpt version\n" \
-			                "\n You can define the sculpt version by setting the 'sculpt_version'" \
-			                "\n variable in a goarc file, or by specifing the '--sculpt-version <version>'"\
-			                "\n command-line argument.\n" }
-
-		return $depot_user/index/$sculpt_version
-	}
-
-	catch {
-		set archive_version [project_version_from_file $project_dir]
-	}
-
-	#
-	# If a binary archive is requested, try to obtain its version from
-	# the corresponding source archive.
-	#
-	set binary_type ""
-	if {$type == "bin" || $type == "dbg"} {
-		set binary_type $type
-		set type src
-	}
-
-	set archive "$depot_user/$type/$name"
-
-	if {![info exists archive_version]} {
-		if {[info exists version($archive)]} {
-			set archive_version $version($depot_user/$type/$name) } }
-
-	if {![info exists archive_version]} {
-		exit_with_error "version for archive $archive undefined\n" \
-		                "\n Create a 'version' file in your project directory, or" \
-		                "\n define 'set version($archive) <version>' in your goarc file," \
-		                "\n or specify '--version-$archive <version>' as argument\n"
-	}
-
-	if {$binary_type != ""} {
-		return "$depot_user/$binary_type/$arch/$name/$archive_version" }
-
-	return "$depot_user/$type/$name/$archive_version"
-}
-
-
-##
-# Prepare destination directory within the depot
-#
-# \return path to the archive directory (or file if type=="index")
-#
-proc prepare_project_archive_directory { type { pkg_name "" } } {
-	global depot_dir
-
-	set policy [depot_policy]
-	set archive [versioned_project_archive $type $pkg_name]
-	set dst_dir "[file join $depot_dir $archive]"
-
-	if {[file exists $dst_dir]} {
-		if {$policy == "overwrite"} {
-			file delete -force $dst_dir
-		} elseif {$policy == "retain"} {
-			log "retaining existing depot archive $archive"
-			return ""
-		} else {
-			exit_with_error "archive $archive already exists in the depot\n" \
-			                "\n You may specify '--depot-overwrite' to replace" \
-			                "or '--depot-retain' to keep the existing version.\n"
-		}
-	}
-
-	if {$type == "index"} {
-		file mkdir [file dirname $dst_dir]
-	} else {
-		file mkdir $dst_dir
-	}
-	return $dst_dir
-}
-
-
-##
-# Return path to the license file as defined for the project
-#
-proc license_file { } {
-	global project_dir license
-
-	set local_license_file [file join $project_dir LICENSE]
-	if {[file exists $local_license_file]} {
-		return $local_license_file }
-
-	if {![info exists license]} {
-		exit_with_error "cannot export src archive because the license is undefined\n" \
-		                "\n Create a 'LICENSE' file for the project, or" \
-		                "\n define 'set license <path>' in your goarc file, or" \
-		                "\n specify '--license <path>' as argument.\n"
-	}
-
-	if {![file exists $license]} {
-		exit_with_error "license file $license does not exists" }
-
-	return $license
-}
-
-
-##
-# Supplement index file pkg paths with user and version information
-#
-proc augment_index_versions { src_file dst_file } {
-	global depot_user
-
-	# read src_file
-	set fd [open $src_file r]
-	set content [read $fd]
-	close $fd
-
-	# filter 'path' attribute
-	set pattern "(\<pkg\[^\>\]+?path=\")(\[^/\]+)(\")"
-	while {[regexp $pattern $content dummy head pkg tail]} {
-		set pkg_path [apply_versions $depot_user/pkg/$pkg]
-		regsub $pattern $content "$head$pkg_path$tail" content
-	}
-
-	# write to dst_file
-	set fd [open $dst_file w]
-	puts $fd $content
-	close $fd
-}
-
-
 if {$perform(export)} {
 
 	assert_definition_of_depot_user
 
-	set index_file [file join $project_dir index]
-	if {![file exists $index_file] || ![file isfile $index_file]} {
-		unset index_file }
-
-	# create raw archive
-	set raw_dir [file join $project_dir raw]
-	if {![file exists $raw_dir] || ![file isdirectory $raw_dir]} {
-		unset raw_dir }
-
-	set src_dir [file join $project_dir src]
-	if {![file exists $src_dir] || ![file isdirectory $src_dir]} {
-		unset src_dir }
-
 	set exported_archives ""
+	goa export-api
+	goa export-raw
+	goa export-src
+	goa export-pkgs  exported_archives
+	goa export-bin   exported_archives
+	if {$debug} { goa export-dbg }
+	goa export-index exported_archives
 
-	if {[file exists $api_dir] && [file isdirectory $api_dir]} {
-		set dst_dir [prepare_project_archive_directory api]
-		if {$dst_dir != ""} {
-			set files [exec find $api_dir -not -type d -and -not -name "*~"]
-			foreach file $files {
-				regsub "$api_dir/" $file "" file_dir
-				set dir [file dirname $file_dir]
-
-				# sanity check for include path
-				set out_dir $dir
-				set dir_parts [file split $dir]
-				if { [llength $dir_parts] > 1 && \
-				     [lindex $dir_parts 0] != "include" } {
-					set idx 0
-					set found 0
-					foreach part $dir_parts {
-						if {$part == "include"} {
-							set found $idx
-						}
-						incr idx
-					}
-					if {$found == 0} {
-						exit_with_error "no valid include path found in api artifacts."
-					}
-					set out_dir [file join [lrange $dir_parts $found [llength $dir_parts]]]
-				}
-				set target_dir [file join $dst_dir $out_dir]
-				if {![file exists $target_dir]} {
-					file mkdir $target_dir
-				}
-				file copy $file [file join $target_dir [file tail $file]]
-			}
-
-			file mkdir [file join $dst_dir lib]
-			if {[file exists [file join $project_dir "symbols"]]} {
-				file copy [file join $project_dir "symbols"] [file join $dst_dir lib]
-			}
-
-			log "exported $dst_dir"
-		}
-	}
-
-	if {[info exists raw_dir]} {
-		set dst_dir [prepare_project_archive_directory raw]
-		if {$dst_dir != ""} {
-			set files [exec find $raw_dir -not -type d -and -not -name "*~"]
-			foreach file $files {
-				file copy $file [file join $dst_dir [file tail $file]] }
-
-			log "exported $dst_dir"
-		}
-	}
-
-	# create src archive
-	if {[info exists src_dir]} {
-
-		set used_apis [apply_versions [read_file_content_as_list used_apis]]
-
-		set files { }
-		lappend files "src"
-
-		foreach optional_file { artifacts import make_args cmake_args configure_args } {
-			if {[file exists $optional_file]} {
-				lappend files $optional_file } }
-
-		set license_file [license_file]
-
-		set dst_dir [prepare_project_archive_directory src]
-		if {$dst_dir != ""} {
-			foreach file $files {
-				file copy $file [file join $dst_dir [file tail $file]] }
-
-			file copy $license_file [file join $dst_dir LICENSE]
-
-			exec find $dst_dir ( -name "*~" \
-			                     -or -name "*.rej" \
-			                     -or -name "*.orig" \
-			                     -or -name "*.swp" ) -delete
-
-			# generate 'used_apis' file with specific versions
-			set fh [open [file join $dst_dir used_apis] "WRONLY CREAT TRUNC"]
-			foreach api $used_apis {
-				puts $fh $api }
-			close $fh
-
-			log "exported $dst_dir"
-		}
-	}
-
-	# create pkg archive
-	set pkg_expr "*"
-	if {$publish_pkg != ""} {
-		set pkg_expr $publish_pkg }
-	set pkgs [glob -nocomplain -directory pkg -tail $pkg_expr -type d]
-	foreach pkg $pkgs {
-
-		set pkg_dir [file join pkg $pkg]
-
-		set readme_file [file join $pkg_dir README]
-		if {![file exists $readme_file]} {
-			exit_with_error "missing README file at $readme_file" }
-
-		set runtime_archives { }
-
-		# automatically add the project's local raw and src archives
-		if {[info exists raw_dir]} {
-			lappend runtime_archives [versioned_project_archive raw] }
-		if {[info exists src_dir]} {
-			lappend runtime_archives [versioned_project_archive src] }
-
-		# add archives specified at the pkg's 'archives' file
-		set archives_file [file join $pkg_dir archives]
-		if {[file exists $archives_file]} {
-			set runtime_archives [concat [read_file_content_as_list $archives_file] \
-			                             $runtime_archives] }
-
-		# supplement version info
-		set runtime_archives [apply_versions $runtime_archives]
-
-		set dst_dir [prepare_project_archive_directory pkg $pkg]
-		if {$dst_dir != ""} {
-			# copy content from pkg directory as is
-			set files [exec find $pkg_dir -not -type d -and -not -name "*~"]
-			foreach file $files {
-				file copy $file [file join $dst_dir [file tail $file]] }
-
-			# overwrite exported 'archives' file with specific versions
-			if {[llength $runtime_archives] > 0} {
-				set fh [open [file join $dst_dir archives] "WRONLY CREAT TRUNC"]
-				puts $fh [join $runtime_archives "\n"]
-				close $fh
-			}
-
-			log "exported $dst_dir"
-		}
-
-		lappend exported_archives [apply_arch [versioned_project_archive pkg $pkg] $arch]
-	}
-
-	# create bin archive
-	if {[file exists $bin_dir] && [file isdirectory $bin_dir]} {
-		set dst_dir [prepare_project_archive_directory bin]
-		if {$dst_dir != ""} {
-			set files [glob -nocomplain -directory $bin_dir *]
-			foreach file $files {
-				set file [file normalize $file]
-				catch { set file [file link  $file] }
-				file copy $file [file join $dst_dir [file tail $file]] }
-
-			log "exported $dst_dir"
-		}
-
-		lappend exported_archives [versioned_project_archive bin]
-	}
-
-	# create dbg archive
-	if {[file exists $dbg_dir] && [file isdirectory $dbg_dir]} {
-		set dst_dir [prepare_project_archive_directory dbg]
-		if {$dst_dir != ""} {
-			set files [glob -nocomplain -directory $dbg_dir *]
-			foreach file $files {
-				set file [file normalize $file]
-				catch { set file [file link  $file] }
-				file copy $file [file join $dst_dir [file tail $file]] }
-
-			log "exported $dst_dir"
-		}
-	}
-
-	# create index
-	if {[info exists index_file]} {
-		check_xml_syntax $index_file
-
-		# check index file for any unexported Goa archives
-		foreach { pkg_name pkg_archs } [pkgs_from_index $index_file] {
-			set archive "$depot_user/pkg/$pkg_name"
-
-			catch {
-				set dir [find_project_dir_for_archive pkg $pkg_name]
-				set versioned_archive [lindex [apply_versions $archive] 0]
-
-				# download or export archive if it has not been exported
-				set dst_dir "[file join $depot_dir $versioned_archive]"
-				if {$dst_dir != "" && ![file exists $dst_dir]} {
-					foreach pkg_arch $pkg_archs {
-						# try downloading first
-						if {![catch {try_download_archives [list [apply_arch $versioned_archive $pkg_arch]]}]} {
-							continue }
-
-						# check that the expected version matches the exported version
-						set exported_archive_version [exported_project_archive_version $dir $archive]
-						if { "$archive/$exported_archive_version" != "$versioned_archive" } {
-							exit_with_error "unable to export $versioned_archive: project version is $exported_archive_version" }
-
-						if {[catch { export_dependent_project $dir $pkg_arch $pkg_name } msg]} {
-							exit_with_error "failed to export depot archive $archive: \n\t$msg" } }
-
-				} elseif {$dst_dir != "" && [file exists $dst_dir]} {
-					# mark arch-specific archives as exported to trigger dependency check
-					foreach pkg_arch $pkg_archs {
-						lappend exported_archives [apply_arch $versioned_archive $pkg_arch] }
-				}
-			}
-		}
-
-		set dst_file [prepare_project_archive_directory index]
-		if {$dst_file != ""} {
-			augment_index_versions $index_file $dst_file
-			log "exported $dst_file"
-		}
-	}
-
-
-	# determine dependent projects that need exporting
-	array set export_projects {}
-	if {[llength $exported_archives] > 0} {
-		set cmd "[file join $tool_dir depot dependencies]"
-		set cmd [concat $cmd $exported_archives]
-		lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
-		lappend cmd "DEPOT_DIR=$depot_dir"
-		lappend cmd "PUBLIC_DIR=$public_dir"
-		lappend cmd "REPOSITORIES="
-
-		diag "acquiring dependencies of exported depot archives via command: $cmd"
-
-		set archives_incomplete 0
-		if {[catch { exec {*}$cmd 2> /dev/null } msg]} {
-			foreach line [split $msg \n] {
-				set archive [string trim $line]
-				if {[catch {archive_parts $archive user type name vers}]} {
-					continue
-				}
-
-				# try downloading before exporting
-				if {![catch {try_download_archives [list [string trim $line]]}]} {
-					continue }
-
-				if {![catch {find_project_dir_for_archive $type $name} dir]} {
-					if {$user != $depot_user} {
-						log "skipping export of $dir: must be exported as depot user '$user'"
-						continue
-					}
-
-					if {"[exported_project_archive_version $dir $user/$type/$name]" != "$vers"} {
-						log "skipping export of $dir due to version mismatch"
-						continue
-					}
-
-					set export_projects($archive) $dir
-				} else {
-					set archives_incomplete 1
-					log "Unable to download or to find project directory for '[string trim $line]'"
-				}
-			}
-		}
-
-		if {$archives_incomplete} {
-			exit_with_error "There are missing archives (see messages above)."
-		}
-	}
-
-	# export bin/pkg archives first and delay arch-independent archives
-	set exported {}
-	set remaining_archives {}
-	foreach archive [array names export_projects] {
-		set dir $export_projects($archive)
-		archive_parts $archive user type name vers
-
-		if {$type == "bin" || $type == "pkg"} {
-			archive_name_and_arch $archive _pkg _arch
-
-			if {[catch { export_dependent_project $dir $_arch $_pkg} msg]} {
-				exit_with_error "failed to export project $dir: \n\t$msg" }
-
-			lappend exported $dir
-		} else {
-			lappend remaining_archives $archive
-		}
-	}
-
-	# export remaining arch-independent archives
-	set exported [lsort -unique $exported]
-	foreach archive $remaining_archives {
-		set dir $export_projects($archive)
-
-		# skip if project dir has been exported before
-		if {[lsearch -exact $exported $dir] >= 0} { continue }
-
-		if {[catch { export_dependent_project $dir $arch} msg]} {
-			exit_with_error "failed to export project $dir: \n\t$msg" }
-
-		lappend exported $dir
-	}
+	array set export_projects { }
+	goa import-dependencies $exported_archives export_projects
+	goa export-dependencies export_projects
 }
 
 
 if {$perform(publish)} {
-
-	set archives { }
 
 	set pubkey_file [file join $depot_dir $depot_user pubkey]
 	if {![file exists $pubkey_file]} {
@@ -1612,100 +299,16 @@ if {$perform(publish)} {
 		                "\n To learn more about this command:\n" \
 		                "\n   goa help add-depot-user\n" }
 
-	set raw_dir [file join $project_dir raw]
-	if {[file exists $raw_dir] && [file isdirectory $raw_dir]} {
-		lappend archives [versioned_project_archive raw] }
-
-	set src_dir [file join $project_dir src]
-	if {[file exists $src_dir] && [file isdirectory $src_dir]} {
-		lappend archives [versioned_project_archive src] }
-
-	if {[file exists $bin_dir] && [file isdirectory $bin_dir]} {
-		lappend archives [versioned_project_archive bin] }
-
-	if {[file exists $api_dir] && [file isdirectory $api_dir]} {
-		lappend archives [versioned_project_archive api] }
-
-	if {$publish_pkg != ""} {
-		lappend archives [apply_arch [versioned_project_archive pkg $publish_pkg] $arch]
-	} else {
-		set pkgs [glob -nocomplain -directory pkg -tail * -type d]
-		foreach pkg $pkgs {
-			lappend archives [apply_arch [versioned_project_archive pkg $pkg] $arch] }
-	}
-
-	set index_file [file join $project_dir index]
-	if {[file exists $index_file] && [file isfile $index_file]} {
-		set index_archive [versioned_project_archive index]
-
-		#
-		# add pkg paths found in index file to archives (adding arch part to
-		# pkg path to make sure that the corresponding bin archives are
-		# downloadable)
-		#
-		foreach { pkg_path pkg_archs } [pkgs_from_index [file join $depot_dir $index_archive]] {
-			foreach pkg_arch $pkg_archs {
-				lappend archives [apply_arch $pkg_path $pkg_arch] } }
-	}
+	# determine to-be-published archives
+	lassign [goa published-archives] archives index_archive
 
 	# download archives from other users that are not present in public
-	set missing_archives ""
-	if {[llength $archives] > 0} {
-		set cmd "[file join $tool_dir depot dependencies]"
-		set cmd [concat $cmd $archives]
-		lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
-		lappend cmd "DEPOT_DIR=$depot_dir"
-		lappend cmd "PUBLIC_DIR=$public_dir"
-		lappend cmd "REPOSITORIES="
-
-		diag "acquiring dependencies via command: $cmd"
-
-		if {![catch { exec {*}$cmd 2> /dev/null } msg]} {
-			foreach line [split $msg \n] {
-				if {[catch {archive_parts [string trim $line] user type name vers}]} {
-					continue
-				}
-
-				if {$user == $depot_user} {
-					continue
-				}
-
-				if {[file exists [file join $public_dir $line ".tar.xz.sig"]]} {
-					continue }
-
-				# remove archive from depot_dir to trigger re-download
-				file delete -force [file join $depot_dir $line]
-				lappend missing_archives $line
-			}
-		}
-	}
-
-	# re-download missing archives
-	set missing_archives [lsort -unique $missing_archives]
-	if {[catch { download_archives $missing_archives }]} {
-		exit_with_error "failed to download the following depot archives:\n" \
-		                [join $missing_archives "\n "] }
+	goa download-foreign $archives
 
 	# add index archive to archives
-	if {[info exists index_archive]} {
+	if {$index_archive != ""} {
 		lappend archives $index_archive }
 
 	# publish archives
-	if {[llength $archives] > 0} {
-		set cmd "[file join $tool_dir depot publish]"
-		set cmd [concat $cmd $archives]
-		lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
-		lappend cmd "DEPOT_DIR=$depot_dir"
-		lappend cmd "PUBLIC_DIR=$public_dir"
-		lappend cmd "REPOSITORIES="
-		lappend cmd "-j$jobs"
-		if { $debug } {
-			lappend cmd "DBG=1" }
-
-		diag "publish depot archives via command: $cmd"
-
-		if {[catch { exec -ignorestderr {*}$cmd >@ stdout }]} {
-			exit_with_error "failed to publish the following depot archives:\n" \
-			                [join $archives "\n "] }
-	}
+	goa publish $archives
 }

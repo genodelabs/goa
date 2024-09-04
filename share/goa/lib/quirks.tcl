@@ -26,7 +26,8 @@ if {$arch == "arm_v8a"} {
 	append_include_dir_for_api libc  include spec arm_64 libc
 }
 
-if {[using_api libc]} {
+global cppflags
+if {[goa using_api libc]} {
 
 	# trigger include of 'sys/signal.h' to make NSIG visible
 	lappend cppflags "-D__BSD_VISIBLE"
@@ -34,7 +35,8 @@ if {[using_api libc]} {
 	lappend cppflags "-D__FreeBSD__=12"
 }
 
-if {[using_api compat-libc]} {
+global lib_src
+if {[goa using_api compat-libc]} {
 
 	set compat_libc_dir [file join [api_archive_dir compat-libc] src lib compat-libc]
 
@@ -55,7 +57,8 @@ if {$arch == "arm_v8a"} { append_include_dir_for_api stdcxx  include spec arm_64
 append_include_dir_for_api sdl        include SDL
 append_include_dir_for_api sdl_image  include SDL
 
-if {[using_api sdl]} {
+global cmake_quirk_args
+if {[goa using_api sdl]} {
 
 	# CMake's detection of libSDL expects the library named uppercase
 	set symlink_name [file join $abi_dir SDL.lib.so]
@@ -102,6 +105,7 @@ if {[using_api sdl2_net]} {
 
 # Genode's posix library
 
+global ldlibs_exe
 if {[using_api posix]} {
 
 	#
@@ -123,6 +127,7 @@ if {[using_api posix]} {
 
 # Genode's blit library
 
+global include_dirs
 if {[using_api blit]} {
 
 	set blit_dir [file join [api_archive_dir blit] src lib blit]
@@ -138,6 +143,7 @@ if {[using_api blit]} {
 	lappend lib_src [file join $blit_dir blit.cc]
 }
 
+global cxxflags
 if {[using_api gui_session]} {
 
 	# prevent strict-aliasing errors in gui_session.h

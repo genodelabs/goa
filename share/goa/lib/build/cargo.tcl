@@ -19,7 +19,7 @@ proc generate_static_stubs { libs } {
 
 	if {[catch { exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:stubs\] /" >@ stdout }]} {
 		exit_with_error "failed to generate static library stubs for the following libraries:\n" \
-		                [join $libs "\n "] }
+		                [join $used_apis "\n "] }
 }
 
 

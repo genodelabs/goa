@@ -270,8 +270,9 @@ if {[file exists import] && [file isfile import]} {
 #
 
 if {$perform(update-goa)} {
+	set args(switch_to_goa_branch) ""
 	if {[llength $argv] == 1} {
-		set switch_to_goa_branch [lindex $argv 0]
+		set args(switch_to_goa_branch) [lindex $argv 0]
 		set argv [lrange $argv 1 end]
 	}
 }
@@ -283,26 +284,26 @@ if {$perform(backtrace)} {
 }
 
 if {$perform(help)} {
-	set help_topic overview
+	set args(help_topic) overview
 	if {[llength $argv] == 1} {
-		set help_topic [lindex $argv 0]
+		set args(help_topic) [lindex $argv 0]
 		set argv [lrange $argv 1 end]
 	}
 }
 
 if {$perform(bump-version)} {
-	set target_version [clock format [clock seconds] -format %Y-%m-%d]
+	set args(target_version) [clock format [clock seconds] -format %Y-%m-%d]
 	if {[llength $argv] == 1} {
-		set target_version [lindex $argv 0]
+		set args(target_version) [lindex $argv 0]
 		set argv [lrange $argv 1 end]
 	}
 }
 
 if {$perform(add-depot-user)} {
 
-	set depot_url       [consume_optional_cmdline_arg    "--depot-url"   ""]
-	set pubkey_file     [consume_optional_cmdline_arg    "--pubkey-file" ""]
-	set gpg_user_id     [consume_optional_cmdline_arg    "--gpg-user-id" ""]
+	set args(depot_url)       [consume_optional_cmdline_arg    "--depot-url"   ""]
+	set args(pubkey_file)     [consume_optional_cmdline_arg    "--pubkey-file" ""]
+	set args(gpg_user_id)     [consume_optional_cmdline_arg    "--gpg-user-id" ""]
 	set depot_overwrite [consume_optional_cmdline_switch "--depot-overwrite"]
 	set depot_retain    [consume_optional_cmdline_switch "--depot-retain"]
 
@@ -315,23 +316,23 @@ if {$perform(add-depot-user)} {
 		exit_with_error "missing user-name argument\n$hint" }
 
 	if {[llength $argv] > 0} {
-		set new_depot_user [lindex $argv 0]
+		set args(new_depot_user) [lindex $argv 0]
 		set argv [lrange $argv 1 end]
 	}
 
-	if {$depot_url == ""} {
+	if {$args(depot_url) == ""} {
 		exit_with_error "missing argument '--depot-url <url>'\n$hint" }
 
-	if {$pubkey_file == "" && $gpg_user_id == ""} {
-		exit_with_error "public key of depot user $new_depot_user not specified\n$hint" }
+	if {$args(pubkey_file) == "" && $args(gpg_user_id) == ""} {
+		exit_with_error "public key of depot user $args(new_depot_user) not specified\n$hint" }
 
-	if {$pubkey_file != "" && $gpg_user_id != ""} {
+	if {$args(pubkey_file) != "" && $args(gpg_user_id) != ""} {
 		exit_with_error "public key argument is ambigious\n" \
 		                "\n You may either specify a pubkey file or a" \
 		                "GPG user ID but not both.\n$hint" }
 
-	if {$pubkey_file != "" && ![file exists $pubkey_file]} {
-		exit_with_error "public-key file $pubkey_file does not exist" }
+	if {$args(pubkey_file) != "" && ![file exists $args(pubkey_file)]} {
+		exit_with_error "public-key file $args(pubkey_file) does not exist" }
 }
 
 # override 'rebuild' variable via optional command-line switch
