@@ -285,7 +285,7 @@ proc _build_project_dir_cache { type } {
 			foreach dir $project_dir_cache($type) {
 				regexp {(.*)/pkg/(.*)$} $dir dummy path name
 				catch {
-					set project_dir_cache($type,$name) [_abs_project_dir $path] }
+					set project_dir_cache($type,$name) [file normalize [file join $search_dir $path]] }
 			}
 		} else {
 			foreach dir $project_dir_cache($type) {
