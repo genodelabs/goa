@@ -1345,8 +1345,6 @@ if {$perform(export)} {
 
 			log "exported $dst_dir"
 		}
-
-		lappend exported_archives [versioned_project_archive api]
 	}
 
 	if {[info exists raw_dir]} {
@@ -1358,8 +1356,6 @@ if {$perform(export)} {
 
 			log "exported $dst_dir"
 		}
-
-		lappend exported_archives [versioned_project_archive raw]
 	}
 
 	# create src archive
@@ -1396,8 +1392,6 @@ if {$perform(export)} {
 
 			log "exported $dst_dir"
 		}
-
-		lappend exported_archives [versioned_project_archive src]
 	}
 
 	# create pkg archive
@@ -1572,12 +1566,37 @@ if {$perform(export)} {
 		}
 	}
 
-	# export dependent projects
+	# export bin/pkg archives first and delay arch-independent archives
+	set exported {}
+	set remaining_archives {}
 	foreach archive [array names export_projects] {
 		set dir $export_projects($archive)
-		archive_name_and_arch $archive _pkg _arch
-		if {[catch { export_dependent_project $dir $_arch $_pkg} msg]} {
+		archive_parts $archive user type name vers
+
+		if {$type == "bin" || $type == "pkg"} {
+			archive_name_and_arch $archive _pkg _arch
+
+			if {[catch { export_dependent_project $dir $_arch $_pkg} msg]} {
+				exit_with_error "failed to export project $dir: \n\t$msg" }
+
+			lappend exported $dir
+		} else {
+			lappend remaining_archives $archive
+		}
+	}
+
+	# export remaining arch-independent archives
+	set exported [lsort -unique $exported]
+	foreach archive $remaining_archives {
+		set dir $export_projects($archive)
+
+		# skip if project dir has been exported before
+		if {[lsearch -exact $exported $dir] >= 0} { continue }
+
+		if {[catch { export_dependent_project $dir $arch} msg]} {
 			exit_with_error "failed to export project $dir: \n\t$msg" }
+
+		lappend exported $dir
 	}
 }
 
@@ -1629,12 +1648,7 @@ if {$perform(publish)} {
 				lappend archives [apply_arch $pkg_path $pkg_arch] } }
 	}
 
-	# first, download missing dependencies
-	if {[catch { download_archives $archives }]} {
-		exit_with_error "failed to download dependencies of the following depot archives:\n" \
-		                [join $archives "\n "] }
-
-	# second, download archives from other users that are not present in public
+	# download archives from other users that are not present in public
 	set missing_archives ""
 	if {[llength $archives] > 0} {
 		set cmd "[file join $tool_dir depot dependencies]"
@@ -1666,7 +1680,7 @@ if {$perform(publish)} {
 		}
 	}
 
-	# third, download missing archives
+	# re-download missing archives
 	set missing_archives [lsort -unique $missing_archives]
 	if {[catch { download_archives $missing_archives }]} {
 		exit_with_error "failed to download the following depot archives:\n" \
@@ -1676,7 +1690,7 @@ if {$perform(publish)} {
 	if {[info exists index_archive]} {
 		lappend archives $index_archive }
 
-	# fourth, try to publish archives
+	# publish archives
 	if {[llength $archives] > 0} {
 		set cmd "[file join $tool_dir depot publish]"
 		set cmd [concat $cmd $archives]

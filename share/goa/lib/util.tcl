@@ -867,7 +867,7 @@ proc avail_goa_branches { } {
 #
 proc export_dependent_project { dir arch { pkg_name "" } } {
 	global argv0 jobs depot_user depot_dir versions_from_genode_dir
-	global public_dir common_var_dir var_dir verbose search_dir
+	global public_dir common_var_dir var_dir verbose search_dir debug
 
 	set orig_pwd [pwd]
 	cd $search_dir
