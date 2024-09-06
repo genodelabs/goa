@@ -1,7 +1,23 @@
+proc stacktrace { } {
+	puts "\nStacktrace:"
+
+	for {set i 2} {$i < [info level]} {incr i} {
+		set frame [info frame -$i]
+
+		if {[dict exists $frame proc]} {
+			set procname [dict get $frame proc]
+			set filename [dict get $frame file]
+			set line     [dict get $frame line]
+			puts " $procname in $filename:$line"
+		}
+	}
+}
+
 
 proc exit_with_error { args } {
-	global project_name
+	global project_name verbose
 	puts stderr "\[$project_name\] Error: [join $args { }]"
+	if {$verbose} { stacktrace }
 	exit 1
 }
 
