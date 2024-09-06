@@ -29,6 +29,15 @@ is defined as follows:
 If <value> is a path name, the path can be specified relative to the location
 of the _goarc_ file or relative to the user's home directory (_~/_).
 
+By default, Goa prevents definition of path variables outside the current
+working directory or project directory. A user may extend this policy by
+adding a path to the list 'allowed_paths' as follows:
+
+! lappend allowed_paths <path>
+
+Note that this instruction is only effective within the privileged configuration
+files at '~/goarc' and '/goarc'.
+
 
 Settings
 ########

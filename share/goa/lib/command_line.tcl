@@ -76,11 +76,16 @@ proc goa_project_dirs { } {
 }
 
 
+source [file join $tool_dir lib config.tcl]
+
 #
 # If called with '-r' argument, scan current working directory for
 # project directories and call goa for each project
 #
 if {[consume_optional_cmdline_switch "-r"]} {
+
+	# make sure to populate allowed_paths
+	config::load_privileged_goarc_files
 
 	foreach dir [goa_project_dirs] {
 
@@ -107,8 +112,6 @@ if {[consume_optional_cmdline_switch "-r"]} {
 # Goa was called without '-r' argument, process a single project directory
 #
 
-source [file join $tool_dir lib config.tcl]
-
 diag "process project '$config::project_name' with arguments: $argv"
 
 config load_goarc_files
@@ -126,7 +129,9 @@ foreach var_name [config path_var_names] {
 	set path [consume_optional_cmdline_arg "--$tag_name" ""]
 
 	if {$path != ""} {
-		set config::$var_name [file normalize $path] }
+		set config::$var_name [file normalize $path]
+		lappend allowed_paths [set config::$var_name]
+	}
 }
 
 namespace eval config {
