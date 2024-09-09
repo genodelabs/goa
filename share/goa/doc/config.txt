@@ -166,6 +166,12 @@ Goa evaluates the following configuration variables.
   the configuration variable, the option can be enabled via the
   '--with-backtrace' command-line argument.
 
+:binary_name:
+  Goa's backtrace command tries to identify the name of the binary from the log
+  output. If the component's name is different than the name of its binary, you
+  must set this configuration variable or use the '--binary-name' command-line
+  argument.
+
 :warn_strict:
   If set to 1, Goa passes Genode's default strict C++ warning flags to the
   build system. It is implicitly enabled whenever a project uses the Genode
