@@ -4,11 +4,17 @@ proc stacktrace { } {
 	for {set i 2} {$i < [info level]} {incr i} {
 		set frame [info frame -$i]
 
-		if {[dict exists $frame proc]} {
-			set procname [dict get $frame proc]
-			set filename [dict get $frame file]
-			set line     [dict get $frame line]
-			puts " $procname in $filename:$line"
+		dict with frame {
+			if {[info exists file]} {
+				puts " $proc in $file:$line"
+				unset file line
+			} elseif {[info exists lambda]} {
+				puts " $proc in {$lambda}"
+				unset lambda
+			} elseif {[info exists cmd]} {
+				puts " $proc in {$cmd}"
+				unset cmd
+			}
 		}
 	}
 }
