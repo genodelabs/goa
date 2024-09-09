@@ -747,8 +747,10 @@ namespace eval goa {
 						continue
 					}
 	
-					if {[file exists [file join $public_dir $line ".tar.xz.sig"]]} {
+					if {[file exists [file join $public_dir "$line.tar.xz.sig"]]} {
 						continue }
+
+					diag "deleting $line from depot to trigger re-download"
 	
 					# remove archive from depot_dir to trigger re-download
 					file delete -force [file join $depot_dir $line]
