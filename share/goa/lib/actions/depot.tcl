@@ -383,7 +383,7 @@ namespace eval goa {
 		if {[file exists $raw_dir] && [file isdirectory $raw_dir]} {
 			set dst_dir [prepare_project_archive_directory raw]
 			if {$dst_dir != ""} {
-				set files [exec find $raw_dir -not -type d -and -not -name "*~"]
+				set files [exec find $raw_dir -not -type d -and -not -name "*~" -and -not -type l]
 				foreach file $files {
 					file copy $file [file join $dst_dir [file tail $file]] }
 	
@@ -476,7 +476,7 @@ namespace eval goa {
 			set dst_dir [prepare_project_archive_directory pkg $pkg]
 			if {$dst_dir != ""} {
 				# copy content from pkg directory as is
-				set files [exec find $pkg_dir -not -type d -and -not -name "*~"]
+				set files [exec find $pkg_dir -not -type d -and -not -name "*~" -and -not -type l]
 				foreach file $files {
 					file copy $file [file join $dst_dir [file tail $file]] }
 	
