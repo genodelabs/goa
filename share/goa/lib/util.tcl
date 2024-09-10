@@ -527,7 +527,7 @@ proc runtime_files { archive_list } {
 				# XXX detect cyclic dependencies between pkg archives
 				#
 				set pkg_archives [read_file_content_as_list $pkg_archives_file]
-				lappend bin_archives {*}[runtime_files $pkg_archives]
+				lappend runtime_file_list {*}[runtime_files $pkg_archives]
 			}
 		}
 	}
