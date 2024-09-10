@@ -122,6 +122,7 @@ namespace eval goa {
 		}
 
 		set archives [lsort -unique $archives]
+		# Note: omitting 'validate_archives' because 'apply_versions' does it
 		set versioned_archives [apply_versions $archives]
 		foreach a $archives v $versioned_archives {
 			set vers [archive_version $v]

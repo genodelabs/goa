@@ -224,8 +224,8 @@ proc read_file_content_as_list { path } {
 		# ignore comments
 		regsub {#.*$} $line {}  line
 
-		# remove trailing space
-		regsub {\s+$} $line { } line
+		# remove leading and trailing whitespace
+		set line [string trim $line]
 
 		# append non-empty line to result list
 		if {$line != ""} {
@@ -379,7 +379,7 @@ proc project_version_from_file { dir } {
 
 	set version_file [file join $dir version]
 	if {[file exists $version_file]} {
-		set version_from_file [read_file_content $version_file]
+		set version_from_file [string trim [read_file_content $version_file]]
 
 		if {[llength $version_from_file] > 1} {
 			exit_with_error "version defined at $version_file" \
@@ -419,6 +419,22 @@ proc exported_project_archive_version { dir archive } {
 
 
 ##
+# Validate archive strings
+#
+proc validate_archives { archives } {
+	foreach archive $archives {
+		if {[llength $archive] > 1} {
+			exit_with_error "depot-archiv path '$archive' must not contain whitespace" }
+
+		if {[string first ".." $archive] >= 0} {
+			exit_with_error "invalid depot-archiv path '$archive' " }
+	}
+
+	return $archives
+}
+
+
+##
 # Supplement list of archives with version information found in goarc files,
 # in the genode directory, or in local Goa projects
 #
@@ -436,7 +452,7 @@ proc apply_versions { archive_list } {
 	global config::version config::versions_from_genode_dir
 
 	set versioned_archives { }
-	foreach archive $archive_list {
+	foreach archive [validate_archives $archive_list] {
 
 		set elements [split $archive "/"]
 
@@ -520,7 +536,7 @@ proc binary_archives { archive_list } {
 
 			if {[file exists $pkg_archives_file]} {
 				# add archive paths to installed archive content
-				set pkg_archives [read_file_content_as_list $pkg_archives_file]
+				set pkg_archives [validate_archives [read_file_content_as_list $pkg_archives_file]]
 
 				#
 				# XXX detect cyclic dependencies between pkg archives
@@ -558,7 +574,7 @@ proc runtime_files { archive_list } {
 				#
 				# XXX detect cyclic dependencies between pkg archives
 				#
-				set pkg_archives [read_file_content_as_list $pkg_archives_file]
+				set pkg_archives [validate_archives [read_file_content_as_list $pkg_archives_file]]
 				lappend runtime_file_list {*}[runtime_files $pkg_archives]
 			}
 		}
