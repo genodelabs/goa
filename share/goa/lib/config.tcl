@@ -73,14 +73,15 @@ namespace eval ::config {
 
 	# used as alias for 'lappend' in child interpreter
 	proc _safe_lappend { rcfile safeinterp args } {
-		global allowed_paths privileged_rcfiles
+		global allowed_paths allowed_tools
+		global privileged_rcfiles
 
 		set nargs [llength $args]
 		if {$nargs < 2} { return }
 
 		set name  [lindex $args 0]
 		set value [lindex $args 1]
-		if {$name == "allowed_paths"} {
+		if {$name == "allowed_paths" || $name == "allowed_tools"} {
 			if {[lsearch -exact $privileged_rcfiles [file dirname $rcfile]] < 0} {
 				diag "variable '$name' may only be modified in a privileged goarc file"
 				return
@@ -102,9 +103,19 @@ namespace eval ::config {
 	}
 
 
+	proc _is_sub_directory { value paths } {
+
+		foreach path $paths {
+			if {[regexp "^$path" $value]} {
+				return 1 }}
+
+		return 0
+	}
+
+
 	# used as alias for 'set' in child interpreter
 	proc _safe_set { rcfile args } {
-		global allowed_paths
+		global allowed_paths allowed_tools
 
 		set nargs [llength $args]
 		if {$nargs < 1} { return }
@@ -137,21 +148,17 @@ namespace eval ::config {
 			# convert relative path to absolute path
 			set value [file normalize $value]
 
-			# check that path is subdirectory of pwd, project dir or one of
-			# the user-defined directories
-			set valid_path 0
-			foreach path $allowed_paths {
-				if {[regexp "^$path" $value]} {
-					set valid_path 1
-					break
-				}
-			}
-			if {!$valid_path} {
+			set varname allowed_paths
+			if {$name == "cross_dev_prefix"} {
+				set varname allowed_tools }
+
+			# check that path is a valid subdirectory
+			if {![_is_sub_directory $value [set $varname]]} {
 				exit_with_error "In $rcfile:" \
 				                "\n Path variable '$name' set to '$value'" \
 				                "\n defines an invalid path. Valid paths are:\n" \
-				                "\n [join $allowed_paths "\n "]" \
-				                "\n\n You may consider setting 'allowed_paths' in" \
+				                "\n [join [set $varname] "\n "]" \
+				                "\n\n You may consider setting '$varname' in" \
 				                "your \$HOME/goarc or /goarc file."
 			}
 		}
@@ -162,11 +169,15 @@ namespace eval ::config {
 
 	proc load_goarc_files { { only_privileged_goarc 0 } } {
 		global tool_dir original_dir config::project_dir
-		global allowed_paths
+		global allowed_paths allowed_tools
 		global privileged_rcfiles
 
 		set allowed_paths [list [file normalize $project_dir] [file normalize $original_dir]]
 		set allowed_paths [lsort -unique $allowed_paths]
+
+		set allowed_tools [split $::env(PATH) ":"]
+		lappend allowed_tools "/usr/local/genode"
+		lappend allowed_tools $tool_dir
 
 		# safe slave interpreter for goarc files
 		interp create -safe safeinterp
