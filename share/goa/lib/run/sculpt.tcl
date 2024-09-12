@@ -71,8 +71,20 @@ proc run_genode { } {
 	if {[info exists target_opt($target-cmd)]} {
 		set    opt_cmd "SERVER=$host;"
 		append opt_cmd {*}$target_opt($target-cmd)
-		spawn sh -c "$opt_cmd"
-		set cmd_spawn_id $spawn_id
+
+		# ask user for confirmation before spawning optional command
+		send_user "Do you want to run '$opt_cmd'? \[Y/n]: "
+		set choice [expect_user {
+			-nocase n { expr 0 }
+			-nocase y { expr 1 }
+			-re "\n"  { expr 1 }
+			timeout   { expr 0 }
+		}]
+
+		if {$choice} {
+			spawn sh -c "$opt_cmd"
+			set cmd_spawn_id $spawn_id
+		}
 	}
 
 	eval spawn -noecho telnet $host $port_telnet
