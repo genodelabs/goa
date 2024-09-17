@@ -1,0 +1,473 @@
+#!/usr/bin/env tclsh
+#
+# \brief  Tool for sandboxed execution of Genode build tools
+# \author Johannes Schlatow
+# \date   2024-09-13
+#
+# The word "gaol" is a dated spelling of "jail".
+#
+
+namespace eval gaol {
+	namespace export -*
+	namespace ensemble create -unknown gaol::unknown
+
+	##
+	# state dictionary stores command-line parsing results
+	#      key | value
+	# ---------|-----------
+	# robinds  | paired list of paths
+	# binds    | paired list of paths
+	# symlinks | paired list of destination and link path
+	# env      | dict of environment variables
+	# makeargs | dict of make variables
+	# chdir    | initial working directory
+	# dirs     | list of paths
+	# verbose  | boolean
+	# network  | boolean
+	# make     | boolean
+	# gpg      | {user, empty}
+	# sq_keys  | boolean
+	# depot    | path to depot directory
+	variable state [dict create env [dict create] \
+	                            robinds {} binds {} symlinks {} dirs {} \
+	                            verbose 0 network 0 make 0]
+
+	proc --system-usr { args } {
+		variable state
+		dict lappend state symlinks usr/lib64 /lib64
+		dict lappend state symlinks usr/bin   /bin
+		dict lappend state symlinks usr/sbin  /sbin
+		dict lappend state symlinks usr/lib   /lib
+
+		set path "/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+		if {[dict exists state env PATH]} {
+			append path ":[dict get state env PATH]" }
+
+		dict set state env PATH $path
+
+		gaol --ro-bind /usr {*}$args
+	}
+
+	proc --env-path { path args } {
+		gaol::validate_no_opt $path
+
+		variable state
+		if {[dict exists state env PATH]} {
+			set path "[dict get state env PATH]:$path" }
+
+		dict set state env PATH $path
+
+		gaol::parse_next args
+	}
+
+	proc --setenv { var value args } {
+		gaol::validate_no_opt $var
+		gaol::validate_no_opt $value
+
+		variable state
+		dict set state env $var $value
+		gaol::parse_next args
+	}
+
+	proc --with-network { args } {
+		variable state
+		dict set state network 1
+
+		dict lappend state robinds /etc/ssl /etc/ssl
+		dict lappend state robinds /etc/ca-certificates /etc/ca-certificates
+		gaol --ro-bind /etc/resolv.conf {*}$args
+	}
+
+	proc --dir { path args } {
+		gaol::validate_no_opt $path
+
+		variable state
+		dict lappend state dirs $path
+		gaol::parse_next args
+	}
+
+	proc --ro-bind { path args } {
+		gaol::validate_no_opt $path
+
+		set path [file normalize $path]
+		gaol::validate_path_exists $path
+
+		variable state
+		dict lappend state robinds $path $path
+		gaol::parse_next args
+	}
+
+	proc --ro-bind-at { path at args } {
+		gaol::validate_no_opt $path
+		gaol::validate_no_opt $at
+
+		set path [file normalize $path]
+		set at   [file normalize $at]
+		gaol::validate_path_exists $path
+
+		variable state
+		dict lappend state robinds $path $at
+		gaol::parse_next args
+	}
+
+	proc --bind { path args } {
+		gaol::validate_no_opt $path
+
+		set path [file normalize $path]
+		gaol::validate_path_exists $path
+
+		variable state
+		dict lappend state binds $path $path
+		gaol::parse_next args
+	}
+
+	proc --symlink { to link args } {
+		gaol::validate_no_opt $to
+		gaol::validate_no_opt $link
+
+		variable state
+		dict lappend state symlinks $to $link
+		gaol::parse_next args
+	}
+
+	proc --chdir { path args } {
+		gaol::validate_no_opt $path
+
+		variable state
+		dict set state chdir $path
+		gaol::parse_next args
+	}
+
+	proc --depot-dir { path args } {
+		gaol::validate_no_opt $path
+
+		set path [file normalize $path]
+		gaol::validate_path_exists $path
+
+		variable state
+		dict lappend state makeargs DEPOT_DIR=$path
+		dict lappend state binds $path $path
+
+		# store path for user-sq
+		dict set state depot $path
+		gaol::parse_next args
+	}
+
+	proc --depot-tool { path args } {
+		gaol::validate_no_opt $path
+
+		set path [file normalize $path]
+		gaol::validate_path_exists $path
+
+		variable state
+		dict lappend state makeargs DEPOT_TOOL_DIR=$path
+		dict lappend state binds $path $path
+		gaol::parse_next args
+	}
+
+	proc --ports-tool { path args } {
+		gaol::validate_no_opt $path
+
+		set path [file normalize $path]
+		gaol::validate_path_exists $path
+
+		variable state
+		dict lappend state makeargs PORTS_TOOL_DIR=$path
+		dict lappend state binds $path $path
+		gaol::parse_next args
+	}
+
+	proc --public-dir { path args } {
+		gaol::validate_no_opt $path
+
+		set path [file normalize $path]
+		gaol::validate_path_exists $path
+
+		variable state
+		dict lappend state makeargs PUBLIC_DIR=$path
+		dict lappend state binds $path $path
+		gaol::parse_next args
+	}
+
+	proc --make { args } {
+		variable state
+		dict set state make 1
+		gaol::parse_next args
+	}
+
+	proc --empty-gpg { args } {
+		variable state
+		if {[dict exists state gpg]} {
+			return -code error "--empty-gpg conflicts with --user-gpg" }
+
+		dict set state gpg "empty"
+		gaol::parse_next args
+	}
+
+	proc --user-gpg { args } {
+		variable state
+		if {[dict exists state gpg]} {
+			return -code error "--user-gpg conflicts with --empty-gpg" }
+
+		dict set state gpg "user"
+		gaol::parse_next args
+	}
+
+	proc --user-sq { args } {
+		variable state
+		dict set state sq_keys 1
+
+		if {[auto_execok "sq"] == ""} {
+			return -code error "'sq' binary not found. Please install sequoia-sq" }
+		gaol::parse_next args
+	}
+
+	proc --verbose { args } {
+		variable state
+		dict set state verbose 1
+		gaol::parse_next args
+	}
+
+	proc --help { } {
+		puts [help_text]
+	}
+
+	proc help_text { } {
+		return [join [list \
+			"Usage: gaol \[options] command \[arguments]" \
+			"" \
+			"Executes command in a sandboxed environment with the specified arguments." \
+			"" \
+			"Tool options:" \
+			"  --help                   Show this message" \
+			"  --verbose                Enable verbose output" \
+			"" \
+			"Meta options (multiple bubblewrap arguments):" \
+			"  --depot-dir <path>       Binds <path> and sets DEPOT_DIR make variable" \
+			"  --depot-tool <path>      Binds <path> at /tool/depot" \
+			"  --ports-tool <path>      Binds <path> at /tool/ports" \
+			"  --env-path <path>        Adds <path> to the PATH variable" \
+			"  --public-dir <path>      Binds <path> and sets PUBLIC_DIR make variable" \
+			"  --system-usr             Bind /usr from host system and create symlinks" \
+			"  --with-network           Enable network access" \
+			"" \
+			"Program-specific policies:" \
+			"  --make                   Passes depot-tool-specific variables to make" \
+			"  --user-sq                Binds the user's sequoia keystore" \
+			"  --user-gpg               Binds the user's gnupg config dir and socket dir" \
+			"  --empty-gpg              Creates an empty ~/.gnupg directory to prevent" \
+			"                           the use of keyboxd" \
+			"" \
+			"Passed-through options:" \
+			"  --setenv <var> <value>   Sets environment variable <var> to <value>" \
+			"  --chdir <path>           Use <path> as working directory" \
+			"  --bind <path>            Bind mount the host path <path>" \
+			"  --dir <path>             Create an empty directory <path>" \
+			"  --ro-bind <path>         Bind mount the host path <path> read-only" \
+			"  --ro-bind-at <src> <dst> Bind mount the host path <src> at <dst> read-only" \
+			"  --symlink <to> <link>    Create symlink at <link> with target <to>" \
+		] "\n"]
+	}
+
+	proc validate_no_opt { arg } {
+		if { $arg == "" } { return }
+
+		set caller [lindex [split [info level -1] ":"] 4]
+		if {[string match "--*" $arg]} {
+			return -code error "Invalid argument '$arg':\n in $caller" }
+	}
+
+	proc validate_path_exists { path } {
+		set caller [lindex [split [info level -1] ":"] 4]
+		if {![file exists $path]} {
+			return -code error "$path does not exist:\n in $caller" }
+	}
+
+	proc parse_next { &args } {
+		upvar ${&args} args
+		if {[llength $args] == 0} {
+			return -code error "missing command argument\n\n[help_text]"
+		}
+
+		gaol {*}$args
+	}
+
+	proc unknown { cmd opt args } {
+		variable state
+		switch -glob -- $opt "--*" {
+			return -code error "bad option \"$opt\"\n\n[help_text]"
+		} default {
+			run $opt {*}$args
+		}
+	}
+
+	##
+	# adds {$path $at} into robinds unless $at or any subdirectory is already
+	# present in robinds. In the latter case, the non-conflicting subdirectories
+	# of $at are added to robinds
+	proc add_disjoint_robind { &robinds path at } {
+		upvar ${&robinds} robinds
+
+		set add_unmodified 1
+		foreach { src dest } $robinds {
+			# skip duplicates
+			if {[file join $at] == [file join $dest]} {
+				set add_unmodified 0
+				break
+			}
+
+			set prefix "[file join $at]/"
+			if {[string match "$prefix*" $dest]} {
+				# if $suffix is present in $path, we can bind it
+				set suffix [string range $dest [string length $prefix] end]
+				if {[file exists [file join $path $suffix]]} { break }
+
+				# recurse into add_disjoint_robinds on subdirectory
+				foreach sub [glob "[file join $path]/*"] {
+					add_disjoint_robind robinds [file join $path $sub] [file join $at $sub]
+				}
+				set add_unmodified 0
+				break
+			}
+		}
+
+		if {$add_unmodified} {
+			lappend robinds $path $at }
+	}
+
+	proc run { bin args } {
+		global error_spawn_id user_spawn_id
+		variable state
+
+		# user run dir
+		set userid [exec id -u]
+		set run_dir /run/user/$userid
+
+		set     cmd bwrap
+		lappend cmd --dir /var --dir /tmp --symlink ../tmp /var/tmp
+		lappend cmd --dev /dev
+		lappend cmd --proc /proc
+		lappend cmd --unshare-all
+		lappend cmd --new-session
+		lappend cmd --clearenv
+		lappend cmd --die-with-parent
+		lappend cmd --dir $run_dir
+		lappend cmd --setenv XDG_RUNTIME_DIR "$run_dir"
+		lappend cmd --setenv DISPLAY ":0.0"
+		lappend cmd --setenv HOME $::env(HOME)
+
+		dict with state {
+			if {[info exists gpg]} {
+				switch $gpg {
+					user {
+						set gpgdirs [exec gpgconf --list-dirs]
+						foreach dir $gpgdirs {
+							lassign [split $dir ":"] name path
+							switch $name {
+								homedir   { lappend binds $path $path }
+								socketdir { lappend binds $path $path }
+							}
+						}
+					}
+					empty {
+						# if ~/.gnupg does not exist, gpg creates a common.conf with use-keyboxd
+						# we therefore create an empty ~/.gnupg
+						lappend cmd --perms 0700 --tmpfs [file join $::env(HOME) .gnupg]
+					}
+				}
+			}
+
+			set pipeargs {}
+			set fdnum 11
+			if {[info exists sq_keys] && $sq_keys} {
+				if {![info exists depot]} {
+					return -code error "missing --depot-dir argument (required for --user-sq)" }
+
+				set pubkey_files [exec find $depot -maxdepth 2 -type f -name pubkey]
+				foreach f $pubkey_files {
+					set fingerprint [string trimleft [exec sq inspect $f 2> /dev/null | grep Fingerprint | cut -d: -f2]]
+					if {[catch {exec sq key export --cert $fingerprint}]} { continue }
+
+					lappend cmd --perms 0400 --ro-bind-data $fdnum /sequoia/softkeys/$fingerprint
+					lappend pipeargs $fdnum< "<(sq key export --cert $fingerprint | sq key password --clear-password --cert-file -)"
+					incr fdnum
+				}
+			}
+
+			# sort robinds by target paths in reverse order
+			set robinds [lsort -stride 2 -index 1 -decreasing $robinds]
+
+			# make sure that robinds are disjoint (remove duplicates, split
+			# prefixes into subdirectories)
+			set new_robinds { }
+			foreach { src dest } $robinds {
+				add_disjoint_robind new_robinds $src $dest }
+			set robinds $new_robinds
+
+			# sort robinds by target paths so that parent directories appear first
+			set robinds [lsort -stride 2 -index 1 $robinds]
+
+			foreach { src dest } $robinds {
+				lappend cmd --ro-bind $src $dest }
+
+			foreach { src dest } $binds {
+				lappend cmd --bind $src $dest }
+
+			foreach path $dirs {
+				lappend cmd --dir $path }
+
+			foreach {to from} $symlinks {
+				lappend cmd --symlink $to $from }
+
+			if {[info exists chdir]} {
+				lappend cmd --chdir $chdir }
+
+			dict for {name value} $env {
+				lappend cmd --setenv $name $value }
+
+			if {!$make} { set makeargs {} }
+		}
+
+		if {[dict get $state network]} {
+			lappend cmd --share-net }
+
+		set cmdargs [concat $cmd [list $bin] $args $makeargs]
+		set quoted_args {}
+		foreach arg $cmdargs {
+			if {[llength $arg] > 1 && [string first "\"" $arg] < 0 && [string first "'" $arg] < 0} {
+				lappend quoted_args "\"$arg\""
+			} else {
+				lappend quoted_args $arg }}
+
+		lappend quoted_args {*}$pipeargs
+
+		if {[dict get $state verbose]} {
+			puts "Executing: [join $quoted_args { }]" }
+
+		if {[catch {exec bash -c [join $quoted_args { }] <@ stdin >@ stdout 2>@ stderr} results options]} {
+			if {[dict get $options -code] == 1} {
+				exit [lindex $::errorCode 2]
+			} else {
+				puts stderr "Internal error"
+				exit 1
+			}
+		}
+
+		exit
+	}
+}
+
+# check for unmerged /usr system
+if {[file link /bin] != "usr/bin"} {
+	puts [join [list "\n!!! Bumpy road ahead !!!\n" \
+		"You seem to run a system with an unmerged /usr. This likely" \
+		"affects the sandboxing mechanism. Please be aware that" \
+		"you are leaving the beaten track.\n"] "\n"]
+}
+
+if {[auto_execok "bwrap"] == ""} {
+	puts stderr "\n'bwrap' binary not found. Please install bubblewrap!\n"
+	exit 1
+}
+
+gaol {*}$argv
