@@ -30,6 +30,7 @@ proc _find_tool_dir { } {
 
 set tool_name [file tail $argv0]
 set tool_dir  [file join [_find_tool_dir] "share" "goa"]
+set gaol      [file join $tool_dir lib gaol]
 
 # assist the user a bit
 if {[llength $argv] == 0} {
@@ -42,7 +43,7 @@ set verbose 0
 
 source [file join $tool_dir lib util.tcl]
 
-exit_if_not_installed xmllint git find sed make diff tar wget
+exit_if_not_installed xmllint git find sed make diff tar wget bwrap
 
 source [file join $tool_dir lib command_line.tcl]
 

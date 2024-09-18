@@ -34,7 +34,7 @@ namespace eval goa {
 
 		global   tool_dir
 
-		set status [exec git -C [file dirname [file dirname $tool_dir]] status -s]
+		set status [goa_git status -s]
 		if {$status != ""} {
 			exit_with_error "aborting Goa update because it was changed locally\n\n$status" }
 
