@@ -254,10 +254,9 @@ to make sure that untrusted configuration files cannot trick Goa into undesired
 file operations.
 
 Moreover, Goa checks the 'cross_dev_prefix' against a list of allowed tool paths.
-By default, Goa allows tools to reside in the directories defined by the PATH
-environment variable or in "/usr/local/genode". Similar to extending the
-'allowed_paths' variable, a user may extend this policy by adding a path to the
-list 'allowed_tools' list.
+By default, Goa allows tools to reside in any subdirectory of /usr/. Similar to
+extending the 'allowed_paths' variable, a user may extend this policy by adding
+a path to the list 'allowed_tools' list.
 
 SEE ALSO
 ########

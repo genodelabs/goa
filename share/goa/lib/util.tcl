@@ -767,6 +767,8 @@ proc install_config { args } {
 # Return true if specified program is installed
 #
 proc have_installed { program } {
+	# Note: auto_execok calls 'config::_safe_file' via 'file executable',
+	# which validates the resulting path against the allowed_tools variable.
 
 	if {[auto_execok "$program"] != ""} { return true; }
 	return false;
