@@ -5,18 +5,36 @@
 namespace eval goa {
 	namespace export import diff
 
-	proc calc_import_hash { } {
+	proc exec_import_tool { tool args } {
+		global verbose gaol tool_dir
+		global config::contrib_dir config::project_dir config::jobs
 
-		global tool_dir config::project_dir
+		set     cmd $gaol
+		lappend cmd --system-usr
+		lappend cmd --make
+		lappend cmd --ro-bind $project_dir
+		lappend cmd --ports-tool [file join $tool_dir ports]
+		lappend cmd --with-network
+		if {[file exists $contrib_dir]} {
+			lappend cmd --bind $contrib_dir
+			lappend cmd --chdir $contrib_dir
+		}
 
-		set     cmd "make"
-		lappend cmd "-f" [file join $tool_dir ports mk print_hash.mk]
+		lappend cmd "make"
+		lappend cmd "-f" [file join $tool_dir ports mk $tool]
 		lappend cmd "-s"
+		lappend cmd "-j$jobs"
 		lappend cmd "PORT=[file join $project_dir import]"
 		lappend cmd "REP_DIR=$project_dir"
-		lappend cmd "PORTS_TOOL_DIR=[file join $tool_dir ports]"
+		if {[file exists $contrib_dir]} {
+			lappend cmd "GENODE_CONTRIB_CACHE=$contrib_dir" }
+		lappend cmd {*}$args
 
 		return [exec {*}$cmd]
+	}
+
+	proc calc_import_hash { } {
+		return [exec_import_tool print_hash.mk {}]
 	}
 
 
@@ -97,22 +115,12 @@ namespace eval goa {
 
 			file mkdir $contrib_dir
 
-			set     cmd "make"
-			lappend cmd "-f" [file join $tool_dir ports mk install.mk]
-			lappend cmd "-C" $contrib_dir
-			lappend cmd "-j$jobs"
-			lappend cmd "-s"
-			lappend cmd "PORT=[file join $project_dir import]"
-			lappend cmd "REP_DIR=$project_dir"
-			lappend cmd "PORTS_TOOL_DIR=[file join $tool_dir ports]"
-			lappend cmd "GENODE_CONTRIB_CACHE=$import_dir"
-
+			set args {}
 			if {$verbose} {
-				lappend cmd "VERBOSE=" }
+				lappend args "VERBOSE=" }
 
-			diag "import via command: $cmd"
-
-			if {[catch { exec {*}$cmd >@ stdout 2>@ stdout }]} {
+			lappend args >@ stdout 2>@ stdout
+			if {[catch { exec_import_tool install.mk {*}$args }]} {
 				exit_with_error "import failed" }
 
 			foreach subdir [list src raw] {

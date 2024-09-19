@@ -9,6 +9,44 @@ namespace eval goa {
 	namespace export export-dbg export-bin import-dependencies export-dependencies
 	namespace export published-archives download-foreign publish
 
+	proc exec_depot_tool { tool args } {
+		global verbose gaol tool_dir
+		global config::depot_dir config::public_dir config::jobs
+
+		if {![file exists $public_dir]} {
+			file mkdir $public_dir }
+
+		set     cmd $gaol
+		lappend cmd --system-usr
+		lappend cmd --make
+		lappend cmd --depot-dir $depot_dir
+		lappend cmd --public-dir $public_dir
+		lappend cmd --depot-tool [file join $tool_dir depot]
+
+		switch $tool {
+			dependencies { }
+			download {
+				lappend cmd --empty-gpg
+				lappend cmd --with-network
+			}
+			publish {
+				lappend cmd --user-gpg
+			}
+		}
+
+		if {$verbose} {
+			lappend cmd --verbose }
+
+		lappend cmd [file join $tool_dir depot $tool]
+		lappend cmd REPOSITORIES=
+
+		if {$tool == "publish"} {
+			exec -ignorestderr {*}$cmd -j$jobs {*}$args
+		} else {
+			exec {*}$cmd {*}$args
+		}
+	}
+
 	##
 	# Run `goa export` in specified project directory
 	#
@@ -61,25 +99,19 @@ namespace eval goa {
 
 
 	proc download_archives { archives { no_err 0 } { dbg 0 }} {
-		global tool_dir config::depot_dir config::public_dir
 
 		if {[llength $archives] > 0} {
-			set cmd "[file join $tool_dir depot download]"
-			set cmd [concat $cmd $archives]
-			lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
-			lappend cmd "DEPOT_DIR=$depot_dir"
-			lappend cmd "PUBLIC_DIR=$public_dir"
-			lappend cmd "REPOSITORIES="
+			set args $archives
 			if { $dbg } {
-				lappend cmd "DBG=1" }
+				lappend args "DBG=1" }
 
-			diag "install depot archives via command: $cmd"
+			diag "install depot archives: $archives"
 
 			if { $no_err } {
-				if {[catch { exec {*}$cmd | sed "s/^Error://" >@ stdout }]} {
+				if {[catch { exec_depot_tool download {*}$args | sed "s/^Error://" >@ stdout }]} {
 					return -code error }
 			} else {
-				if {[catch { exec {*}$cmd >@ stdout }]} {
+				if {[catch { exec_depot_tool download {*}$args >@ stdout }]} {
 					return -code error }
 			}
 		}
@@ -598,18 +630,11 @@ namespace eval goa {
 		upvar  ${&export_projects} export_projects
 	
 		# determine dependent projects that need exporting
-		foreach exported_archive $exported_archives {
-			set cmd "[file join $tool_dir depot dependencies]"
-			set cmd [concat $cmd $exported_archive]
-			lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
-			lappend cmd "DEPOT_DIR=$depot_dir"
-			lappend cmd "PUBLIC_DIR=$public_dir"
-			lappend cmd "REPOSITORIES="
-	
-			diag "acquiring dependencies of exported depot archives via command: $cmd"
+		foreach exported_archive $exported_archives {	
+			diag "acquiring dependencies of exported depot archive: $exported_archive"
 	
 			set archives_incomplete 0
-			if {[catch { exec {*}$cmd 2> /dev/null } msg]} {
+			if {[catch { exec_depot_tool dependencies $exported_archive 2> /dev/null } msg]} {
 				foreach line [split $msg \n] {
 					set archive [string trim $line]
 					if {[catch {archive_parts $archive user type name vers}]} {
@@ -746,16 +771,10 @@ namespace eval goa {
 
 		set missing_archives ""
 		if {[llength $archives] > 0} {
-			set cmd "[file join $tool_dir depot dependencies]"
-			set cmd [concat $cmd $archives]
-			lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
-			lappend cmd "DEPOT_DIR=$depot_dir"
-			lappend cmd "PUBLIC_DIR=$public_dir"
-			lappend cmd "REPOSITORIES="
-	
-			diag "acquiring dependencies via command: $cmd"
-	
-			if {![catch { exec {*}$cmd 2> /dev/null } msg]} {
+
+			diag "acquiring dependencies via archives: $archives"
+
+			if {![catch { exec_depot_tool dependencies {*}$archives 2> /dev/null } msg]} {
 				foreach line [split $msg \n] {
 					set archive [string trim $line]
 					if {[catch {archive_parts $archive user type name vers}]} {
@@ -790,22 +809,16 @@ namespace eval goa {
 	proc publish { archives } {
 
 		global tool_dir
-		global config::depot_dir config::public_dir config::debug config::jobs
+		global config::debug
 
 		if {[llength $archives] > 0} {
-			set cmd "[file join $tool_dir depot publish]"
-			set cmd [concat $cmd $archives]
-			lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
-			lappend cmd "DEPOT_DIR=$depot_dir"
-			lappend cmd "PUBLIC_DIR=$public_dir"
-			lappend cmd "REPOSITORIES="
-			lappend cmd "-j$jobs"
+			set args $archives
 			if { $debug } {
-				lappend cmd "DBG=1" }
+				lappend args "DBG=1" }
 	
-			diag "publish depot archives via command: $cmd"
+			diag "publish depot archives: $archives"
 	
-			if {[catch { exec -ignorestderr {*}$cmd >@ stdout }]} {
+			if {[catch { exec_depot_tool publish {*}$args >@ stdout }]} {
 				exit_with_error "failed to publish the following depot archives:\n" \
 				                [join $archives "\n "] }
 		}
