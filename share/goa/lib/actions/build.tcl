@@ -70,6 +70,35 @@ namespace eval goa {
 	}
 
 
+	proc exec_make_tool { tool args } {
+
+		global tool_dir verbose
+		global config::depot_dir config::abi_dir config::cross_dev_prefix
+		global config::ld_march config::cc_march config::arch config::var_dir
+
+		if {![file exists $var_dir]} {
+			file mkdir $var_dir }
+
+		set     cmd [gaol_with_toolchain]
+		lappend cmd --ro-bind $depot_dir
+		lappend cmd --ro-bind $tool_dir
+		lappend cmd --bind $var_dir
+
+		lappend cmd make -f $tool_dir/lib/$tool
+		lappend cmd "TOOL_DIR=$tool_dir"
+		lappend cmd "DEPOT_DIR=$depot_dir"
+		lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
+		lappend cmd "ABI_DIR=$abi_dir"
+		lappend cmd "ARCH=$arch"
+		lappend cmd "LD_MARCH=[join $ld_march { }]"
+		lappend cmd "CC_MARCH=[join $cc_march { }]"
+		if {$verbose == 0} {
+			lappend cmd "-s" }
+
+		exec -ignorestderr {*}$cmd {*}$args
+	}
+
+
 	proc exec_tool_chain { bin args } {
 
 		global config::cross_dev_prefix config::build_dir
@@ -155,30 +184,17 @@ namespace eval goa {
 		return 0
 	}
 
+
 	##
 	# Generate API stubs
 	#
 	proc prepare_abi_stubs { used_apis } {
 
-		global tool_dir verbose
-		global config::depot_dir config::abi_dir config::cross_dev_prefix
-		global config::ld_march config::cc_march config::project_name config::arch
+		global config::project_name
 
-		set     cmd "make -f $tool_dir/lib/gen_abi_stubs.mk"
-		lappend cmd "TOOL_DIR=$tool_dir"
-		lappend cmd "DEPOT_DIR=$depot_dir"
-		lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
-		lappend cmd "APIS=[join $used_apis { }]"
-		lappend cmd "ABI_DIR=$abi_dir"
-		lappend cmd "ARCH=$arch"
-		lappend cmd "LD_MARCH=[join $ld_march { }]"
-		lappend cmd "CC_MARCH=[join $cc_march { }]"
-		if {$verbose == 0} {
-			lappend cmd "-s" }
+		diag "generate ABI stubs"
 
-		diag "generate ABI stubs via command: [join $cmd { }]"
-
-		if {[catch { exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:abi\] /" >@ stdout }]} {
+		if {[catch { exec_make_tool gen_abi_stubs.mk "APIS=[join $used_apis { }]" | sed "s/^/\[$project_name:abi\] /" >@ stdout }]} {
 			exit_with_error "failed to generate ABI stubs for the following" \
 			                "depot archives:\n" [join $used_apis "\n "] }
 	}
@@ -189,9 +205,7 @@ namespace eval goa {
 	#
 	proc prepare_ldso_support_stub { used_apis } {
 
-		global tool_dir verbose
-		global config::depot_dir config::abi_dir config::cross_dev_prefix
-		global config::cc_march config::project_name config::arch
+		global config::project_name
 
 		set so_api { }
 		foreach api_path $used_apis {
@@ -205,19 +219,9 @@ namespace eval goa {
 		if {[llength $so_api] == 0} {
 			return }
 
-		set     cmd "make -f $tool_dir/lib/gen_ldso_support.mk"
-		lappend cmd "TOOL_DIR=$tool_dir"
-		lappend cmd "DEPOT_DIR=$depot_dir"
-		lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
-		lappend cmd "APIS=[join $so_api { }]"
-		lappend cmd "ABI_DIR=$abi_dir"
-		lappend cmd "CC_MARCH=[join $cc_march { }]"
-		if {$verbose == 0} {
-			lappend cmd "-s" }
+		diag "generate ldso_support.lib.a"
 
-		diag "generate ldso_support.lib.a via command: [join $cmd { }]"
-
-		if {[catch { exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:abi\] /" >@ stdout }]} {
+		if {[catch { exec_make_tool gen_ldso_support.mk "APIS=[join $so_api { }]" | sed "s/^/\[$project_name:abi\] /" >@ stdout }]} {
 			exit_with_error "failed to generate ldso_support.lib.a "] }
 	}
 
@@ -355,6 +359,8 @@ namespace eval goa {
 	
 	
 	proc create_artifact_containers_from_list_file { list_file_path artifact_path tar_path } {
+
+		global gaol
 	
 		set artifact_files { }
 		set artifacts [read_file_content_as_list $list_file_path]
@@ -400,7 +406,11 @@ namespace eval goa {
 				diag "create $archive_path"
 	
 				foreach file $files {
-					set cmd "tar rf $archive_path"
+					set cmd $gaol
+					lappend cmd --system-usr
+					lappend cmd --bind $tar_path
+					lappend cmd --ro-bind $artifact_path
+					lappend cmd tar rf $archive_path
 					lappend cmd -C [file dirname $file]
 					lappend cmd --dereference
 					lappend cmd --transform "s#^#$archive_sub_dir#"
@@ -463,8 +473,8 @@ namespace eval goa {
 	
 	proc check_abis { } {
 
-		global tool_dir
-		global config::arch config::project_dir config::cross_dev_prefix
+		global tool_dir gaol
+		global config::arch config::project_dir config::var_dir config::cross_dev_prefix
 		variable library_artifacts
 	
 		foreach library $library_artifacts {
@@ -477,8 +487,14 @@ namespace eval goa {
 				exit_with_error "missing symbols file '$symbols_file'\n" \
 				                "\n You can generate this file by running 'goa extract-abi-symbols'."
 			}
-	
-			if {[catch { exec [file join $tool_dir abi check_abi] $library $symbols_file_name } msg]} {
+
+			set     cmd $gaol
+			lappend cmd --system-usr
+			lappend cmd --ro-bind $project_dir
+			lappend cmd --ro-bind $var_dir
+			lappend cmd --ro-bind $tool_dir
+			lappend cmd [file join $tool_dir abi check_abi] $library $symbols_file_name
+			if {[catch { exec {*}$cmd } msg]} {
 				exit_with_error $msg
 			}
 
@@ -529,7 +545,7 @@ namespace eval goa {
 	
 	proc extract_library_symbols { } {
 
-		global tool_dir
+		global tool_dir gaol
 		global config::build_dir config::project_dir
 	
 		set artifacts_file_path [file join $project_dir artifacts]
@@ -555,7 +571,13 @@ namespace eval goa {
 	
 				file mkdir $symbols_dir
 				set symbols_file_path [file join $symbols_dir $symbols_file_name]
-				if {[catch { exec [file join $tool_dir abi abi_symbols] $library_file_path > $symbols_file_path}]} {
+				set     cmd $gaol
+				lappend cmd --system-usr
+				lappend cmd --bind $symbols_dir
+				lappend cmd --ro-bind $build_dir
+				lappend cmd --ro-bind $tool_dir
+				lappend cmd [file join $tool_dir abi abi_symbols] $library_file_path > $symbols_file_path
+				if {[catch { exec {*}$cmd}]} {
 					exit_with_error "unable to extract abi symbols"
 				}
 	
