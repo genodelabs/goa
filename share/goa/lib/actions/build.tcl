@@ -7,6 +7,20 @@ namespace eval goa {
 	namespace export build extract_artifacts_from_build_dir extract_api_artifacts
 	namespace export extract-abi-symbols
 
+	proc sandboxed_build_command { } {
+		global config::project_dir config::depot_dir config::var_dir config::build_dir
+
+		set     cmd [gaol_with_toolchain]
+		lappend cmd --ro-bind $depot_dir
+		lappend cmd --ro-bind $var_dir
+		lappend cmd --ro-bind $project_dir
+		lappend cmd --bind $build_dir
+		lappend cmd --chdir $build_dir
+
+		return $cmd
+	}
+
+
 	##
 	# Return type of build system used in the source directory
 	#

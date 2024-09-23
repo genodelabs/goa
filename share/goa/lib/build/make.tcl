@@ -3,8 +3,9 @@ proc _make_cmd { } {
 	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe lib_src
 	global ldflags_so ldlibs_so api_dirs
 	global config::build_dir config::cross_dev_prefix config::jobs config::project_dir
+	global config::depot_dir config::var_dir
 
-	set cmd { }
+	set     cmd [sandboxed_build_command]
 
 	lappend cmd make -C $build_dir
 	lappend cmd "CPPFLAGS=$cppflags"
