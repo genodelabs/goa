@@ -14,12 +14,12 @@ proc create_or_update_build_dir { } {
 	set orig_pwd [pwd]
 	cd $build_dir
 
-	set ::env(LDFLAGS) "$ldflags $ldlibs_common $ldlibs_exe"
+	set     cmd [goa::sandboxed_build_command]
+	lappend cmd --setenv LDFLAGS "$ldflags $ldlibs_common $ldlibs_exe"
 
-	set cmd { }
 	lappend cmd cmake
-	lappend cmd "-DCMAKE_IGNORE_PREFIX_PATH=/;/usr"
-	lappend cmd "-DCMAKE_MODULE_PATH=[join ${api_dirs} ";"];[file join $tool_dir cmake Modules]"
+	lappend cmd "-DCMAKE_IGNORE_PREFIX_PATH='/;/usr'"
+	lappend cmd "-DCMAKE_MODULE_PATH='[join ${api_dirs} ";"];[file join $tool_dir cmake Modules]'"
 	lappend cmd "-DCMAKE_SYSTEM_NAME=Genode"
 	lappend cmd "-DCMAKE_C_COMPILER=${cross_dev_prefix}gcc"
 	lappend cmd "-DCMAKE_CXX_COMPILER=${cross_dev_prefix}g++"
@@ -41,7 +41,7 @@ proc create_or_update_build_dir { } {
 
 	lappend cmd [file join $project_dir src]
 
-	diag "create build directory via command:" {*}$cmd
+	diag "create build directory via cmake"
 
 	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:cmake\] /" >@ stdout} msg]} {
 		exit_with_error "build-directory creation via cmake failed:\n" $msg }
@@ -51,10 +51,13 @@ proc create_or_update_build_dir { } {
 
 
 proc build { } {
-	global verbose
+	global verbose tool_dir
+	global ldflags ldlibs_common ldlibs_exe
 	global config::build_dir config::jobs config::project_name
 
-	set cmd [list make -C $build_dir "-j$jobs"]
+	set     cmd [goa::sandboxed_build_command]
+	lappend cmd --setenv LDFLAGS "$ldflags $ldlibs_common $ldlibs_exe"
+	lappend cmd make -C $build_dir "-j$jobs"
 
 	if {$verbose == 0} {
 		lappend cmd "-s"
