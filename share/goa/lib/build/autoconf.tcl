@@ -19,12 +19,11 @@ proc create_or_update_build_dir { } {
 	#
 	if {[expr ![file exists [file join src configure]]]} {
 
-		set cmd { }
-
+		set     cmd [goa::sandboxed_build_command]
 		lappend cmd "autoreconf"
 		lappend cmd "--install"
 
-		diag "create build system via command:" {*}$cmd
+		diag "create build system via autoreconf"
 
 		cd $build_dir
 		if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:autoconf\] /" >@ stdout} msg]} {
@@ -33,7 +32,7 @@ proc create_or_update_build_dir { } {
 		cd $orig_pwd
 	}
 
-	set cmd { }
+	set     cmd [goa::sandboxed_build_command]
 
 	lappend cmd "./configure"
 	lappend cmd "--prefix" "/"
@@ -65,7 +64,7 @@ proc create_or_update_build_dir { } {
 	foreach arg [read_file_content_as_list [file join $project_dir configure_args]] {
 		lappend cmd $arg }
 
-	diag "create build directory via command:" {*}$cmd
+	diag "create build directory via autoconf"
 
 	cd $build_dir
 
@@ -81,7 +80,7 @@ proc build { } {
 	global verbose ldlibs_common ldlibs_exe ldlibs_so
 	global config::build_dir config::project_name config::jobs config::project_dir
 
-	set cmd { }
+	set     cmd [goa::sandboxed_build_command]
 
 	# pass variables that are not fully handled by configure scripts
 	lappend cmd make -C $build_dir
@@ -112,7 +111,7 @@ proc build { } {
 		return
 	}
 
-	diag "build via command" {*}$cmd
+	diag "build via make"
 
 	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:make\] /" >@ stdout}]} {
 		exit_with_error "build via make failed" }
