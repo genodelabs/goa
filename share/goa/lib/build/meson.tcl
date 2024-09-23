@@ -80,7 +80,7 @@ proc create_or_update_build_dir { } {
 
 	set source_dir [file join $project_dir src]
 
-	set cmd { }
+	set     cmd [sandboxed_build_command]
 	lappend cmd meson
 	lappend cmd "setup"
 
@@ -127,7 +127,7 @@ proc create_or_update_build_dir { } {
 	lappend cmd $build_dir
 	lappend cmd $source_dir
 
-	diag "create build directory via command: " {*}$cmd
+	diag "create build directory via meson"
 
 	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:meson\] /" >@ stdout} msg]} {
 		exit_with_error "build-directory creation via meson failed:\n" $msg }
@@ -140,7 +140,8 @@ proc build { } {
 	global verbose
 	global config::build_dir config::jobs config::project_name
 
-	set cmd [list ninja -C $build_dir "-j $jobs"]
+	set     cmd [sandboxed_build_command]
+	lappend cmd ninja -C $build_dir "-j $jobs"
 
 	if { $verbose } {
 		lappend cmd "--verbose"
@@ -150,7 +151,8 @@ proc build { } {
 		exit_with_error "build via meson failed:\n" $msg }
 
 
-	set cmd [list meson install -C $build_dir]
+	set     cmd [sandboxed_build_command]
+	lappend cmd meson install -C $build_dir
 	if { $verbose == 0} {
 		lappend cmd "--quiet"
 	}
