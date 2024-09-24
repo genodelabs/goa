@@ -5,7 +5,10 @@ proc generate_static_stubs { libs } {
 	global tool_dir verbose cflags cppflags lib_src
 	global config::abi_dir config::cross_dev_prefix config::cc_march config::project_name
 
-	set     cmd "make -f $tool_dir/lib/gen_static_stubs.mk"
+	set     cmd [sandboxed_build_command]
+	lappend cmd --bind $abi_dir
+
+	lappend cmd make -f $tool_dir/lib/gen_static_stubs.mk
 	lappend cmd "LIBS=[join $libs { }]"
 	lappend cmd "TOOL_DIR=$tool_dir"
 	lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
@@ -17,11 +20,11 @@ proc generate_static_stubs { libs } {
 	if {$verbose == 1} {
 		lappend cmd "VERBOSE=''"
 	}
-	diag "generate static library stubs via command: [join $cmd { }]"
+	diag "generate static library stubs"
 
 	if {[catch { exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:stubs\] /" >@ stdout }]} {
 		exit_with_error "failed to generate static library stubs for the following libraries:\n" \
-		                [join $used_apis "\n "] }
+		                [join $libs "\n "] }
 }
 
 
@@ -34,7 +37,7 @@ proc build { } {
 	global config::project_name config::jobs config::project_dir config::cc_march
 
 	set rustflags { }
-	set gcc_unwind [exec $cross_dev_prefix\gcc $cc_march -print-file-name=libgcc_eh.a]
+	set gcc_unwind [exec_tool_chain gcc $cc_march -print-file-name=libgcc_eh.a]
 	lappend ldflags $gcc_unwind
 
 	foreach x $ldflags {
@@ -49,26 +52,28 @@ proc build { } {
 		lappend rustflags -C link-arg=$x
 	}
 
-	set ::env(RUSTFLAGS) $rustflags
-	set ::env(RUST_STD_FREEBSD_12_ABI) 1
-
 	set fake_libs { execinfo pthread gcc_s c m rt util memstat kvm procstat devstat }
 
 	generate_static_stubs $fake_libs
 
-	set cmd { }
+	set     cmd [sandboxed_build_command]
+	lappend cmd --setenv RUSTFLAGS $rustflags
+	lappend cmd --setenv RUST_STD_FREEBSD_12_ABI 1
+	lappend cmd --ro-bind [file join $::env(HOME) .rustup]
+	lappend cmd --with-network
 	lappend cmd cargo build
 	if {!$debug} {
 		lappend cmd "-r" }
 	lappend cmd "--target" $tool_dir/cargo/x86_64-unknown-genode.json
-	lappend cmd --config target.x86_64-unknown-genode.linker="$cross_dev_prefix\gcc"
-	lappend cmd --config profile.release.panic="abort"
-	lappend cmd --config profile.dev.panic="abort"
+	lappend cmd --config target.x86_64-unknown-genode.linker='\"$cross_dev_prefix\gcc\"'
+	lappend cmd --config profile.release.panic='\"abort\"'
+	lappend cmd --config profile.dev.panic='\"abort\"'
 	# let cargo know we need to build panic_abort too, see
 	# https://github.com/rust-lang/wg-cargo-std-aware/issues/29
 	lappend cmd -Z build-std=std,panic_abort
 
-	set copy [list cp -f -l]
+	set     copy [sandboxed_build_command]
+	lappend copy cp -f -l
 
 	if {$verbose == 1} {
 		lappend cmd "-vv"
@@ -77,7 +82,7 @@ proc build { } {
 
 	set orig_pwd [pwd]
 	cd $build_dir
-	diag "build via command" {*}$cmd
+	diag "build via cargo"
 
 	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:cargo\] /" >@ stdout} msg]} {
 		exit_with_error "build via cargo failed: $msg" }
