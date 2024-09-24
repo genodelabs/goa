@@ -5,6 +5,7 @@
 namespace eval goa {
 	namespace export build-dir build using_api used_apis check_abis
 	namespace export build extract_artifacts_from_build_dir extract_api_artifacts
+	namespace export gaol_with_toolchain
 	namespace export extract-abi-symbols
 
 	proc sandboxed_build_command { } {
