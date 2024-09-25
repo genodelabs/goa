@@ -75,13 +75,14 @@ proc create_or_update_build_dir { } {
 	global ldlibs_exe ldlibs_so
 	global config::build_dir config::project_dir config::abi_dir
 	global config::cross_dev_prefix config::project_name
+	global config::toolchain_version
 
 	set qmake_platform [_qmake_platform]
 	set qt_version     [_qt_version]
 	if { $qt_version == "qt6" } {
-		set qt_tool_dir "/usr/local/genode/tool/23.05/qt6"
+		set qt_tool_dir "/usr/local/genode/tool/$toolchain_version/qt6"
 	} else {
-		set qt_tool_dir "/usr/local/genode/tool/23.05"
+		set qt_tool_dir "/usr/local/genode/tool/$toolchain_version"
 	}
 
 	if {![file exists $build_dir]} {
@@ -95,7 +96,9 @@ proc create_or_update_build_dir { } {
 
 	set qt_api ${qt_version}_base
 
-	file link -symbolic qmake_root/bin $qt_tool_dir/bin
+	# $qt5_tool_dir might only exist in sandbox environment, hence use ln
+	exec ln -sf $qt_tool_dir/bin qmake_root/bin
+
 	file link -symbolic qmake_root/include [file join [api_archive_dir $qt_api] include]
 	file link -symbolic qmake_root/lib $abi_dir
 	file link -symbolic qmake_root/libexec $qt_tool_dir/libexec

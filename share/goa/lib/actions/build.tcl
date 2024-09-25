@@ -7,6 +7,7 @@ namespace eval goa {
 	namespace export build extract_artifacts_from_build_dir extract_api_artifacts
 	namespace export gaol_with_toolchain
 	namespace export extract-abi-symbols
+	namespace export install-toolchain
 
 	proc sandboxed_build_command { } {
 		global config::project_dir config::depot_dir config::var_dir config::build_dir
@@ -71,12 +72,16 @@ namespace eval goa {
 	proc gaol_with_toolchain { {silent 0} } {
 
 		global   gaol verbose allowed_tools
+		variable toolchain_dirs
 
 		set     cmd $gaol
 		lappend cmd --system-usr
 
 		foreach dir [lsearch -all -inline -not $allowed_tools /usr*] {
 			lappend cmd --ro-bind $dir }
+
+		foreach { base_dir at } $toolchain_dirs {
+			lappend cmd --ro-bind-at [file join $base_dir $at] /$at }
 
 		if {$verbose && !$silent} {
 			lappend cmd --verbose }
@@ -126,6 +131,17 @@ namespace eval goa {
 		lappend cmd $cross_dev_prefix$bin
 
 		exec {*}$cmd {*}$args
+	}
+
+
+	proc is_toolchain_path { path } {
+		variable toolchain_dirs
+
+		foreach { dummy dir } $toolchain_dirs {
+			if {[regexp "^/$dir" $path]} {
+				return 1 } }
+
+		return 0
 	}
 
 
@@ -241,6 +257,74 @@ namespace eval goa {
 	}
 
 	##
+	# Make tool chain available (download and install if necessary)
+	#
+	proc install-toolchain { keep_mounted } {
+
+		global gaol tool_dir verbose
+		global config::cross_dev_prefix
+		global config::install_dir config::toolchain_version
+		variable toolchain_dirs {}
+
+		##
+		# Check for system-wide availability of the Genode tool chain
+		#
+		if {[have_installed ${cross_dev_prefix}gcc]} {
+			return
+		} elseif {$cross_dev_prefix != [::config::default_cross_dev_prefix] } {
+			exit_with_error "the custom tool chain ${cross_dev_prefix}" \
+			                "is required but not installed." \
+			                "Please remove cross_dev_prefix from your goarc" \
+			                "to enable automated tool-chain installation." \
+		}
+
+		set toolchain genode-toolchain-$toolchain_version
+
+		if {![file exists $install_dir]} {
+			file mkdir $install_dir }
+
+		exit_if_not_installed curl xzcat sqfstar squashfuse_ll
+
+		# trigger (re-)download, integrity check and squashfs creation
+		set     install_cmd $gaol
+		lappend install_cmd --system-usr
+		lappend install_cmd --ro-bind [file join $tool_dir lib]
+		lappend install_cmd --bind $install_dir
+		lappend install_cmd --with-network
+		lappend install_cmd [file join $tool_dir lib install_tool.mk]
+		lappend install_cmd $toolchain
+		lappend install_cmd INSTALL_DIR=$install_dir
+		if {[catch {exec {*}$install_cmd >&@ stdout}]} {
+			exit_with_error "Unable to install $toolchain" }
+
+		# create mountpoint
+		set     mount_dir [file join $install_dir $toolchain]
+		if {![file exists $mount_dir]} {
+			file mkdir $mount_dir
+		} elseif {[glob -nocomplain -dir $mount_dir *] != ""} {
+			exec fusermount -u $mount_dir
+		}
+
+		# mount squashfs
+		set     mount_cmd squashfuse_ll
+		if {!$keep_mounted} {
+			lappend mount_cmd -f }
+		lappend mount_cmd [file join $install_dir download $toolchain.squashfs]
+		lappend mount_cmd $mount_dir
+		spawn -noecho {*}$mount_cmd
+
+		# remember mountpoint and location (used in gaol_with_toolchain)
+		lappend  toolchain_dirs $mount_dir usr/local/genode
+
+		# check mount availability
+		after 100
+		if {![file exists $mount_dir/${cross_dev_prefix}gcc]} {
+			if {$verbose} { expect -i $spawn_id }
+			exit_with_error "Installation of tool chain at $mount_dir failed."
+		}
+	}
+
+	##
 	# Implements 'goa build-dir' command
 	#
 	proc build-dir { } {
@@ -252,16 +336,6 @@ namespace eval goa {
 		global config::build_dir api_dirs
 		global config::with_backtrace config::warn_strict config::depot_user
 		global config::project_name config::project_dir
-
-		#
-		# Check for availability of the Genode tool chain
-		#
-		if {![have_installed ${cross_dev_prefix}gcc]} {
-			exit_with_error "the tool chain ${cross_dev_prefix}" \
-			                 "is required but not installed." \
-			                 "Please refer to https://genode.org/download/tool-chain" \
-			                 "for more information."
-		}
 
 		#
 		# Prepare depot content for the used APIs and generate ABI stubs
@@ -290,7 +364,7 @@ namespace eval goa {
 
 		# filter out non-existing include directories
 		foreach dir $include_dirs {
-			if {[file exists $dir]} {
+			if {[file exists $dir] || [is_toolchain_path $dir]} {
 				lappend existing_include_dirs $dir } }
 		set include_dirs $existing_include_dirs
 

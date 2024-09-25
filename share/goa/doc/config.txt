@@ -57,7 +57,7 @@ Goa evaluates the following configuration variables.
 
 :cross_dev_prefix:
   The tool-chain prefix for the Genode cross compiler.
-  The default value is "/usr/local/genode/tool/current/bin/genode-x86-".
+  The default value is "/usr/local/genode/tool/<toolchain_version>/bin/genode-x86-".
 
 :rebuild:
   If set to 1 or if the command line argument *--rebuild* is specified,
@@ -109,6 +109,9 @@ Goa evaluates the following configuration variables.
 :run_dir: The directory where Genode test scenarios are assembled when
   executing the *run* command. The default is _var/run/_ within the project
   directory.
+
+:install_dir: The directory where additional build tools are downloaded and
+  installed.
 
 :common_var_dir:
   If defined, Goa places all generated files in the specified directory
@@ -195,6 +198,9 @@ Goa evaluates the following configuration variables.
   published. The default value can either be overridden by setting this
   configuration variable in a custom _goarc_ file or via the
   *--sculpt-version* command-line argument.
+
+:toolchain_version:
+  Specifies the to-be-used version of the Genode toolchain.
 
 :target:
   Specifies the run target used for *goa run*. The default value is "linux".

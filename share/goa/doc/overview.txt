@@ -181,6 +181,14 @@ Commands
 :goa diff:
   Show local modifications of the imported 3rd-party software.
 
+:goa install-toolchain [--keep-mounted]:
+  Downloads and installs the Genode toolchain as a squashfs archive into
+  the var/install/ directory if no system-wide installation was found. This
+  command is executed as a prerequisite of the 'build-dir' command. During
+  Goa's execution, the squashfs archive will be temporarily mounted using FUSE.
+  When provided with the --keep-mounted option, the mount is kept persistent
+  after Goa exited.
+
 :goa depot-dir:
   Create a depot directory and install default depot users.
 

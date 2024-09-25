@@ -114,7 +114,8 @@ proc run_goa_until {{test} {timeout_value 0}} {
 	variable public var
 	set public [file join [_find_tool_dir] public]
 	set var    [file join [_find_tool_dir] var]
-	eval spawn $goa run -C $test_dir --public-dir $public --common-var-dir $var
+	set tool   [file join $var tool]
+	eval spawn $goa run -C $test_dir --public-dir $public --install-dir $tool --common-var-dir $var
 	set result [wait_for_output $test_output($test) $timeout_value $spawn_id]
 
 	#

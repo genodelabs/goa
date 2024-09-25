@@ -187,6 +187,10 @@ if {![file exists src]} {
 	set perform(build)     0
 }
 
+if {$perform(install-toolchain)} {
+	goa install-toolchain $args(keep_mounted)
+}
+
 
 if {$perform(build-dir)} {
 
