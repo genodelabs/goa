@@ -38,14 +38,14 @@ are described in Chapter 5 of the Genode Foundations book:
 Installation
 ------------
 
-# Install the latest Genode tool chain on a GNU/Linux OS on a 64-bit x86 PC.
-  It is recommended to use the latest long-term support (LTS) version of
-  Ubuntu. Make sure that your installation satisfies the following
-  requirements.
+# It is recommended to use the latest long-term support (LTS) version of
+  Ubuntu on a 64-bit x86 PC. Make sure that your installation satisfies the
+  following requirements.
 
   * _libSDL-dev_ needed to run system scenarios directly on your host OS,
   * _tclsh_ and _expect_ needed by the tools,
   * _xmllint_ for validating configurations,
+  * _bubblewrap_ for sandboxed build environments,
 
 # Clone the Goa repository:
 
@@ -63,6 +63,15 @@ Installation
     (replace '<goa-dir>' with the absolute path of your clone):
 
     ! export PATH=$PATH:<goa-dir>/bin
+
+# Provide the latest Genode toolchain by either
+
+  * Installing the Genode toolchain following the instructions at
+    [https://genode.org/download/tool-chain]
+
+  * Making sure _squashfs-tools_ and _squashfuse_ are installed so that Goa
+    is able to download the latest Genode toolchain and make it available in
+    the sandboxed build environment
 
 # Optionally, enable bash completion by adding the following line to your
   '~/.bashrc' file:
