@@ -30,5 +30,6 @@
 		<rom label="libdrm.lib.so"/>
 		<rom label="expat.lib.so"/>
 		<rom label="vfs_gpu.lib.so"/>
+		<rom label="libiconv.lib.so"/>
 	</content>
 </runtime>

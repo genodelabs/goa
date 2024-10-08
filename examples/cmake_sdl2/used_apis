@@ -2,5 +2,5 @@ genodelabs/api/base
 genodelabs/api/libc
 genodelabs/api/stdcxx
 genodelabs/api/mesa
-jschlatow/api/zlib/2024-01-05
-jschlatow/api/sdl2/2023-12-15-b
+genodelabs/api/zlib
+jschlatow/api/sdl2/2024-04-11
