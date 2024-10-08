@@ -5,4 +5,4 @@ genodelabs/src/report_rom
 genodelabs/src/vfs
 genodelabs/src/vfs_block
 genodelabs/src/vfs_import
-genodelabs/src/rump
+genodelabs/src/vfs_rump
