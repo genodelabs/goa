@@ -11,6 +11,9 @@ proc create_or_update_build_dir { } {
 	} elseif { [regexp qt6_base [used_apis]] } {
 		set qt_version qt6
 		set qt_tool_dir "/usr/local/genode/tool/23.05/qt6"
+	} else {
+		exit_with_error "build via qmake failed: unable to detect Qt version\n" \
+		                "\n Please add qt5_base or qt6_base to your 'used_apis' file."
 	}
 
 	if {$arch == "x86_64"} {
