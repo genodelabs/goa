@@ -240,7 +240,7 @@ proc bind_required_services { &services } {
 
 		append routes "\n\t\t\t\t\t" \
 		              "<service name=\"Rtc\"> " \
-		              "<child name=\"rtc_drv\"/> " \
+		              "<child name=\"rtc\"/> " \
 		              "</service>"
 
 		_instantiate_rtc start_nodes archives modules
@@ -251,11 +251,11 @@ proc bind_required_services { &services } {
 	##
 	# add mesa gpu route if required by runtime
 	if {[info exists services(rom)]} {
-		set i [lsearch -regexp ${services(rom)} {label="mesa_gpu_drv.lib.so"}]
+		set i [lsearch -regexp ${services(rom)} {label="mesa_gpu.lib.so"}]
 		set services(rom) [lreplace ${services(rom)} $i $i]
 
 		append routes "\n\t\t\t\t\t" \
-		              "<service name=\"ROM\" label=\"mesa_gpu_drv.lib.so\"> " \
+		              "<service name=\"ROM\" label=\"mesa_gpu.lib.so\"> " \
 		              "<parent label=\"mesa_gpu-softpipe.lib.so\"/> " \
 		              "</service>"
 
@@ -473,7 +473,7 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules &
 
 	global run_as
 
-	set driver_name nic_drv_$tap_name
+	set driver_name nic_$tap_name
 	set router_name nic_router_$tap_name
 
 	set forward_rules { }
@@ -497,7 +497,7 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules &
 
 	append start_nodes {
 			<start name="} $driver_name {" caps="100" ld="no">
-				<binary name="linux_nic_drv"/>
+				<binary name="linux_nic"/>
 				<resource name="RAM" quantum="4M"/>
 				<provides> <service name="Nic"/> </provides>}
 	if {$tap_name != ""} {
@@ -542,9 +542,9 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules &
 			</start>
 	}
 
-	lappend modules linux_nic_drv nic_router
+	lappend modules linux_nic nic_router
 
-	lappend archives "$run_as/src/linux_nic_drv"
+	lappend archives "$run_as/src/linux_nic"
 	lappend archives "$run_as/src/nic_router"
 
 	return $router_name
@@ -559,8 +559,8 @@ proc _instantiate_uplink_client { uplink_label &start_nodes &archives &modules }
 	global project_name run_as
 
 	append start_nodes "\n" {
-			<start name="nic_drv" caps="100" ld="no">
-				<binary name="linux_nic_drv"/>
+			<start name="nic" caps="100" ld="no">
+				<binary name="linux_nic"/>
 				<resource name="RAM" quantum="4M"/>
 				<provides> <service name="Uplink"/> </provides>}
 	if {$uplink_label != ""} {
@@ -575,9 +575,9 @@ proc _instantiate_uplink_client { uplink_label &start_nodes &archives &modules }
 			</start>
 	}
 
-	lappend modules linux_nic_drv
+	lappend modules linux_nic
 
-	lappend archives "$run_as/src/linux_nic_drv"
+	lappend archives "$run_as/src/linux_nic"
 }
 
 
@@ -708,17 +708,17 @@ proc _instantiate_rtc { &start_nodes &archives &modules } {
 	global run_as
 
 	append start_nodes {
-			<start name="rtc_drv" caps="100" ld="no">
-				<binary name="linux_rtc_drv"/>
+			<start name="rtc" caps="100" ld="no">
+				<binary name="linux_rtc"/>
 				<resource name="RAM" quantum="1M"/>
 				<provides> <service name="Rtc"/> </provides>
 				<route> <any-service> <parent/> </any-service> </route>
 			</start>
 	}
 
-	lappend modules linux_rtc_drv
+	lappend modules linux_rtc
 
-	lappend archives "$run_as/src/linux_rtc_drv"
+	lappend archives "$run_as/src/linux_rtc"
 }
 
 

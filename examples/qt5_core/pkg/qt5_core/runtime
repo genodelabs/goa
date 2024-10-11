@@ -1,7 +1,7 @@
 <runtime ram="64M" caps="500" binary="test-qt_core">
 
 	<requires>
-		<rom label="mesa_gpu_drv.lib.so"/>
+		<rom label="mesa_gpu.lib.so"/>
 		<gpu/>
 		<timer/>
 	</requires>
