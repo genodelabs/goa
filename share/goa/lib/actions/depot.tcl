@@ -532,7 +532,7 @@ namespace eval goa {
 
 	proc export-index { &exported_archives } {
 
-		global project_dir depot_user
+		global project_dir depot_user depot_dir
 		upvar  ${&exported_archives} exported_archives
 
 		set index_file [file join $project_dir index]
@@ -679,7 +679,7 @@ namespace eval goa {
 
 	proc published-archives { } {
 
-		global project_dir publish_pkg bin_dir api_dir arch
+		global project_dir publish_pkg bin_dir api_dir arch depot_dir
 		set archives { }
 		set index_archive ""
 	
