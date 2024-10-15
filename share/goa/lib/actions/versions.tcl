@@ -14,7 +14,7 @@ namespace eval goa {
 			set old_version ""
 
 			catch {
-				set old_version [project_version $project_dir] }
+				set old_version [project_version_from_file $project_dir] }
 
 			# version already bumped?
 			if {[string first $target_version $old_version] == 0} {
