@@ -539,12 +539,11 @@ namespace eval goa {
 		if {[file exists $index_file] && [file isfile $index_file]} {
 			check_xml_syntax $index_file
 	
-			# check index file for any unexported Goa archives
+			# check index file for any missing archives
 			foreach { pkg_name pkg_archs } [pkgs_from_index $index_file] {
 				set archive "$depot_user/pkg/$pkg_name"
 	
 				catch {
-					set dir [find_project_dir_for_archive pkg $pkg_name]
 					set versioned_archive [lindex [apply_versions $archive] 0]
 	
 					# download or export archive if it has not been exported
@@ -554,6 +553,11 @@ namespace eval goa {
 							# try downloading first
 							if {![catch {try_download_archives [list [apply_arch $versioned_archive $pkg_arch]]}]} {
 								continue }
+
+							set dir {}
+							catch { set dir [find_project_dir_for_archive pkg $pkg_name] }
+							if {$dir == ""} {
+								exit_with_error "unable to download or export missing archive $versioned_archive" }
 	
 							# check that the expected version matches the exported version
 							set exported_archive_version [exported_project_archive_version $dir $archive]
@@ -763,7 +767,8 @@ namespace eval goa {
 					file delete -force [file join $depot_dir $archive]
 					lappend missing_archives $archive
 				}
-			}
+			} else {
+				exit_with_error "\n$msg" }
 		}
 	
 		# re-download missing archives
