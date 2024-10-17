@@ -583,13 +583,13 @@ namespace eval goa {
 
 	proc import-dependencies { exported_archives &export_projects} {
 
-		global tool_dir depot_dir public_dir depot_user arch
+		global tool_dir depot_dir public_dir depot_user
 		upvar  ${&export_projects} export_projects
 	
 		# determine dependent projects that need exporting
-		if {[llength $exported_archives] > 0} {
+		foreach exported_archive $exported_archives {
 			set cmd "[file join $tool_dir depot dependencies]"
-			set cmd [concat $cmd $exported_archives]
+			set cmd [concat $cmd $exported_archive]
 			lappend cmd "DEPOT_TOOL_DIR=[file join $tool_dir depot]"
 			lappend cmd "DEPOT_DIR=$depot_dir"
 			lappend cmd "PUBLIC_DIR=$public_dir"
@@ -604,9 +604,15 @@ namespace eval goa {
 					if {[catch {archive_parts $archive user type name vers}]} {
 						continue
 					}
+
+					# transfer arch from $exported_archive
+					if {$type == "pkg"} {
+						archive_name_and_arch $exported_archive _name _arch
+						set archive [apply_arch $archive $_arch]
+					}
 	
 					# try downloading before exporting
-					if {![catch {try_download_archives [list [string trim $line]]}]} {
+					if {![catch {try_download_archives [list $archive]}]} {
 						continue }
 	
 					if {![catch {find_project_dir_for_archive $type $name} dir]} {
@@ -623,7 +629,7 @@ namespace eval goa {
 						set export_projects($archive) $dir
 					} else {
 						set archives_incomplete 1
-						log "Unable to download or to find project directory for '[string trim $line]'"
+						log "Unable to download or to find project directory for '$archive'"
 					}
 				}
 			}
@@ -739,7 +745,8 @@ namespace eval goa {
 	
 			if {![catch { exec {*}$cmd 2> /dev/null } msg]} {
 				foreach line [split $msg \n] {
-					if {[catch {archive_parts [string trim $line] user type name vers}]} {
+					set archive [string trim $line]
+					if {[catch {archive_parts $archive user type name vers}]} {
 						continue
 					}
 	
@@ -747,14 +754,14 @@ namespace eval goa {
 						continue
 					}
 	
-					if {[file exists [file join $public_dir "$line.tar.xz.sig"]]} {
+					if {[file exists [file join $public_dir "$archive.tar.xz.sig"]]} {
 						continue }
 
-					diag "deleting $line from depot to trigger re-download"
+					diag "deleting $archive from depot to trigger re-download"
 	
 					# remove archive from depot_dir to trigger re-download
-					file delete -force [file join $depot_dir $line]
-					lappend missing_archives $line
+					file delete -force [file join $depot_dir $archive]
+					lappend missing_archives $archive
 				}
 			}
 		}
