@@ -9,7 +9,7 @@
 proc _find_tool_dir { } {
 	global argv0
 
-	set path $argv0
+	set path [file normalize $argv0]
 	if {[file type $path] == "link"} {
 
 		set link_target [file readlink $path]
