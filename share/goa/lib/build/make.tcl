@@ -49,7 +49,7 @@ proc create_or_update_build_dir { } {
 
 	# write build command to file
 	set fd [open $signature_file w]
-	puts $fd $cmd
+	puts $fd [join $cmd { }]
 	close $fd
 }
 
