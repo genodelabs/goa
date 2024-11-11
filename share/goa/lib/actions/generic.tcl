@@ -23,8 +23,8 @@ namespace eval goa {
 		}
 		set     cmd [file join $tool_dir gosh gosh]
 		lappend cmd --style man $file | man -l -
-		spawn -noecho sh -c "$cmd"
-		interact
+		system {*}$cmd
+		exit
 	}
 
 	##
