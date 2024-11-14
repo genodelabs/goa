@@ -42,31 +42,59 @@ proc out_man {string} {
 	set string " $string "
 	
 	# italic style #
-	while {[regexp {([ \"\(])_(.+?)_([ \)\.\",!?])} $string dummy head_char emph_text tail_char]} {
-		regsub -all {_} $emph_text " " emph_text
+	while {[regexp {([ \"\(])_(.+?)_([ \)\.\",:!?])} $string dummy head_char emph_text tail_char]} {
+		regsub {^_} $emph_text " " emph_text
+		regsub {_$} $emph_text " " emph_text
 		regsub " " $tail_char "" tail_char
+		regsub " " $head_char "" head_char
 		regsub {\.} $tail_char {\\\\\\\&.} tail_char
-		regsub {([ \"\(])_(.+?)_([ \)\.\",!?])} $string "$head_char\n.I $emph_text\n$tail_char" string
+		regsub {"}  $head_char {\\(dq} head_char
+		regsub {"}  $tail_char {\\(dq} tail_char
+
+		if { $tail_char != "" } {
+			set emph_text "$emph_text\\c" }
+		if { $head_char != "" } {
+			set head_char "$head_char\\c" }
+
+		regsub {([ \"\(])_(.+?)_([ \)\.\",:!?])} $string "$head_char\n.I $emph_text\n$tail_char" string
 	}
 
 	# bold style #
-	while {[regexp {([ \"\(])\*(.+?)\*([ \)\.\",!?])} $string dummy head_char bf_text tail_char]} {
+	while {[regexp {([ \"\(])\*(.+?)\*([ \)\.\",:!?])} $string dummy head_char bf_text tail_char]} {
 		regsub -all {\*} $bf_text " " bf_text
 		regsub " " $tail_char "" tail_char
+		regsub " " $head_char "" head_char
 		regsub {\.} $tail_char {\\\\\\\&.} tail_char
-		regsub {([ \"\(])\*(.+?)\*([ \)\.\",!?])} $string "$head_char\n.B $bf_text\n$tail_char" string
+		regsub {"}  $head_char {\\(dq} head_char
+		regsub {"}  $tail_char {\\(dq} tail_char
+
+		if { $tail_char != "" } {
+			set bf_text "$bf_text\\c" }
+		if { $head_char != "" } {
+			set head_char "$head_char\\c" }
+
+		regsub {([ \"\(])\*(.+?)\*([ \)\.\",:!?])} $string "$head_char\n.B $bf_text\n$tail_char" string
 	}
 	
 	# monospace style #
 #	while {[regexp {([ \(])\'(.+?)\'([ \)\.,!?])} $string dummy head_char code_text tail_char]} {
 #		regsub {([ \(])\'(.+?)\'([ \)\.,!?])} $string "$head_char\\texttt{$code_text}$tail_char" string
 #	}
+
+	# insert hyperlinks
+	while {[regexp {\[(https?://[^\]]+)\]([ \)\.\",:!?])} $string dummy ref_text tail_char space_char]} {
+		set url ""
+		regexp {^(\w+:[^ ]+)} $ref_text url
+		regsub {\[([^\]]+)\]([ \)\]\.\",:!?])} $string "\n.UR $url\n.UE $tail_char\n" string
+	}
 	
 	regsub -all {"} $string "\"" string
 	regsub {^ } $string "" string
 	regsub { $} $string "" string
+	regsub {\n$} $string "" string
+	regsub {^\n} $string "" string
 
-	regsub {^\.} $string {\\\&.} string
+	regsub {^\.[^UBI]} $string {\\\&.} string
 	regsub -lineanchor {^'} $string {\(cq} string
 
 	return $string
