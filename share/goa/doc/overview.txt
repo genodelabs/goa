@@ -92,7 +92,7 @@ USAGE
 :goa help [<topic>]:
   Show the documentation about the specified topic.
   Available topics are 'overview' (this document), 'config', 'artifacts',
-  'add-depot-user', 'build-systems', 'import', 'targets'
+  'add-depot-user', 'api', 'build-systems', 'import', 'index', 'runtime', 'targets'
 
 :goa update-goa [<version>]:
   Update the Goa tool to the latest minor version if called without
@@ -104,10 +104,14 @@ USAGE
 :goa --version:
   Print current major version of the Goa tool.
 
+:goa archive-versions:
+  Print information about known depot-archive versions.
+
 :goa bump-version [<version>]:
   Update version file of a Goa project. If <version> is not provided, the
   current date is taken. If the project version already matches the desired
-  date, "-a" is added as a suffix and alphabetically incremented.
+  date, "-a" is added as a suffix and alphabetically incremented for every
+  version bump.
 
 :goa import:
   Download and patch 3rd-party source code according to the rules given by
@@ -192,9 +196,6 @@ USAGE
   contains the specified user ID.
 
   This command implies the 'depot-dir' command.
-
-:goa archive-versions:
-  Print information about known depot-archive versions.
 
 OPTIONAL ARGUMENTS
 ##################
