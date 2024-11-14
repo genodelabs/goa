@@ -5,7 +5,7 @@
                               Johannes Schlatow
 
 Goa automatically detects the kind of build system used based on the content of
-the src/ directory. E.g. if the directory contains a plain Makefile, Goa
+the _src/_ directory. E.g. if the directory contains a plain Makefile, Goa
 assumes the use of GNU Make. Other options are listed below.
 
 ALTERNATIVE BUILD SYSTEMS
@@ -15,75 +15,75 @@ autoconf
 ========
 
 If Goa encounters a configure or a configure.ac file, it follows the usual
-'./configure; make; make install' procedure. Project-specific configure
+*./configure; make; make install* procedure. Project-specific configure
 arguments can be supplied via the configure_args file. The install prefix is
-set to '<build-dir>/install'.
+set to _<build-dir>/install_.
 
 The out-of-tree build is realized by following the symlink-based mirroring
 approach (as used by Goa for plain make) because autoconf-based out-of-tree
 builds do not always work.
 
 The configure step is taken only once when creating the build directory and the
-generated config.status file does not yet exist.
+generated _config.status_ file does not yet exist.
 
-If a project has no configure script but only a configure.ac file, autoconf has
+If a project has no configure script but only a _configure.ac_ file, autoconf has
 to generate a configure script from that file first. The appropriate way to
 trigger this is by calling autoreconf
 
 
 Cargo
 =====
-If Goa encounters a Cargo.toml file in the src/ directory, it uses Cargo
-(see https://github.com/rust-lang/cargo/) to build a Rust project. Cargo is
-configured to build a release binary. Use the --debug command-line argument in
+If Goa encounters a _Cargo.toml_ file in the _src/_ directory, it uses Cargo - see
+[https://github.com/rust-lang/cargo/] - to build a Rust project. Cargo is
+configured to build a release binary. Use the *--debug* command-line argument in
 goa to switch to the dev profile
-(see https://doc.rust-lang.org/cargo/reference/profiles.html) and build a debug
+- see [https://doc.rust-lang.org/cargo/reference/profiles.html] - and build a debug
 binary. For more information on obtaining a Rust toolchain for Genode, consult
 the release notes for Genode 23.08 at
-https://genode.org/documentation/release-notes/23.08.
+[https://genode.org/documentation/release-notes/23.08].
 
 
 CMake
 =====
 
-CMake is used, if Goa encounters a CMakeList.txt file in the src/ directory.
-Project-specific CMake configuration arguments are read from the cmake_args
+CMake is used, if Goa encounters a _CMakeList.txt_ file in the _src/_ directory.
+Project-specific CMake configuration arguments are read from the _cmake_args_
 file.
 
 Meson
 =====
 
-Meson is used, if Goa encounters a meson.build file in the src/ directory.
-Project-specific Meson configuration arguments are read from the meson_args
+Meson is used, if Goa encounters a meson.build file in the _src/_ directory.
+Project-specific Meson configuration arguments are read from the _meson_args_
 file.
 
 
 qmake (Qt)
 ==========
 
-If Goa detects the presence of any .pro file in the src/ directory, it assumes
+If Goa detects the presence of any _*.pro_ file in the _src/_ directory, it assumes
 the use of qmake.
 
 
 Xilinx Vivado
 =============
 
-If Goa finds a vivado.tcl file in the src/ directory, it uses Xilinx Vivado to
-re-create a bitstream project as specified in the vivado.tcl file. This file
+If Goa finds a _vivado.tcl_ file in the _src/_ directory, it uses Xilinx Vivado to
+re-create a bitstream project as specified in the _vivado.tcl_ file. This file
 must be created in Vivado with the following command:
 
-*write_project_tcl -paths_relative_to /path/to/workspace/dir vivado.tcl*
+! write_project_tcl -paths_relative_to /path/to/workspace/dir vivado.tcl
 
-The '-paths_relative_to' argument is essential because it converts the paths of
+The *-paths_relative_to* argument is essential because it converts the paths of
 the source files into relative paths. Furthermore, the required source files
-(as referenced in the checkRequiredFiles procedure in the tcl file) must be
-manually copied into the src/ directory with their unmodified relative paths.
+(as referenced in the *checkRequiredFiles* procedure in the tcl file) must be
+manually copied into the _src/_ directory with their unmodified relative paths.
 
-Furthermore, if Goa finds a devices file in the src/ directory, it generates a
-devices_manager.config. The devices file is an XML file that has the following
+Furthermore, if Goa finds a devices file in the _src/_ directory, it generates a
+_devices_manager.config_. The devices file is an XML file that has the following
 structure:
 
-*<devices> <device name="axi_dma_0" type="axi_dma"/> </devices>*
+! <devices> <device name="axi_dma_0" type="axi_dma"/> </devices>
 
 Each device node must at least contain a name or a type attribute. These
 attributes are used for module lookup in the hardware design. Goa automatically
@@ -93,7 +93,7 @@ for specifying XPAR_ parameter definitions for Xilinx standalone drivers.
 Missing property values are supplemented by definitions found in the hardware
 design.
 
-Note that Goa writes the bitstream to a <project_name>.bit file.
+Note that Goa writes the bitstream to a _<project_name>.bit_ file.
 
 
 SEE ALSO

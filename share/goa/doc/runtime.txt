@@ -5,15 +5,15 @@
                                Johannes Schlatow
 
 
-A 'runtime' file defines the runtime scenario. The file resides at a
-'pkg/<pkg-name>/' subdirectory and specifies the required/provided services,
+A _runtime_ file defines the runtime scenario. The file resides at a
+_pkg/<pkg-name>/_ subdirectory and specifies the required/provided services,
 the required ROM modules and the configuration of a Genode component.
 
 
 DESCRIPTION
 ###########
 
-The 'runtime' file contains XML data with a '<runtime>' node at top level. The
+The _runtime_ file contains XML data with a _<runtime>_ node at top level. The
 top-level node has the following mandatory attributes:
 
 :ram: The amount of RAM granted to the component. The attribute's value must be
@@ -28,18 +28,18 @@ Additionally, the top-level node may have the following optional attributes:
 
 :config: The name of a ROM module containing the component's configuration.
 
-The '<runtime>' node may further contain the following sub nodes:
+The _<runtime>_ node may further contain the following sub nodes:
 
 :<requires>: A list of the required services. Each required service is a
   dedicated sub node. The type of the sub node is the lowercased name of the
-  session interface, e.g. '<file_system/>' for a File_system session or '<gui/>'
+  session interface, e.g. _<file_system/>_ for a File_system session or _<gui/>_
   for a Gui session. Note that CPU, PD, LOG and RM are always granted and thus
   do not need to be mentioned here.
 
 :<provides>: A list of services provided by the component.
 
 :<config>: Contains the component's configuration. This is evaluated unless the
-  top-level node has a 'config' attribute.
+  top-level node has a _config_ attribute.
 
 :<content>: A list of required ROM modules. Each ROM module is specified by a
   '<rom label="..."/>' sub node.
@@ -49,7 +49,7 @@ EXAMPLES
 ########
 
 You can find a minimalistic example at
-'examples/hello_make/pkg/hello_make/runtime'. The scenario merely consists
+_examples/hello_make/pkg/hello_make/runtime_. The scenario merely consists
 of a single component with an empty configuration and no required services:
 
 ! <runtime ram="1M" caps="1000" binary="hello">
@@ -60,7 +60,7 @@ of a single component with an empty configuration and no required services:
 ! </runtime>
 
 A more advanced scenario resides at
-'examples/hello_make/pkg/multiple_hello_make/runtime'. It uses the init
+_examples/hello_make/pkg/multiple_hello_make/runtime_. It uses the init
 binary to create a subsystem comprising multiple components:
 
 ! <runtime ram="10M" caps="1000" binary="init">

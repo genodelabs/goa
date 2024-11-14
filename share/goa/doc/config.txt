@@ -5,18 +5,18 @@
                                  Norman Feske
 
 
-Goa can be configured using configuration files called 'goarc' or via
+Goa can be configured using configuration files called _goarc_ or via
 command-line arguments.
 
 
 Configuration files
 ###################
 
-Upon startup, Goa includes all files named 'goarc' found in the directory
+Upon startup, Goa includes all files named _goarc_ found in the directory
 hierarchy up to the project directory, starting with the root directory.
 This way, different aspects of Goa can be configured at different scopes.
 For example, settings that should be applied to any project of a given
-user can be defined at the user's home directory at '~/goarc', settings
+user can be defined at the user's home directory at _~/goarc_, settings
 shared by multiple Goa projects can be defined at the common parent directory
 of those projects, and project-specific settings can live local to the
 project directory.
@@ -27,7 +27,7 @@ is defined as follows:
 ! set <variable-name> <value>
 
 If <value> is a path name, the path can be specified relative to the location
-of the 'goarc' file or relative to the user's home directory '~'.
+of the _goarc_ file or relative to the user's home directory (_~/_).
 
 
 Settings
@@ -41,26 +41,26 @@ Goa evaluates the following configuration variables.
 
 :arch:
   The CPU architecture used for building the software.
-  Supported values are 'x86_64' and 'arm_v8a'.
-  It can be given via the optional '--arch' command-line argument.
+  Supported values are _x86_64_ and _arm_v8a_.
+  It can be given via the optional *--arch* command-line argument.
   If not specified, Goa targets the CPU architecture of the host machine by
-  default, probed via the 'uname -m' command.
+  default, probed via the *uname -m* command.
 
 :cross_dev_prefix:
   The tool-chain prefix for the Genode cross compiler.
   The default value is "/usr/local/genode/tool/current/bin/genode-x86-".
 
 :rebuild:
-  If set to 1 or if the command line argument '--rebuild' is specified,
+  If set to 1 or if the command line argument *--rebuild* is specified,
   a complete rebuild of the software is enforced each time Goa invokes the
   build system. With the default value 0, Goa triggers partial builds.
 
 :jobs:
   The amount of parallelism while building. If not defined, Goa determines
   a reasonable value that corresponds to the number of CPU cores according
-  to the information of '/proc/cpuinfo'. This built-in heuristics can be
-  overridden by assigning a number to the 'jobs' variable by specifying the
-  number to the '--jobs <N>' command-line argument.
+  to the information of _/proc/cpuinfo_. This built-in heuristics can be
+  overridden by assigning a number to the _jobs_ variable by specifying the
+  number to the *--jobs <N>* command-line argument.
 
 :ld_march:
   Architecture-specific linker arguments.
@@ -70,40 +70,40 @@ Goa evaluates the following configuration variables.
   Optimization level as passed to the compiler.
   The default value is "-O2".
 
-:depot_dir: The location of the Genode depot. The default is var/depot
+:depot_dir: The location of the Genode depot. The default is _var/depot_
   within the project directory. If no such directory exists, Goa creates
-  a new directory taking the content of 'share/goa/default_depot/' as
+  a new directory taking the content of _share/goa/default_depot/_ as
   starting point.
 
 :public_dir: The location of the public directory used for downloading
-  and publishing depot archives. The default is var/public within the
+  and publishing depot archives. The default is _var/public_ within the
   project directory.
 
-:contrib_dir: The location where 3rd-party software imported via the 'import'
-  command should be installed. The default is var/contrib within the
+:contrib_dir: The location where 3rd-party software imported via the *import*
+  command should be installed. The default is _var/contrib_ within the
   project directory.
 
 :build_dir: The build directory used by the build system. The default
-  is var/build/<arch>/ within the project directory.
+  is _var/build/<arch>/_ within the project directory.
 
 :abi_dir: The directory where Goa creates ABI stubs for any shared libraries
-  used by the project. The default is var/abi/<arch>/ within the project
+  used by the project. The default is _var/abi/<arch>/_ within the project
   directory.
 
 :bin_dir: The directory containing the final build artifacts extracted from
   the build directory upon the completion of the build process. The
-  default is var/bin/<arch>/ within the project directory.
+  default is _var/bin/<arch>/_ within the project directory.
 
 :dbg_dir: The directory containing debug info files for the final build
-  artifacts. The default is var/dbg/<arch>/ within the project directory.
+  artifacts. The default is _var/dbg/<arch>/_ within the project directory.
 
 :run_dir: The directory where Genode test scenarios are assembled when
-  executing the 'run' command. The default is var/run/ within the project
+  executing the *run* command. The default is _var/run/_ within the project
   directory.
 
 :common_var_dir:
   If defined, Goa places all generated files in the specified directory
-  instead of creating a 'var' directory inside the project directory.
+  instead of creating a _var_ directory inside the project directory.
   Within the common var directory, the content of each project is created
   in a subdirectory named after the project.
 
@@ -111,34 +111,34 @@ Goa evaluates the following configuration variables.
   separate from any generated files.
 
 :depot_overwrite:
-  Whenever Goa encounters the situation where a 'goa export' or 'goa publish'
+  Whenever Goa encounters the situation where a *goa export* or *goa publish*
   command would overwrite existing depot content, it aborts the command.
   Usually, this is an indicator that the project version is due for an
   update. However, while iteratively testing a new version, it is often useful
   to overwrite existing depot content. This can be achieved by setting the
-  value to 1 or by specifying the '--depot-overwrite' command-line argument.
+  value to 1 or by specifying the *--depot-overwrite* command-line argument.
 
 :depot_retain:
-  Whenever Goa encounters the situation where a 'goa export' or 'goa publish'
+  Whenever Goa encounters the situation where a *goa export* or *goa publish*
   command would overwrite existing depot content, it aborts the command.
-  By setting the value to 1 or by specifying the '--depot-retain' command-line
+  By setting the value to 1 or by specifying the *--depot-retain* command-line
   argument, Goa will not touch the existing depot content but continue the
   command.
 
 :depot_user:
   Depot user name to use when exporting or publishing the project via the
-  'export' or 'publish' commands. In order to be able to publish software,
+  *export* or *publish* commands. In order to be able to publish software,
   the GPG keyring must contain a private key that matches the specified
-  depot user's pubkey. Alternatively to setting the 'depot_user' variable,
-  the name can be specified for the 'export' or 'publish' commands
-  via the '--depot-user <name>' argument.
+  depot user's pubkey. Alternatively to setting the _depot_user_ variable,
+  the name can be specified for the *export* or *publish* commands
+  via the *--depot-user <name>* argument.
 
 :run_as:
-  The 'goa run' command requires several archives from the official genodelabs
+  The *goa run* command requires several archives from the official genodelabs
   depot. These archives are updated and published along with every Sculpt OS
   release. The archive versions stored in Goa are updated accordingly.
-  By setting the 'run_as' variable to your depot user name or by specifying
-  the '--run-as <name>' argument, you may load the required archives from your
+  By setting the *run_as* variable to your depot user name or by specifying
+  the *--run-as <name>* argument, you may load the required archives from your
   own depot instead.
 
 :license:
@@ -146,72 +146,72 @@ Goa evaluates the following configuration variables.
   file to the source archive, which is expected to be located as a file
   named LICENSE in the project directory. If many Goa projects share the same
   license, it would be cumbersome to spill LICENSE files everywhere.
-  In this case, a path to a license file can be supplied via the 'license'
-  configuration variable, or the '--license' command-line argument.
+  In this case, a path to a license file can be supplied via the _license_
+  configuration variable, or the *--license* command-line argument.
 
 :debug:
   If set to 1, Goa may use debug build mode to produce binaries with debug
   information (details depend on the build system). Furthermore, Goa extracts
   debug info files from the produced binaries and adds corresponding
-  .gnu_debuglink sections. The 'goa run' command tries downloading required dbg
+  .gnu_debuglink sections. The *goa run* command tries downloading required dbg
   archives and makes the contained debug info files available in the .debug
-  subdirectory of run_dir. If set to 1, the 'goa export' and 'goa publish'
+  subdirectory of run_dir. If set to 1, the *goa export* and *goa publish*
   commands are instructed to publish dbg archives along with the bin archives.
   Alternatively to defining the configuration variable, the debug build mode
-  can be enabled via the '--debug' command-line argument.
+  can be enabled via the *--debug* command-line argument.
 
 :with_backtrace:
   If set to 1, Goa adds the flag '-fno-omit-frame-pointer' to the compiler
   options in order to enable the use of backtraces. Alternatively to defining
   the configuration variable, the option can be enabled via the
-  '--with-backtrace' command-line argument.
+  *--with-backtrace* command-line argument.
 
 :binary_name:
   Goa's backtrace command tries to identify the name of the binary from the log
   output. If the component's name is different than the name of its binary, you
-  must set this configuration variable or use the '--binary-name' command-line
+  must set this configuration variable or use the *--binary-name* command-line
   argument.
 
 :warn_strict:
   If set to 1, Goa passes Genode's default strict C++ warning flags to the
   build system. It is implicitly enabled whenever a project uses the Genode
-  'base' API. By explicitly defining the value, strict warnings can be
+  _base_ API. By explicitly defining the value, strict warnings can be
   disabled for a Genode-API-using project, or enabled for any non-Genode-API
   project. Alternatively to defining the configuration variable, the
-  strict warnings can be enabled or disabled via the '--warn-strict' and
-  '--no-warn-strict' command-line arguments.
+  strict warnings can be enabled or disabled via the *--warn-strict* and
+  *--no-warn-strict* command-line arguments.
 
 :sculpt_version:
   Determines the Sculpt version for which a depot index is exported and
   published. The default value can either be overridden by setting this
-  configuration variable in a custom 'goarc' file or via the
-  '--sculpt-version' command-line argument.
+  configuration variable in a custom _goarc_ file or via the
+  *--sculpt-version* command-line argument.
 
 :target:
-  Specifies the run target used for 'goa run'. The default value is 'linux'.
+  Specifies the run target used for *goa run*. The default value is "linux".
   The value can be overridden by setting this configuration variable or by
-  providing the '--target' command-line argument. See 'goa help targets' for
+  providing the *--target* command-line argument. See *goa help targets* for
   more details.
 
 :target_opt(<option>):
   The target_opt array stores target-specific configurations. Alternatively to
-  setting this variable in a custom 'goarc' file, you may provide
-  '--target-opt-<option>' command-line arguments. See 'goa help targets' for
+  setting this variable in a custom _goarc_ file, you may provide
+  *--target-opt-<option>* command-line arguments. See *goa help targets* for
   more details.
 
 :version(<user>/<type>/<name>):
   The version array is indexed with a depot-archive path and contains the
   version to be assumed for this archive.
   The <user> corresponds to a depot user (a software source).
-  The <type> can be 'src', 'raw', 'api', or 'pkg'.
+  The <type> can be _src_, _raw_, _api_, or _pkg_.
   The <name> is the name of the archive.
   Goa comes with a data base of default versions, which can be found at
   share/goa/goarc.
   It is possible to instruct Goa to obtain version information directly
-  from a Genode source tree by using the 'versions_from_genode_dir' variable.
+  from a Genode source tree by using the _versions_from_genode_dir_ variable.
   To display Goa's currently known version information, you may use the
-  'goa archive-versions' command.
-  Version information can also be provided via '--version-<user>/<type>/<name>'
+  *goa archive-versions* command.
+  Version information can also be provided via *--version-<user>/<type>/<name>*
   command-line arguments.
 
 :versions_from_genode_dir:
@@ -219,16 +219,16 @@ Goa evaluates the following configuration variables.
   versions from the depot recipes stored in the Genode source tree.
   Since the corresponding archives are likely not available in the official
   genodelabs depot, you probably want to guide Goa to your personal depot by
-  setting the 'run_as' variable.
+  setting the _run_as_ variable.
 
 :search_dir:
   By default, Goa uses the original working directory for looking up versions
-  of other Goa projects. This can be changed by setting the 'search_dir'
-  variable in a custom 'goarc' file or by using the '--search-dir <dir>'
+  of other Goa projects. This can be changed by setting the _search_dir_
+  variable in a custom _goarc_ file or by using the *--search-dir <dir>*
   command-line argument.
 
 :cc_cxx_opt_std:
-  Overwrite C++ standard. The default is '-std=gnu++20'.
+  Overwrite C++ standard. The default is "-std=gnu++20".
 
 SEE ALSO
 ########

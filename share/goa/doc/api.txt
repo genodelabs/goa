@@ -5,7 +5,7 @@
                                   Pirmin Duss
 
 
-The 'api' file defines the include paths required by users of a project that
+The _api_ file defines the include paths required by users of a project that
 produces a library.
 
 
@@ -17,29 +17,23 @@ path relative to the build directory. The paths select the files and
 directories to be featured in the api archive of the library.
 If a path refers to a directory, all contained files are included.
 
-Note that the build directory also contains an 'install' subdirectory which is
-used as a destination directory for running 'make install' after a successful
+Note that the build directory also contains an _install_ subdirectory which is
+used as a destination directory for running *make install* after a successful
 build. When extracting include paths from the install subdirectory, the
-'install/' prefix is removed.
+_install/_ prefix is removed.
 
 
 Examples
 ########
 
-*include/spdlog.h*
+:include/spdlog.h: The file _include/spdlog.h_ from the build directory is added as a single
+  header file.
 
-The file 'include/spdlog.h' form the build directory is added as a single
-header file.
+:include/spdlog/: All files found in the directory _include/spdlog_ below the build directory are
+  added as artifacts. The relative directory structure is kept intact.
 
-*include/spdlog/*
-
-All files found in the directory 'include/spdlog' below the build directory are
-added as artifacts. The relative directory structure is kept intact.
-
-*install/include/spdlog*
-
-All files found in the directory 'install/include/spdlog' below the build
-directory are added as artifacts to 'include/spdlog' of the api archive.
+:install/include/spdlog: All files found in the directory _install/include/spdlog_ below the build
+  directory are added as artifacts to _include/spdlog_ of the api archive.
 
 SEE ALSO
 ########

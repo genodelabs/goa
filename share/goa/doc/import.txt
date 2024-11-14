@@ -5,7 +5,7 @@
                                Johannes Schlatow
 
 
-The 'import' file defines how to download, extract and patch 3rd-party source
+The _import_ file defines how to download, extract and patch 3rd-party source
 code.
 
 
@@ -25,9 +25,9 @@ which evaluates the following mandatory variables:
 :DOWNLOADS:
   This variable defines a list of downloads in the form of '<name>.<type>'. The
   <name> part is arbitrary and used for referencing in the URL, DIR and REV
-  variables. Supported <type> values are 'file' (a plain file), 'archive' (an
-  archive of the types tar.gz, tar.xz, tgz, tar.bz2, or zip), 'svn' (a
-  subversion repository), and 'git' (a git repository).
+  variables. Supported <type> values are _file_ (a plain file), _archive_ (an
+  archive of the types tar.gz, tar.xz, tgz, tar.bz2, or zip), _svn_ (a
+  subversion repository), and _git_ (a git repository).
 
 :URL(<name>):
   This variable defines the URL of a certain download.
@@ -37,11 +37,11 @@ which evaluates the following mandatory variables:
   the 3rd-party source code is going to be located.
 
 :SHA(<name>):
-  For downloads of type 'file' or 'archive, this variable defines the SHA256
+  For downloads of type _file_ or _archive_, this variable defines the SHA256
   hash of the downloaded file.
 
 :REV(<name>):
-  For downloads of type 'git' or 'svn', this variable defines the revision
+  For downloads of type _git_ or _svn_, this variable defines the revision
   to be checked out.
 
 In addition, the following optional variables are available that allow modifying
@@ -58,16 +58,16 @@ the directory structure and source code once it has been downloaded.
   Defines a list of patch files that are going to be applied to the source code.
 
 :PATCH_OPT:
-  Sets command line options supplied to the 'patch' command. Default: -p0
+  Sets command line options supplied to the *patch* command. Default: -p0
 
 
 EXAMPLES
 ########
 
-The following content of an 'import' file instructs Goa to clone a certain git
+The following content of an _import_ file instructs Goa to clone a certain git
 repository and checkout commit 'ba8881e2c9afb2f2345bd1df8d6b42cd1deadb08'. This
 is conducted in the contrib directory. The content is then copied into the
-'src/' subdirectory of the project.
+_src/_ subdirectory of the project.
 
 ! LICENSE := BSD
 ! VERSION := 1.2.3
@@ -78,16 +78,16 @@ is conducted in the contrib directory. The content is then copied into the
 ! DIR(foobar) := src
 
 Let's assume there are a few patches necessary to adapt the 3rd-party source
-code to Genode. These patches are present in the 'patches' subdirectory. Goa is
-then instructed to apply all the '*.patch' files found in this directory to the
+code to Genode. These patches are present in the _patches_ subdirectory. Goa is
+then instructed to apply all the _*.patch_ files found in this directory to the
 checked out source code as follows:
 
 ! PATCHES := $(notdir $(wildcard patches/*.patch))
 
-Furthermore, let's assume there is a 'background.png' file needed, which would
+Furthermore, let's assume there is a _background.png_ file needed, which would
 like to pack up in a raw archive. The file is present in the checked out git
-repository and can be placed into the 'raw/' directory with the following lines
-added to the 'import' file:
+repository and can be placed into the _raw/_ directory with the following lines
+added to the _import_ file:
 
 ! DIRS := raw
 ! DIR_CONTENT(raw) := src/resources/background.png

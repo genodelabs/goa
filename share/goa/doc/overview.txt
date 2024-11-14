@@ -26,14 +26,14 @@ It can have the following ingredients:
 
 :import: A file that describes how 3rd-party software is downloaded and
   patched for the use with Genode. It follows the lines of Genode's
-  time-tested 'ports' tool described at
-  https://genode.org/documentation/developer-resources/porting.
-  Note, import may populate 'src/' and 'raw/'. It will therefore overwrite
+  time-tested _ports_ tool described at
+  [https://genode.org/documentation/developer-resources/porting].
+  Note, import may populate _src/_ and _raw/_. It will therefore overwrite
   any existing content in these directories.
 
 :src/: A directory containing source code and build instructions. Goa
   automatically detects the kind of build system used. In particular,
-  if the src/ directory contains a CMakeLists.txt file, CMake is used.
+  if the _src/_ directory contains a _CMakeLists.txt_ file, CMake is used.
   If a plain Makefile is encountered, Goa assumes the use of GNU Make.
 
 :used_apis: A file containing a list of APIs used by the project.
@@ -56,10 +56,10 @@ It can have the following ingredients:
 
 :LICENSE: A file denoting the project's licensing terms, which is
   supplemented whenever a source-archive is exported from the project
-  via the 'export' or 'publish' commands.
+  via the *export* or *publish* commands.
 
-:index: A file that specifies a depot index. If an 'index' file is present,
-  the 'export' command will augment the archive names mentioned by the 'index'
+:index: A file that specifies a depot index. If an _index_ file is present,
+  the *export* command will augment the archive names mentioned by the _index_
   file with the current depot user and known archive versions, and export the
   result as a depot index for the current Sculpt version.
 
@@ -79,11 +79,11 @@ It can have the following ingredients:
 
 Any given project may feature a subset of those files or directories.
 For example, a plain port of a 3rd-party software package may contain
-only 'import', 'used_apis', 'artifacts', 'version' and LICENSE files.
-As another extreme, a project may only feature a 'pkg/' directory with
+only _import_, _used_apis_, _artifacts_, _version_ and _LICENSE_ files.
+As another extreme, a project may only feature a _pkg/_ directory with
 scenarios that plug existing Genode components together.
-Be aware, that a project must not contain a 'src/' or 'raw/' directory
-along with an 'import' file and vice versa.
+Be aware, that a project must not contain a _src/_ or _raw/_ directory
+along with an _import_ file and vice versa.
 
 
 USAGE
@@ -91,8 +91,8 @@ USAGE
 
 :goa help [<topic>]:
   Show the documentation about the specified topic.
-  Available topics are 'overview' (this document), 'config', 'artifacts',
-  'add-depot-user', 'api', 'build-systems', 'import', 'index', 'runtime', 'targets'
+  Available topics are *overview* (this document), *config*, *artifacts*,
+  *add-depot-user*, *api*, *build-systems*, *import*, *index*, *runtime*, *targets*.
 
 :goa update-goa [<version>]:
   Update the Goa tool to the latest minor version if called without
@@ -115,7 +115,7 @@ USAGE
 
 :goa import:
   Download and patch 3rd-party source code according to the rules given by
-  an 'import' file.
+  an _import_ file.
 
 :goa diff:
   Show local modifications of the imported 3rd-party software.
@@ -126,17 +126,17 @@ USAGE
 :goa build-dir:
   Create a build directory.
 
-  This command implies the 'depot-dir' command.
+  This command implies the *depot-dir* command.
 
-  If an 'import' file exists, this command automatically invokes the 'import'
+  If an _import_ file exists, this command automatically invokes the *import*
   command.
 
 :goa build:
   Invoke the build system and extract the resulting build artifacts
-  according to an 'artifacts' file. See 'goa help artifacts' for more
-  information about the syntax of an 'artifacts' file.
+  according to an _artifacts_ file. See 'goa help artifacts' for more
+  information about the syntax of an _artifacts_ file.
 
-  This command implies the 'build-dir' command.
+  This command implies the *build-dir* command.
 
   Note that the building of libraries is supported only via cmake.
 
@@ -146,27 +146,27 @@ USAGE
   The output is a file 'symbols/<library-name>'. For each library in the
   list of artifacts (recognized by the ending '.lib.so').
   You should review the files and add them to the repository.
-  They are required by users of the library during the 'build' step.
+  They are required by users of the library during the *build* step.
 
 :goa run-dir [--pkg <pkg-name>]:
   Prepare the run directory for executing the system scenario defined at
   pkg/<pkg-name>. If no argument is supplied, <pkg-name> is assumed to
   correspond to the name of the project directory.
 
-  This command implies the 'build' command.
+  This command implies the *build* command.
 
 :goa run [--pkg <pkg-name>]:
-  Execute a system scenario as prepared by the 'run-dir' command.
+  Execute a system scenario as prepared by the *run-dir* command.
 
-  This command implies the 'run-dir' command. The log of the scenario is stored
+  This command implies the *run-dir* command. The log of the scenario is stored
   in the project's run directory.
 
 :goa backtrace [--pkg <pkg-name>] [--binary-name <name>]:
-  Execute a system scenario with the 'run' command.
+  Execute a system scenario with the *run* command.
 
   After the user cancelled the scenario, the log saved output is passed to the
   backtrace utility. The name of the top-level binary can be provided via the
-  '--binary-name' argument.
+  *--binary-name* argument.
 
 :goa export [--depot-user <name>] [--pkg <pkg-name>]:
   Export entire project to a Genode depot. If <pkg-name> is supplied,
@@ -176,18 +176,18 @@ USAGE
   projects located in subdirectories of the current working directory, it
   may run the export command recursively.
 
-  This command implies the 'build' command.
+  This command implies the *build* command.
 
 :goa publish [--depot-user <name>] [--pkg <pkg-name>]:
-  Archive and sign depot archives generated via the 'export' command.
+  Archive and sign depot archives generated via the *export* command.
 
-  This command implies the 'export' command.
+  This command implies the *export* command.
 
 :goa add-depot-user <name> --depot-url <url> --pubkey-file <file>:
   Make a new depot user known at a Genode depot as software source
   by specifying a URL and the public key as an ASCII-armored file.
 
-  This command implies the 'depot-dir' command.
+  This command implies the *depot-dir* command.
 
 :goa add-depot-user <name> --depot-url <url> --gpg-user-id <id>:
   Make a new depot user known at a Genode depot as software source
@@ -195,7 +195,7 @@ USAGE
   email address. This command works only if the GPG keyring already
   contains the specified user ID.
 
-  This command implies the 'depot-dir' command.
+  This command implies the *depot-dir* command.
 
 OPTIONAL ARGUMENTS
 ##################
@@ -207,7 +207,7 @@ OPTIONAL ARGUMENTS
   Change into project directory <dir> before executing the command. The
   working directory before the change determines the scope in which Goa
   may locate dependent projects. This can be changed by setting the
-  'search_dir' variable.
+  _search_dir_ variable; see *goa help config* for further details.
 
 :-r:
   Recursively scan for project directories in the current working directory

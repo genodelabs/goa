@@ -5,9 +5,9 @@
                               Johannes Schlatow
 
 Goa supports different targets for executing a system scenario. A target is
-selected by setting the config 'target' variable or by providing the '--target'
-argument on the command line. By default, Goa uses the 'linux' target for
-'goa run'.
+selected by setting the config _target_ variable or by providing the *--target*
+argument on the command line. By default, Goa uses the _linux_ target for
+*goa run*.
 
 AVAILABLE TARGETS
 #################
@@ -16,7 +16,7 @@ linux
 =====
 
 This target uses base-linux to execute the project on top of the running Linux
-kernel. The 'linux' target evaluates the following services mentioned in
+kernel. The _linux_ target evaluates the following services mentioned in
 the _runtime_ file's <requires> node:
 
 :<event/>:
@@ -45,12 +45,12 @@ the _runtime_ file's <requires> node:
   fonts_fs component.
   For any other required _File_system_ a separate lx_fs component is added to
   the runtime and configured to provide access to the host directory
-  'var/projects/<project_name>/fs/<label>'.
+  _var/projects/<project_name>/fs/<label>_.
 
 :<nic label="<label>" tap_name="<tap_name>"/>:
   Required _Nic_ services are tied to a tap device on the host by adding a
   linux_nic and a nic_router to the runtime. The linux_nic is configured
-  to use the tap device '<tap_name>' (if provided, otherwise 'tap0') and
+  to use the tap device _<tap_name>_ (if provided, otherwise _tap0_) and
   connects to the uplink domain of the Nic router. The latter is configured as a
   DHCP client for its uplink interface and as a DHCP server for its default
   domain. Each nic_router will use a distinct subnet for its default domain,
@@ -58,17 +58,17 @@ the _runtime_ file's <requires> node:
   device in use, only a single pair of linux_nic and nic_router will be
   instantiated.
 
-  A '<nic>' node may contain an arbitrary number of '<tcp-forward>' and
-  '<udp-forward>' nodes, which are added to the Nic router's uplink domain.
-  Any additional '<policy>' and '<domain>' nodes are added to the Nic router's.
+  A _<nic>_ node may contain an arbitrary number of _<tcp-forward>_ and
+  _<udp-forward>_ nodes, which are added to the Nic router_s uplink domain.
+  Any additional _<policy>_ and _<domain>_ nodes are added to the Nic router's.
   config.
 
 :<gpu/>:
   Any required _Gpu_ service is routed to a black-hole component.
 
 :<rom label="mesa_gpu.lib.so"/>:
-  The 'mesa_gpu.lib.so' _ROM_ requirement is routed to the
-  'mesa_gpu-softpipe.lib' ROM module.
+  The _mesa_gpu.lib.so_ _ROM_ requirement is routed to the
+  _mesa_gpu-softpipe.lib_ ROM module.
 
 :<rom label="clipboard"/>:
   The clipboard _ROM_ requirement is routed to a report_rom component.
@@ -94,7 +94,7 @@ the _runtime_ file's <requires> node:
   Any required _Uplink_ service is routed to a black-hole component.
 
 
-The 'linux' target evaluates the following services mentioned in
+The _linux_ target evaluates the following services mentioned in
 the _runtime_ file's <provides> node:
 
 :<uplink label="<tap-name>"/>:
@@ -112,9 +112,9 @@ upload the run directory whereas Goa receives the log output via the Telnet
 server. A blueprint for such a subsystem is provided by
 jschlatow/pkg/goa_testbed.
 
-The 'sculpt' target evaluates the following target-specific variables that you
+The _sculpt_ target evaluates the following target-specific variables that you
 may set in your goarc file or provide as command-line arguments
-'--target-opt-<name>':
+*--target-opt-<name>*:
 
 :target_opt(sculpt-server):
   Specifies the hostname or IP address of the target system
@@ -141,10 +141,10 @@ may set in your goarc file or provide as command-line arguments
 :target_opt(sculpt-cmd):
   Specifies a command to be executed (e.g. starting a VNC client) before
   establishing the telnet connection. The command will be executed using the
-  default shell with the environment variable 'SERVER' set to the value of
-  'target_opt(sculpt-server)'.
+  default shell with the environment variable _SERVER_ set to the value of
+  _target_opt(sculpt-server)_.
 
-The 'sculpt' target routes all runtime-required services to the parent except
+The _sculpt_ target routes all runtime-required services to the parent except
 for the following:
 
 :<file_system label="fonts"/>:
@@ -154,7 +154,7 @@ for the following:
 ADDING A CUSTOM TARGET TO GOA
 #############################
 
-A custom run target is added by creating a file 'share/goa/lib/run/<target>.tcl'.
+A custom run target is added by creating a file _share/goa/lib/run/<target>.tcl_.
 The file must implement the following procedures:
 
 :base_archives:
@@ -177,8 +177,8 @@ The file must implement the following procedures:
   ! }
 
 :bind_provided_services:
-  Same as 'bind_required_services' but called with the services found in the
-  '<provides>' node of the _runtime_ file.
+  Same as _bind_required_services_ but called with the services found in the
+  _<provides>_ node of the _runtime_ file.
 
 :run_genode:
   Is called after the run_dir has been prepared and the scenario is ready to be

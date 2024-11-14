@@ -5,7 +5,7 @@
                                  Norman Feske
 
 
-The 'artifacts' file defines the build artifacts produced by the build system.
+The _artifacts_ file defines the build artifacts produced by the build system.
 
 
 Syntax
@@ -32,38 +32,26 @@ to the same container.
 Examples
 ########
 
-*install/bin/ls*
+:install/bin/ls: The _ls_ executable binary is taken from the build directory's _install/bin/_
+  subdirectory as a single ROM module named _ls_.
 
-The 'ls' executable binary is taken from the build directory's 'install/bin/'
-subdirectory as a single ROM module named 'ls'.
+:install/bin/: All executable binaries found at the build directory's _install/bin/_
+  subdirectory are turned into ROM modules.
 
-*install/bin/*
+:coreutils.tar: install/bin/ls: The single executable binary _ls_ is archived at the root of the
+  _coreutils.tar_ archive, which, in turn, becomes available as ROM module.
 
-All executable binaries found at the build directory's 'install/bin/'
-subdirectory are turned into ROM modules.
+:coreutils.tar: install: The entire _install_ subdirectory within the build directory is archived
+  into the _coreutils.tar_ archive. The archive contains an _install_ directory
+  at the root of the archive.
 
-*coreutils.tar: install/bin/ls*
+:coreutils.tar: install/: All files within the build directory's _install_ subdirectory are archived
+  into the _coreutils.tar_ archive. The files are located at the root of the
+  archive.
 
-The single executable binary 'ls' is archived at the root of the
-'coreutils.tar' archive, which, in turn, becomes available as ROM module.
-
-*coreutils.tar: install*
-
-The entire 'install' subdirectory within the build directory is archived
-into the 'coreutils.tar' archive. The archive contains an 'install' directory
-at the root of the archive.
-
-*coreutils.tar: install/*
-
-All files within the build directory's 'install' subdirectory are archived
-into the 'coreutils.tar' archive. The files are located at the root of the
-archive.
-
-*coreutils.tar/usr/local/bin/: install/bin/ls*
-*coreutils.tar/usr/local/bin/: install/bin/cp*
-
-The executable binaries 'ls' and 'cp' are archived within 'coreutils.tar'.
-The archive contains two entries '/usr/local/bin/ls' and '/usr/local/bin/cp'.
+:coreutils.tar/usr/local/bin/: install/bin/ls:
+:coreutils.tar/usr/local/bin/: install/bin/cp: The executable binaries _ls_ and _cp_ are archived within _coreutils.tar_.
+  The archive contains two entries _/usr/local/bin/ls_ and _/usr/local/bin/cp_.
 
 SEE ALSO
 ########
