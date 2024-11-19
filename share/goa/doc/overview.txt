@@ -3,6 +3,8 @@
 
 
                                  Norman Feske
+                                     and
+                              Johannes Schlatow
 
 
 Goa is a tool for streamlining the development of application software for the
@@ -89,6 +91,61 @@ along with an _import_ file and vice versa.
 USAGE
 #####
 
+The Goa tool provides several commands to be performed on an particular project
+directory. The simplest way is to change into the project directory and executing
+the intended Goa command like, e.g., *goa run*.
+!
+
+Alternatively, when supplied with the *-r* switch, the tool recursively scans
+for project directories and applies the supplied command to each project.
+!
+
+Moreover, Goa supports project hierarchies. Goa searches for related project
+directories whenever the current project requires a depot archive that
+could not be downloaded. By default, Goa uses the working directory as a
+starting point for the search. This can be changed by defining the _search_dir_
+variable; see *goa help config* for further details.
+
+Overview
+========
+
+Typical goals when using the Goa tool are to test run an application project
+or to package the same for a Genode system like Sculpt. Multiple actions need
+to be taken along the way such as building the application software. Goa exposes
+most intermediate actions as individual commands but also takes care of
+automatically executing any prerequisite action. For instance, executing the
+*publish* command implies the *import*, *depot_dir*, *build_dir*, *build* and
+*export* commands.  The figure below illustrates the interdependencies of Goa's
+commands.
+
+!                         +---------+
+!                         | import  |
+!                         +----+----+
+!                              |
+!                              v
+!                        +-----------+         +-----------+
+!                        | build_dir |<--------+ depot_dir |
+!                        +-----+-----+         +-----+-----+
+!                              |                     |
+!                              v                     v
+!                        +-----------+        +--------------+
+!                        |   build   |        |add_depot_user|
+!                        +-+-------+-+        +--------------+
+!                          |       |
+!                          v       v
+!                  +---------+   +---------+
+!                  | run_dir |   | export  |
+!                  +----+----+   +----+----+
+!                       |             |
+!                       v             v
+!                  +---------+   +---------+
+!                  |   run   |   | publish |
+!                  +---------+   +---------+
+
+
+Commands
+========
+
 :goa help [<topic>]:
   Show the documentation about the specified topic.
   Available topics are *overview* (this document), *config*, *artifacts*,
@@ -105,7 +162,11 @@ USAGE
   Print current major version of the Goa tool.
 
 :goa archive-versions:
-  Print information about known depot-archive versions.
+  Print information about known depot-archive versions. By default, Goa
+  acquires version information from the version definitions in the _goarc_
+  files; see *goa help config* for more details. If no version definition is
+  present for a particular depot archive, Goa tries to locate the
+  corresponding project directory and evalutes the contained _version_ file.
 
 :goa bump-version [<version>]:
   Update version file of a Goa project. If <version> is not provided, the
@@ -197,8 +258,8 @@ USAGE
 
   This command implies the *depot-dir* command.
 
-OPTIONAL ARGUMENTS
-##################
+Optional Arguments and Configuration Overrides
+==============================================
 
 :--verbose:
   Print diagnostic information about the operation of Goa.
@@ -212,6 +273,11 @@ OPTIONAL ARGUMENTS
 :-r:
   Recursively scan for project directories in the current working directory
   and execute the command for each project.
+
+Goa is further configured using configuration files called _goarc_. For most
+configuration variables, there is also a command-line argument that overrides
+the corresponding variable. Please refer to *goa help config* for further
+details on these configuration-override arguments.
 
 SEE ALSO
 ########
