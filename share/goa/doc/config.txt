@@ -213,6 +213,8 @@ Goa evaluates the following configuration variables.
   *goa archive-versions* command.
   Version information can also be provided via *--version-<user>/<type>/<name>*
   command-line arguments.
+  Note that, for the currently operated-on project, the content of the project's
+  _version_ file takes precedence over the version array.
 
 :versions_from_genode_dir:
   If set to the root of a Genode source tree, Goa determines the package
