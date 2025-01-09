@@ -36,6 +36,8 @@ if {[llength $argv] == 0} {
 	exit 1
 }
 
+# 'verbose' is used by utility functions and needs to be defined early on
+set verbose 0
 
 source [file join $tool_dir lib util.tcl]
 

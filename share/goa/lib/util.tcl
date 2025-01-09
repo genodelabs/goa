@@ -22,7 +22,12 @@ proc stacktrace { } {
 
 proc exit_with_error { args } {
 	global project_name verbose
-	puts stderr "\[$project_name\] Error: [join $args { }]"
+
+	if {[info exists project_name]} {
+		puts -nonewline stderr "\[$project_name\] " }
+
+	puts stderr "Error: [join $args { }]"
+
 	if {$verbose} { stacktrace }
 	exit 1
 }
@@ -33,8 +38,13 @@ proc exit_with_error { args } {
 #
 proc diag { args } {
 	global verbose project_name
+
 	if {$verbose} {
-		puts "\[$project_name\] [join $args { }]" }
+		if {[info exists project_name]} {
+			puts -nonewline "\[$project_name\] " }
+
+		puts "[join $args { }]"
+	}
 }
 
 
@@ -43,7 +53,11 @@ proc diag { args } {
 #
 proc log { args } {
 	global project_name
-	puts "\[$project_name\] [join $args { }]"
+
+	if {[info exists project_name]} {
+		puts -nonewline "\[$project_name\] " }
+
+	puts "[join $args { }]"
 }
 
 
