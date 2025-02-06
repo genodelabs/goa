@@ -1,6 +1,7 @@
 proc _make_cmd { } {
 	global build_dir cross_dev_prefix verbose jobs project_dir
 	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe lib_src
+	global ldflags_so ldlibs_so
 
 	set cmd { }
 
@@ -14,6 +15,7 @@ proc _make_cmd { } {
 	lappend cmd "CC=$cross_dev_prefix\gcc"
 	lappend cmd "LIB_SRC=$lib_src"
 	lappend cmd "-j$jobs"
+	lappend cmd "MAKE_SHARED_LINKER_FLAGS=\"$ldflags_so $ldlibs_common $ldlibs_so\""
 
 	if {$verbose == 0} {
 		lappend cmd "-s" }
