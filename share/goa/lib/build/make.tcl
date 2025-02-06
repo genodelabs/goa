@@ -13,6 +13,7 @@ proc _make_cmd { } {
 	lappend cmd "LDLIBS=$ldlibs_common $ldlibs_exe"
 	lappend cmd "CXX=$cross_dev_prefix\g++"
 	lappend cmd "CC=$cross_dev_prefix\gcc"
+	lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
 	lappend cmd "LIB_SRC=$lib_src"
 	lappend cmd "-j$jobs"
 	lappend cmd "MAKE_SHARED_LINKER_FLAGS=\"$ldflags_so $ldlibs_common $ldlibs_so\""
