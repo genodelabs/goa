@@ -698,7 +698,12 @@ proc mirror_source_dir_to_build_dir { } {
 		set path   [file join $build_dir $symlink]
 
 		if {[file exists $path]} {
-			file delete $path }
+			# skip if build replaced symlink by a generated file
+			if {[file type $path] != "link"} {
+				continue }
+
+			file delete $path
+		}
 
 		file link -symbolic $path $target
 	}
