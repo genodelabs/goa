@@ -909,6 +909,15 @@ proc assert_definition_of_depot_user { } {
 }
 
 
+proc exec_status { cmd } {
+	if {[catch {exec {*}$cmd} msg options]} {
+		set details [dict get $options -errorcode]
+		if {[lindex $details 0] eq "CHILDSTATUS"} {
+			return [lindex $details 2] }
+	}
+}
+
+
 ##
 # strip debug symbols from binary
 #

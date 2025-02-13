@@ -102,8 +102,23 @@ proc build { } {
 	foreach arg [read_file_content_as_list [file join $project_dir make_args]] {
 		lappend cmd $arg }
 
+	# skip make (and make install) if there is nothing to be made
+	if {[exec_status [list {*}$cmd -q]] == 0} {
+		diag "everything is up to date"
+		return
+	}
+
 	diag "build via command" {*}$cmd
 
 	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:make\] /" >@ stdout}]} {
 		exit_with_error "build via make failed" }
+
+	# return if 'install' target does not exist
+	if {[exec_status [list {*}$cmd -q install]] == 2} {
+		return }
+
+	# at this point, we know that the 'install' target exists
+	lappend cmd install
+	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:make\] /" >@ stdout}]} {
+		exit_with_error "install via make failed" }
 }

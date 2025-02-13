@@ -62,13 +62,9 @@ proc build { } {
 	if {[catch {exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:cmake\] /" >@ stdout} msg]} {
 		exit_with_error "build via cmake failed:\n" $msg }
 
-	# test whether 'install' target exists
-	set test_cmd [list {*}$cmd -q install]
-	if {[catch {exec {*}$test_cmd} msg options]} {
-		set details [dict get $options -errorcode]
-		if {[lindex $details 0] eq "CHILDSTATUS"} {
-			if {[lindex $details 2] == 2} { return } }
-	}
+	# return if 'install' target does not exist
+	if {[exec_status [list {*}$cmd -q install]] == 2} {
+		return }
 
 	# at this point, we know that the 'install' target exists
 	lappend cmd install
