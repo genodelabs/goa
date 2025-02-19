@@ -15,6 +15,7 @@ Syntax
 The file consists of an arbitrary number of lines where each line refers to a
 path relative to the build directory. The paths select the files and
 directories to be featured in the api archive of the library.
+A trailing slash in the path denotes a directory.
 If a path refers to a directory, all contained files are included.
 
 When using API archives, Goa adds the following contained directories to the
@@ -42,7 +43,7 @@ Examples
 :include/spdlog/: All files found in the directory _include/spdlog_ below the build directory are
   added as artifacts. The relative directory structure is kept intact.
 
-:install/include/spdlog: All files found in the directory _install/include/spdlog_ below the build
+:install/include/spdlog/: All files found in the directory _install/include/spdlog_ below the build
   directory are added as artifacts to _include/spdlog_ of the api archive.
 
 SEE ALSO
