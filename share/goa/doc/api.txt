@@ -17,6 +17,16 @@ path relative to the build directory. The paths select the files and
 directories to be featured in the api archive of the library.
 If a path refers to a directory, all contained files are included.
 
+When using API archives, Goa adds the following contained directories to the
+list of include directories (if they exist and apply to the target architecture):
+
+* include/
+* include/spec/x86/
+* include/spec/x86_64/
+* include/spec/arm_64/
+* include/spec/64bit/
+!
+
 Note that the build directory also contains an _install_ subdirectory which is
 used as a destination directory for running *make install* after a successful
 build. When extracting include paths from the install subdirectory, the

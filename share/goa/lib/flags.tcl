@@ -1,5 +1,5 @@
 #
-# CPP flags
+# Assemble include directories
 #
 global include_dirs
 set include_dirs { }
@@ -22,6 +22,9 @@ set libgcc_include [file join [file dirname $libgcc_path] include]
 
 lappend include_dirs [file normalize $libgcc_include]
 
+#
+# CPP flags
+#
 global cppflags
 set cppflags { }
 lappend cppflags "-nostdinc"
