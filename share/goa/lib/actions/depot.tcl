@@ -323,6 +323,8 @@ namespace eval goa {
 
 		global api_dir project_dir
 
+		set license_file [license_file]
+
 		if {[file exists $api_dir] && [file isdirectory $api_dir]} {
 			set dst_dir [prepare_project_archive_directory api]
 			if {$dst_dir != ""} {
@@ -360,6 +362,8 @@ namespace eval goa {
 				if {[file exists [file join $project_dir "symbols"]]} {
 					file copy [file join $project_dir "symbols"] [file join $dst_dir lib]
 				}
+
+				file copy $license_file [file join $dst_dir LICENSE]
 	
 				log "exported $dst_dir"
 			}
