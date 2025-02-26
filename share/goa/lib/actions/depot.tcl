@@ -355,7 +355,7 @@ namespace eval goa {
 					if {![file exists $target_dir]} {
 						file mkdir $target_dir
 					}
-					file copy $file [file join $target_dir [file tail $file]]
+					file copy [fullnormalize $file] [file join $target_dir [file tail $file]]
 				}
 	
 				file mkdir [file join $dst_dir lib]
@@ -502,9 +502,8 @@ namespace eval goa {
 			if {$dst_dir != ""} {
 				set files [glob -nocomplain -directory $bin_dir *]
 				foreach file $files {
-					set file [file normalize $file]
-					catch { set file [file link  $file] }
-					file copy $file [file join $dst_dir [file tail $file]] }
+					set src_file [fullnormalize $file]
+					file copy $src_file [file join $dst_dir [file tail $file]] }
 	
 				log "exported $dst_dir"
 			}
@@ -524,9 +523,8 @@ namespace eval goa {
 			if {$dst_dir != ""} {
 				set files [glob -nocomplain -directory $dbg_dir *]
 				foreach file $files {
-					set file [file normalize $file]
-					catch { set file [file link  $file] }
-					file copy $file [file join $dst_dir [file tail $file]] }
+					set src_file [fullnormalize $file]
+					file copy $src_file [file join $dst_dir [file tail $file]] }
 	
 				log "exported $dst_dir"
 			}

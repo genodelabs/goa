@@ -359,7 +359,7 @@ namespace eval goa {
 		set library_artifacts { }
 		foreach file [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
 			set symlink_path [file join $bin_dir [file tail $file]]
-			file link $symlink_path $file
+			file link $symlink_path [fullnormalize $file]
 	
 			if {[artifact_is_library $file]} {
 				lappend library_artifacts $file }
@@ -422,7 +422,7 @@ namespace eval goa {
 			if {![file exists $target_dir]} {
 				file mkdir $target_dir
 			}
-			file copy $file $link_target
+			file link $link_target $file
 		}
 	}
 	
