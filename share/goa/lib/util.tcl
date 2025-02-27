@@ -61,24 +61,6 @@ proc log { args } {
 }
 
 
-##
-# resolve symlinks
-#
-proc fullnormalize { path } {
-	if {[file type $path] == "link"} {
-		set link_target [file link $path]
-
-		if {[file pathtype $link_target] == "relative"} {
-			set path [file join [file dirname $path] $link_target]
-		} else {
-			set path $link_target
-		}
-	}
-
-	return [file normalize $path]
-}
-
-
 proc _consume_cmdline_arg_at { tag_idx } {
 	global argv
 

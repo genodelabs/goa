@@ -5,6 +5,8 @@
 namespace eval ::config {
 	namespace export path_var_names load_goarc_files set_late_defaults
 	namespace export load_privileged_goarc_files
+	namespace export default_cross_dev_prefix
+	namespace export enable_safe_file_ops
 
 	# defaults, potentially being overwritten by 'goarc' files
 	# Note: All variables in this namespace can be overwritten by 'goarc' files
@@ -110,6 +112,92 @@ namespace eval ::config {
 				return 1 }}
 
 		return 0
+	}
+
+
+	# used as alias for 'file' in main interpreter
+	proc _safe_file { args } {
+		global allowed_paths allowed_tools writeable_paths
+		global config::var_dir config::depot_dir config::public_dir config::project_dir
+
+		proc _validate_path_arg { paths num args } {
+			set target_path [lindex $args $num]
+			if { $target_path == "" } { return }
+
+			# resolve symlinks (make sure to resolve relative links correctly)
+			catch {
+				set orig_path $target_path
+				set target_path [unsafe_file link $orig_path]
+				set target_path [file join [file dirname $orig_path] $target_path]
+			}
+
+			# normalize path
+			set normalized_path [unsafe_file normalize $target_path]
+			if {![_is_sub_directory $normalized_path $paths]} {
+				exit_with_error "Command 'file $args' operates on an invalid path." \
+				                "Valid paths are:\n" \
+				                "\n [join $paths "\n "]" \
+				                "\n\n You may consider setting 'allowed_paths' in" \
+				                "your \$HOME/goarc or /goarc file."
+			}
+		}
+
+		switch [lindex $args 0] {
+			normalize   { _validate_path_arg $allowed_paths 1 {*}$args }
+			executable  { if {![file exists [lindex $args 1]]} { return 0 }
+			              _validate_path_arg $allowed_tools 1 {*}$args }
+			link {
+				set argnum 1
+				set arg [lindex $args $argnum]
+				if {$arg == "-hard" || $arg == "-symbolic"} { incr argnum }
+
+				set writeable_paths [list $depot_dir $public_dir]
+				if {[unsafe_file exists [unsafe_file join $project_dir import]]} {
+					lappend writeable_paths [unsafe_file join $project_dir src]
+					lappend writeable_paths [unsafe_file join $project_dir raw]
+				}
+				if {[info exists var_dir]} {
+					lappend writeable_paths $var_dir }
+
+				_validate_path_arg $writeable_paths $argnum {*}$args
+
+				incr argnum
+				if {[llength $args] > $argnum} {
+					_validate_path_arg [concat $allowed_paths $allowed_tools] $argnum {*}$args }
+			}
+			fullnormalize {
+				set path [lindex $args 1]
+
+				if {[file type $path] == "link"} {
+					set link_target [file link $path]
+
+					if {[file pathtype $link_target] == "relative"} {
+						set path [file join [file dirname $path] $link_target]
+					} else {
+						set path $link_target
+					}
+				}
+
+				return [file normalize $path]
+			}
+			split       -
+			dirname     -
+			tail        -
+			copy        -
+			delete      -
+			mkdir       -
+			attributes  -
+			isfile      -
+			isdirectory -
+			exists      -
+			type        -
+			pathtype    -
+			join        { }
+			default {
+				exit_with_error "Unknown command 'file $args'" }
+		}
+
+		interp invokehidden {} unsafe_file {*}$args
 	}
 
 
@@ -239,6 +327,14 @@ namespace eval ::config {
 		# revert original current working directory
 		cd $project_dir
 
+	}
+
+
+	proc enable_safe_file_ops {} {
+		# hide file command and replace with safe version
+		interp hide {} file unsafe_file
+		interp alias {} file {} config::_safe_file
+		interp alias {} unsafe_file {} interp invokehidden {} unsafe_file
 	}
 
 

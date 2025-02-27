@@ -67,6 +67,7 @@ proc goa_project_dirs { } {
 	# filter out candidates that are do not look like a real project dir
 	set project_dirs { }
 	foreach dir $project_candidates {
+		set dir [file normalize $dir]
 
 		if {[looks_like_goa_project_dir $dir]} {
 			lappend project_dirs $dir }
@@ -301,6 +302,8 @@ consume_prefixed_cmdline_args "--version-" config::version
 # back out if there is any unhandled argument
 if {[llength $argv] > 0} {
 	exit_with_error "invalid argument: [join $argv { }]" }
+
+config enable_safe_file_ops
 
 config set_late_defaults
 

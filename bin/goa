@@ -24,7 +24,7 @@ proc _find_tool_dir { } {
 	}
 
 	# strip binary name and 'bin/' path
-	return [file dirname [file dirname $path]]
+	return [file dirname [file dirname [file normalize $path]]]
 }
 
 set tool_name [file tail $argv0]

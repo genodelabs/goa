@@ -17,10 +17,10 @@ foreach api [used_apis] {
 	lappend include_dirs $dir
 }
 
-set libgcc_path    [file normalize [eval "exec $cross_dev_prefix\gcc -print-libgcc-file-name"]]
+set libgcc_path    [unsafe_file normalize [eval "exec $cross_dev_prefix\gcc -print-libgcc-file-name"]]
 set libgcc_include [file join [file dirname $libgcc_path] include]
 
-lappend include_dirs [file normalize $libgcc_include]
+lappend include_dirs [unsafe_file normalize $libgcc_include]
 
 #
 # CPP flags
