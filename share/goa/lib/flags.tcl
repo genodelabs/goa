@@ -47,6 +47,7 @@ lappend cflags -D__GENODE__
 if {$cc_march != ""} {
 	lappend cflags $cc_march }
 
+global warn_strict
 if {[info exists warn_strict] && $warn_strict} {
 	lappend cflags -Wall }
 
