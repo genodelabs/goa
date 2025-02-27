@@ -43,9 +43,14 @@ set verbose 0
 
 source [file join $tool_dir lib util.tcl]
 
-exit_if_not_installed xmllint git find sed make diff tar wget bwrap
+exit_if_not_installed xmllint git find sed make diff tar wget
 
 source [file join $tool_dir lib command_line.tcl]
+
+if {$config::disable_sandbox} {
+	lappend gaol --disable-sandbox
+} else {
+	exit_if_not_installed bwrap }
 
 source [file join $tool_dir lib actions generic.tcl]
 

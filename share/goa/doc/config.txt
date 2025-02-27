@@ -247,6 +247,13 @@ Goa evaluates the following configuration variables.
 :cc_cxx_opt_std:
   Overwrite C++ standard. The default is "-std=gnu++20".
 
+:disable_sandbox:
+  By default, Goa uses bubblewrap for sandboxing build commands. This can be
+  disabled by setting this _disable_sandbox_ config variable to 1. Note that
+  this is only effective in the privileged goarc files located at '~/goarc' or
+  '/goarc'.
+
+
 SECURITY
 ########
 

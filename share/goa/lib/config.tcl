@@ -45,6 +45,7 @@ namespace eval ::config {
 	variable bin_dir                  ""
 	variable dbg_dir                  ""
 	variable install_dir              ""
+	variable disable_sandbox          0
 	variable target_opt
 	array set target_opt {}
 	variable version
@@ -206,6 +207,7 @@ namespace eval ::config {
 	# used as alias for 'set' in child interpreter
 	proc _safe_set { rcfile args } {
 		global allowed_paths allowed_tools
+		global privileged_rcfiles
 
 		set nargs [llength $args]
 		if {$nargs < 1} { return }
@@ -219,6 +221,13 @@ namespace eval ::config {
 
 		if {$nargs == 1} {
 			return [set ::config::$name] }
+
+		if {$name == "disable_sandbox"} {
+			if {[lsearch -exact $privileged_rcfiles [file dirname $rcfile]] < 0} {
+				diag "variable '$name' may only be modified in a privileged goarc file"
+				return
+			}
+		}
 
 		set value [string trim [lindex $args 1]]
 

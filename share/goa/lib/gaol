@@ -28,9 +28,16 @@ namespace eval gaol {
 	# gpg      | {user, empty}
 	# sq_keys  | boolean
 	# depot    | path to depot directory
+	# no_bwrap | boolean
 	variable state [dict create env [dict create] \
 	                            robinds {} binds {} symlinks {} dirs {} \
-	                            verbose 0 network 0 make 0]
+	                            verbose 0 network 0 make 0 no_bwrap 0]
+
+	proc --disable-sandbox { args } {
+		variable state
+		dict set state no_bwrap 1
+		gaol::parse_next args
+	}
 
 	proc --system-usr { args } {
 		variable state
@@ -44,6 +51,14 @@ namespace eval gaol {
 			append path ":[dict get state env PATH]" }
 
 		dict set state env PATH $path
+
+		# check for unmerged /usr system
+		if {[file type /bin] != "link" || [file link /bin] != "usr/bin"} {
+			puts [join [list "\n!!! Bumpy road ahead !!!\n" \
+				"You seem to run a system with an unmerged /usr. This likely" \
+				"affects the sandboxing mechanism. Please be aware that" \
+				"you are leaving the beaten track.\n"] "\n"]
+		}
 
 		gaol --ro-bind /usr {*}$args
 	}
@@ -241,6 +256,7 @@ namespace eval gaol {
 			"Tool options:" \
 			"  --help                   Show this message" \
 			"  --verbose                Enable verbose output" \
+			"  --disable-sandbox        Disable sandboxing" \
 			"" \
 			"Meta options (multiple bubblewrap arguments):" \
 			"  --depot-dir <path>       Binds <path> and sets DEPOT_DIR make variable" \
@@ -343,20 +359,25 @@ namespace eval gaol {
 		set userid [exec id -u]
 		set run_dir /run/user/$userid
 
-		set     cmd bwrap
-		lappend cmd --dir /var --dir /tmp --symlink ../tmp /var/tmp
-		lappend cmd --dev /dev
-		lappend cmd --proc /proc
-		lappend cmd --unshare-all
-		lappend cmd --new-session
-		lappend cmd --clearenv
-		lappend cmd --die-with-parent
-		lappend cmd --dir $run_dir
-		lappend cmd --setenv XDG_RUNTIME_DIR "$run_dir"
-		lappend cmd --setenv DISPLAY ":0.0"
-		lappend cmd --setenv HOME $::env(HOME)
+		set     bwrap_cmd bwrap
+		lappend bwrap_cmd --dir /var --dir /tmp --symlink ../tmp /var/tmp
+		lappend bwrap_cmd --dev /dev
+		lappend bwrap_cmd --proc /proc
+		lappend bwrap_cmd --unshare-all
+		lappend bwrap_cmd --new-session
+		lappend bwrap_cmd --clearenv
+		lappend bwrap_cmd --die-with-parent
+		lappend bwrap_cmd --dir $run_dir
+		lappend bwrap_cmd --setenv XDG_RUNTIME_DIR "$run_dir"
+		lappend bwrap_cmd --setenv DISPLAY ":0.0"
+		lappend bwrap_cmd --setenv HOME $::env(HOME)
 
 		dict with state {
+			if {!$no_bwrap && [auto_execok "bwrap"] == ""} {
+				puts stderr "\n'bwrap' binary not found. Please install bubblewrap!\n"
+				exit 1
+			}
+
 			if {[info exists gpg]} {
 				switch $gpg {
 					user {
@@ -372,7 +393,7 @@ namespace eval gaol {
 					empty {
 						# if ~/.gnupg does not exist, gpg creates a common.conf with use-keyboxd
 						# we therefore create an empty ~/.gnupg
-						lappend cmd --perms 0700 --tmpfs [file join $::env(HOME) .gnupg]
+						lappend bwrap_cmd --perms 0700 --tmpfs [file join $::env(HOME) .gnupg]
 					}
 				}
 			}
@@ -388,7 +409,7 @@ namespace eval gaol {
 					set fingerprint [string trimleft [exec sq inspect $f 2> /dev/null | grep Fingerprint | cut -d: -f2]]
 					if {[catch {exec sq key export --cert $fingerprint}]} { continue }
 
-					lappend cmd --perms 0400 --ro-bind-data $fdnum /sequoia/softkeys/$fingerprint
+					lappend bwrap_cmd --perms 0400 --ro-bind-data $fdnum /sequoia/softkeys/$fingerprint
 					lappend pipeargs $fdnum< "<(sq key export --cert $fingerprint | sq key password --clear-password --cert-file -)"
 					incr fdnum
 				}
@@ -408,30 +429,37 @@ namespace eval gaol {
 			set robinds [lsort -stride 2 -index 1 $robinds]
 
 			foreach { src dest } $robinds {
-				lappend cmd --ro-bind $src $dest }
+				lappend bwrap_cmd --ro-bind $src $dest }
 
 			foreach { src dest } $binds {
-				lappend cmd --bind $src $dest }
+				lappend bwrap_cmd --bind $src $dest }
 
 			foreach path $dirs {
-				lappend cmd --dir $path }
+				lappend bwrap_cmd --dir $path }
 
 			foreach {to from} $symlinks {
-				lappend cmd --symlink $to $from }
+				lappend bwrap_cmd --symlink $to $from }
 
 			if {[info exists chdir]} {
-				lappend cmd --chdir $chdir }
+				lappend bwrap_cmd --chdir $chdir
+
+				if {$no_bwrap} { cd $chdir }
+			}
 
 			dict for {name value} $env {
-				lappend cmd --setenv $name $value }
+				lappend bwrap_cmd --setenv $name $value }
 
 			if {!$make} { set makeargs {} }
 		}
 
 		if {[dict get $state network]} {
-			lappend cmd --share-net }
+			lappend bwrap_cmd --share-net }
 
-		set cmdargs [concat $cmd [list $bin] $args $makeargs]
+		set cmdargs {}
+		if {!$no_bwrap} {
+			set cmdargs $bwrap_cmd }
+		set cmdargs [concat $cmdargs [list $bin] $args $makeargs]
+
 		set quoted_args {}
 		foreach arg $cmdargs {
 			if {[llength $arg] > 1 && [string first "\"" $arg] < 0 && [string first "'" $arg] < 0} {
@@ -439,7 +467,8 @@ namespace eval gaol {
 			} else {
 				lappend quoted_args $arg }}
 
-		lappend quoted_args {*}$pipeargs
+		if {!$no_bwrap} {
+			lappend quoted_args {*}$pipeargs }
 
 		if {[dict get $state verbose]} {
 			puts "Executing: [join $quoted_args { }]" }
@@ -455,19 +484,6 @@ namespace eval gaol {
 
 		exit
 	}
-}
-
-# check for unmerged /usr system
-if {[file link /bin] != "usr/bin"} {
-	puts [join [list "\n!!! Bumpy road ahead !!!\n" \
-		"You seem to run a system with an unmerged /usr. This likely" \
-		"affects the sandboxing mechanism. Please be aware that" \
-		"you are leaving the beaten track.\n"] "\n"]
-}
-
-if {[auto_execok "bwrap"] == ""} {
-	puts stderr "\n'bwrap' binary not found. Please install bubblewrap!\n"
-	exit 1
 }
 
 gaol {*}$argv
