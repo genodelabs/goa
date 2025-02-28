@@ -281,7 +281,7 @@ namespace eval goa {
 			return $local_license_file }
 	
 		if {![info exists license]} {
-			exit_with_error "cannot export src archive because the license is undefined\n" \
+			exit_with_error "cannot export src or api archive because the license is undefined\n" \
 			                "\n Create a 'LICENSE' file for the project, or" \
 			                "\n define 'set license <path>' in your goarc file, or" \
 			                "\n specify '--license <path>' as argument.\n"
@@ -323,9 +323,10 @@ namespace eval goa {
 
 		global api_dir project_dir
 
-		set license_file [license_file]
-
 		if {[file exists $api_dir] && [file isdirectory $api_dir]} {
+
+			set license_file [license_file]
+
 			set dst_dir [prepare_project_archive_directory api]
 			if {$dst_dir != ""} {
 				set files [exec find $api_dir -not -type d -and -not -name "*~"]
