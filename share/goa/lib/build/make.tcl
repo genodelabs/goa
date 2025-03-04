@@ -36,7 +36,7 @@ proc create_or_update_build_dir { } {
 	set signature_file [file join $build_dir ".goa_make_command"]
 
 	set previous_cmd { }
-	set cmd [_make_cmd]
+	set cmd [join [_make_cmd] { }]
 
 	# read previous command from file
 	if {[file exists $signature_file]} {
@@ -52,7 +52,7 @@ proc create_or_update_build_dir { } {
 
 	# write build command to file
 	set fd [open $signature_file w]
-	puts $fd [join $cmd { }]
+	puts $fd $cmd
 	close $fd
 }
 
