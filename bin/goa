@@ -172,9 +172,6 @@ if {$perform(export)} {
 	goa prepare_depot_with_apis
 }
 
-# unless explicitly configured, enable strict warnings if using the base API
-if {![info exists warn_strict] && [goa using_api base]} {
-	set warn_strict 1 }
 
 
 #
@@ -190,6 +187,11 @@ if {![file exists src]} {
 
 
 if {$perform(build-dir)} {
+
+	# unless explicitly configured, enable strict warnings if using the base API
+	if {![info exists warn_strict] && [goa using_api base]} {
+		set warn_strict 1
+	}
 
 	set api_dirs { }
 	set lib_src { }
