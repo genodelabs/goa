@@ -377,7 +377,7 @@ namespace eval goa {
 	
 	proc check_abis { } {
 
-		global arch project_dir tool_dir library_artifacts
+		global arch project_dir tool_dir library_artifacts cross_dev_prefix
 	
 		foreach library $library_artifacts {
 	
@@ -392,6 +392,18 @@ namespace eval goa {
 	
 			if {[catch { exec [file join $tool_dir abi check_abi] $library $symbols_file_name } msg]} {
 				exit_with_error $msg
+			}
+
+			# sanity check for whether genode_rel.ld was used
+			set expected_phdrs {LOAD r-x LOAD rw- DYNAMIC rw- EH_FRAME r--}
+			set phdrs [split [exec ${cross_dev_prefix}objdump -p $library | grep -E "(off|filesz)"] \n]
+			foreach {off filesz} $phdrs {exp_type exp_flags} $expected_phdrs {
+				set type  [lindex $off 0]
+				set flags [lindex $filesz end]
+				if {$type != $exp_type || $flags != $exp_flags} {
+					exit_with_error "program headers of '[file tail $library]' don't match their definition in genode_rel.ld\n" \
+					                "\n Please check that the shared-object linker flags have been passed correctly."
+				}
 			}
 		}
 	}
