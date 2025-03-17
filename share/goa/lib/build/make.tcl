@@ -1,5 +1,5 @@
 proc _make_cmd { } {
-	global build_dir cross_dev_prefix verbose jobs project_dir
+	global build_dir cross_dev_prefix verbose jobs project_dir api_dirs
 	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe lib_src
 	global ldflags_so ldlibs_so
 
@@ -17,6 +17,8 @@ proc _make_cmd { } {
 	lappend cmd "LIB_SRC=$lib_src"
 	lappend cmd "-j$jobs"
 	lappend cmd "MAKE_SHARED_LINKER_FLAGS=\"$ldflags_so $ldlibs_common $ldlibs_so\""
+	lappend cmd "PKG_CONFIG_LIBDIR=''"
+	lappend cmd "PKG_CONFIG_PATH=[join ${api_dirs} ":"]"
 
 	if {$verbose == 0} {
 		lappend cmd "-s" }
