@@ -16,7 +16,7 @@ proc _make_cmd { } {
 	lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
 	lappend cmd "LIB_SRC=$lib_src"
 	lappend cmd "-j$jobs"
-	lappend cmd "MAKE_SHARED_LINKER_FLAGS=\"$ldflags_so $ldlibs_common $ldlibs_so\""
+	lappend cmd "MAKE_SHARED_LINKER_FLAGS=$ldflags_so $ldlibs_common $ldlibs_so"
 	lappend cmd "PKG_CONFIG_LIBDIR=''"
 	lappend cmd "PKG_CONFIG_PATH=[join ${api_dirs} ":"]"
 
