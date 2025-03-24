@@ -60,6 +60,13 @@ the directory structure and source code once it has been downloaded.
 :PATCH_OPT:
   Sets command line options supplied to the *patch* command. Default: -p0
 
+:TAR_OPT:
+  Set extra command line options supplied to the *tar* when extracting tar
+  archives. Default: --strip-components=1
+
+:UNZIP_OPT:
+  Set extra command line options supplied to the *unzip* when extracting zip
+  archives.
 
 EXAMPLES
 ########
