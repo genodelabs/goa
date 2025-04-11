@@ -7,5 +7,5 @@ genodelabs/src/mesa
 genodelabs/src/expat
 genodelabs/src/libdrm
 genodelabs/src/vfs_gpu
-genodelabs/src/libiconv/2024-10-07
-jschlatow/src/sdl2/2024-10-08
+genodelabs/src/libiconv
+jschlatow/src/sdl2/2025-04-11
