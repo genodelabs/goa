@@ -213,7 +213,7 @@ proc bind_required_services { &services } {
 					"</service>"
 			} else {
 				append routes "\n\t\t\t\t\t" \
-					"<service name=\"File_system\" label=\"$label\"> " \
+					"<service name=\"File_system\" label_prefix=\"$label ->\"> " \
 					"<child name=\"$name\"/> " \
 					"</service>"
 			}

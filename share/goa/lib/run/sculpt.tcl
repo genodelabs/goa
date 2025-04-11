@@ -199,7 +199,7 @@ proc bind_required_services { &services } {
 
 			if {$label == "fonts"} {
 				append routes "\n\t\t\t\t\t" \
-					"<service name=\"File_system\" label=\"fonts\"> " \
+					"<service name=\"File_system\" label_prefix=\"fonts ->\"> " \
 					"<child name=\"fonts_fs\"/> " \
 					"</service>"
 
