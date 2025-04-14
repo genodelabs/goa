@@ -36,7 +36,8 @@ adding a path to the list 'allowed_paths' as follows:
 ! lappend allowed_paths <path>
 
 Note that this instruction is only effective within the privileged configuration
-files at '~/goarc' and '/goarc'.
+files at '~/goarc' and '/goarc'. It must also appear before setting any
+path configuration variable.
 
 
 Settings
