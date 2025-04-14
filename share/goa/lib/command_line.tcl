@@ -30,6 +30,28 @@ if {[consume_optional_cmdline_switch "--version"]} {
 	exit 0
 }
 
+##
+# Print help and exit
+#
+if {[lindex $argv 0] == "help"} {
+	set help_topic "overview"
+	if {[llength $argv] > 1} {
+		set help_topic [lindex $argv 1] }
+
+	set file [file join $tool_dir doc $help_topic.txt]
+	if {![file exists $file]} {
+		set topics [glob -directory [file join $tool_dir doc] -tail *.txt]
+		regsub -all {.txt} $topics "" topics
+		exit_with_error "help topic '$help_topic' does not exist\n"\
+		                "\n Available topics are: [join $topics {, }]\n"
+	}
+	set     cmd [file join $tool_dir gosh gosh]
+	lappend cmd --style man $file | man -l -
+	system {*}$cmd
+	exit
+}
+
+
 #
 # Handle -C argument, changing the current working directory
 #
@@ -152,7 +174,7 @@ if {[llength $argv] == 0} {
 
 set avail_commands [list update-goa archive-versions backtrace import diff build-dir \
                          build run run-dir export publish add-depot-user bump-version \
-                         extract-abi-symbols help versions depot-dir install-toolchain]
+                         extract-abi-symbols versions depot-dir install-toolchain]
 
 foreach command $avail_commands {
 	set perform($command) 0 }
@@ -203,14 +225,6 @@ if {$perform(backtrace)} {
 	set config::binary_name [consume_optional_cmdline_arg "--binary-name" ""]
 	set config::with_backtrace 1
 	set config::debug 1
-}
-
-if {$perform(help)} {
-	set args(help_topic) overview
-	if {[llength $argv] == 1} {
-		set args(help_topic) [lindex $argv 0]
-		set argv [lrange $argv 1 end]
-	}
 }
 
 if {$perform(bump-version)} {

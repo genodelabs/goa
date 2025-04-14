@@ -59,16 +59,6 @@ source [file join $tool_dir lib actions generic.tcl]
 ##################
 
 ##
-## Show documentation
-##
-
-if {$perform(help)} {
-	goa help $args(help_topic)
-	exit
-}
-
-
-##
 ## Update Goa
 ##
 

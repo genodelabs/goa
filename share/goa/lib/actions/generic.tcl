@@ -5,27 +5,7 @@
 namespace eval goa {
 	namespace ensemble create
 
-	namespace export help update depot-dir add-depot-user
-
-	##
-	# implements 'goa help'
-	#
-	proc help { help_topic } {
-
-		global   tool_dir
-
-		set file [file join $tool_dir doc $help_topic.txt]
-		if {![file exists $file]} {
-			set topics [glob -directory [file join $tool_dir doc] -tail *.txt]
-			regsub -all {.txt} $topics "" topics
-			exit_with_error "help topic '$help_topic' does not exist\n"\
-			                "\n Available topics are: [join $topics {, }]\n"
-		}
-		set     cmd [file join $tool_dir gosh gosh]
-		lappend cmd --style man $file | man -l -
-		system {*}$cmd
-		exit
-	}
+	namespace export update depot-dir add-depot-user
 
 	##
 	# implements 'goa update-goa'
