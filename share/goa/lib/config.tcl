@@ -127,15 +127,9 @@ namespace eval ::config {
 			set target_path [lindex $args $num]
 			if { $target_path == "" } { return }
 
-			# resolve symlinks (make sure to resolve relative links correctly)
-			catch {
-				set orig_path $target_path
-				set target_path [unsafe_file link $orig_path]
-				set target_path [file join [file dirname $orig_path] $target_path]
-			}
-
-			# normalize path
-			set normalized_path [unsafe_file normalize $target_path]
+			# normalize path and resolve all symlinks
+			set normalized_path [unsafe_file normalize $target_path/___]
+			set normalized_path [unsafe_file dirname $normalized_path]
 			if {![_is_sub_directory $normalized_path $paths]} {
 				exit_with_error "Command 'file $args' operates on an invalid path." \
 				                "Valid paths are:\n" \
@@ -170,19 +164,12 @@ namespace eval ::config {
 			}
 			fullnormalize {
 				set path [lindex $args 1]
-
-				if {[file type $path] == "link"} {
-					set link_target [file link $path]
-
-					if {[file pathtype $link_target] == "relative"} {
-						set path [file join [file dirname $path] $link_target]
-					} else {
-						set path $link_target
-					}
-				}
-
-				return [file normalize $path]
+				set path [unsafe_file normalize $path/___]
+				set path [unsafe_file dirname $path]
+				_validate_path_arg $allowed_paths 0 $path
+				return $path
 			}
+
 			split       -
 			dirname     -
 			tail        -
