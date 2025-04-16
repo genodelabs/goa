@@ -64,6 +64,16 @@ namespace eval gaol {
 				"you are leaving the beaten track.\n"] "\n"]
 		}
 
+		# bind ld.so.cache for addtional library search paths
+		set ldcache /etc/ld.so.cache
+		if {[file exists $ldcache]} {
+			if {[file type $ldcache] == "link"} {
+				puts "\[gaol\] warning: skipping $ldcache because it is a symlink"
+			} else {
+				dict lappend state robinds $ldcache $ldcache
+			}
+		}
+
 		gaol --ro-bind /usr {*}$args
 	}
 
