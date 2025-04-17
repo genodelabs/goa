@@ -80,7 +80,13 @@ namespace eval gaol {
 		gaol::validate_no_opt $value
 
 		variable state
-		dict set state env $var $value
+
+		# in case sandbox is disabled set environment variable directly
+		if {[dict get $state no_bwrap]} {
+			set ::env($var) $value
+		} else {
+			dict set state env $var $value }
+
 		gaol::parse_next args
 	}
 
