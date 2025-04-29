@@ -37,7 +37,7 @@ set  version(genodelabs/api/terminal_session)            2025-04-09
 set  version(genodelabs/api/timer_session)               2024-08-28
 set  version(genodelabs/api/vfs)                         2025-04-09
 set  version(genodelabs/api/zlib)                        2025-02-26
-set  version(genodelabs/pkg/drivers_interactive-linux)   2025-04-28
+set  version(genodelabs/pkg/drivers_interactive-linux)   2025-04-09
 set  version(genodelabs/pkg/fonts_fs)                    2025-04-28
 set  version(genodelabs/raw/drivers_interactive-linux)   2025-02-26
 set  version(genodelabs/raw/terminal)                    2024-04-18
@@ -50,7 +50,7 @@ set  version(genodelabs/src/coreutils)                   2025-04-28
 set  version(genodelabs/src/curl)                        2025-04-09
 set  version(genodelabs/src/event_filter)                2025-04-09
 set  version(genodelabs/src/expat)                       2025-04-09
-set  version(genodelabs/src/fb_sdl)                      2025-04-28
+set  version(genodelabs/src/fb_sdl)                      2025-04-09
 set  version(genodelabs/src/fs_query)                    2025-04-28
 set  version(genodelabs/src/fs_rom)                      2025-04-09
 set  version(genodelabs/src/gui_fb)                      2025-04-09
@@ -66,7 +66,7 @@ set  version(genodelabs/src/mesa)                        2025-04-28
 set  version(genodelabs/src/monitor)                     2025-04-09
 set  version(genodelabs/src/ncurses)                     2025-04-09
 set  version(genodelabs/src/nic_router)                  2025-04-09
-set  version(genodelabs/src/nitpicker)                   2025-04-28
+set  version(genodelabs/src/nitpicker)                   2025-04-09
 set  version(genodelabs/src/openssl)                     2025-04-09
 set  version(genodelabs/src/pcre)                        2025-04-09
 set  version(genodelabs/src/posix)                       2025-04-09
