@@ -52,6 +52,10 @@ namespace eval gaol {
 
 		dict set state env PATH $path
 
+		if {[file isdirectory /etc/alternatives]} {
+			dict lappend state robinds /etc/alternatives /etc/alternatives
+		}
+
 		# check for unmerged /usr system
 		if {[file type /bin] != "link" || [file link /bin] != "usr/bin"} {
 			puts [join [list "\n!!! Bumpy road ahead !!!\n" \
