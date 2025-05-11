@@ -447,9 +447,9 @@ namespace eval goa {
 	}
 	
 	
-	proc create_artifact_containers_from_list_file { list_file_path artifact_path tar_path } {
+	proc create_artifact_containers_from_list_file { list_file_path } {
 
-		global gaol
+		global gaol config::bin_dir config::build_dir config::project_dir
 	
 		set artifact_files { }
 		set artifacts [read_file_content_as_list $list_file_path]
@@ -477,11 +477,11 @@ namespace eval goa {
 			if {[regexp {/$} $selector dummy]} {
 				# selector refers to the content of a directory
 				regsub {/$} $selector "" selector
-				set selected_dir [file join $artifact_path $selector]
+				set selected_dir [file join $build_dir $selector]
 				set files [glob -directory $selected_dir -nocomplain -types $selected_types *]
 			} else {
 				# selector refers to single file
-				set files [list [file join $artifact_path $selector]]
+				set files [list [file join $build_dir $selector]]
 			}
 	
 			# tar archive
@@ -490,15 +490,16 @@ namespace eval goa {
 				# strip leading slash from archive sub directory
 				regsub {^/} $archive_sub_dir "" archive_sub_dir
 	
-				set archive_path [file join $tar_path "$archive_name"]
+				set archive_path [file join $bin_dir $archive_name]
 	
 				diag "create $archive_path"
 	
 				foreach file $files {
 					set cmd $gaol
 					lappend cmd --system-usr
-					lappend cmd --bind $tar_path
-					lappend cmd --ro-bind $artifact_path
+					lappend cmd --bind $bin_dir
+					lappend cmd --ro-bind $build_dir
+					lappend cmd --ro-bind [file join $project_dir src]
 					lappend cmd tar rf $archive_path
 					lappend cmd -C [file dirname $file]
 					lappend cmd --dereference
@@ -556,7 +557,7 @@ namespace eval goa {
 			strip_binary $file
 		}
 	
-		create_artifact_containers_from_list_file $artifacts_file_path $build_dir $bin_dir
+		create_artifact_containers_from_list_file $artifacts_file_path
 	}
 	
 	
