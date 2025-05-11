@@ -25,6 +25,7 @@ endef
 DARK_COL    ?= \x1b[00;33m
 DEFAULT_COL ?= \x1b[0m
 
+SHELL   := bash
 ECHO    := echo -e
 VERBOSE ?= @
 
