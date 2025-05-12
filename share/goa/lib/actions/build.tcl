@@ -383,7 +383,7 @@ namespace eval goa {
 	}
 
 
-	proc artifact_file_list_from_list_file { list_file_path artifact_path } {
+	proc artifact_file_list_from_list_file { list_file_path artifact_path check_file} {
 	
 		set artifact_files { }
 		set artifacts [read_file_content_as_list $list_file_path]
@@ -429,13 +429,15 @@ namespace eval goa {
 					if {[file isdirectory $file]} {
 						append invalid_files "\n $file" }
 				}
-	
-				if {[llength $missing_files] > 0} {
-					exit_with_error "build artifact does not exist at $artifact_path:" \
-					                "$missing_files" }
-	
-				if {[llength $invalid_files] > 0} {
-					exit_with_error "build artifact is not a file: $invalid_files" }
+
+				if {$check_file} {
+					if {[llength $missing_files] > 0} {
+						exit_with_error "build artifact does not exist at $artifact_path:" \
+						                 "$missing_files" }
+
+					if {[llength $invalid_files] > 0} {
+						exit_with_error "build artifact is not a file: $invalid_files" }
+				}
 	
 				foreach file $files {
 					lappend artifact_files $file
@@ -521,6 +523,24 @@ namespace eval goa {
 	
 		return [string match $so_pattern $artifact];
 	}
+
+	proc check_library_only_project { } {
+		global config::project_dir config::build_dir
+
+		set artifacts_file_path [file join $project_dir artifacts]
+
+		if {![file exists $artifacts_file_path]} {
+			return false }
+
+		foreach file [artifact_file_list_from_list_file $artifacts_file_path $build_dir false] {
+			if {![artifact_is_library $file]} {
+				# if an artifect is not a library, this is not a library-only project
+				return false
+			}
+		}
+
+		return true
+	}
 	
 	
 	proc extract_artifacts_from_build_dir { } {
@@ -543,7 +563,7 @@ namespace eval goa {
 		file mkdir $bin_dir
 		if { $debug } { file mkdir $dbg_dir }
 	
-		foreach file [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
+		foreach file [artifact_file_list_from_list_file $artifacts_file_path $build_dir true] {
 			set symlink_path [file join $bin_dir [file tail $file]]
 			file link $symlink_path [file fullnormalize $file]
 	
@@ -621,7 +641,7 @@ namespace eval goa {
 	
 		file mkdir $api_dir
 	
-		foreach file [artifact_file_list_from_list_file $api_file_path $build_dir] {
+		foreach file [artifact_file_list_from_list_file $api_file_path $build_dir true] {
 			regsub "$build_dir/" $file "" link_src
 			regsub "install/" $link_src "" link_src
 			set dir [file dirname $link_src]
@@ -650,7 +670,7 @@ namespace eval goa {
 		set symbols_dir [file join $project_dir symbols]
 	
 		set libraries { }
-		foreach artifact [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
+		foreach artifact [artifact_file_list_from_list_file $artifacts_file_path $build_dir true] {
 	
 			if {[artifact_is_library $artifact]} {
 	
