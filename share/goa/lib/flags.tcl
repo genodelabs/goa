@@ -126,6 +126,9 @@ lappend ldlibs_so     -Wl,-shared
 lappend ldlibs_so     -Wl,--whole-archive -Wl,-l:ldso_so_support.lib.a -Wl,--no-whole-archive
 lappend ldlibs_so     -T [file join $ld_script_dir genode_rel.ld]
 
+global library_only_project
+set library_only_project [check_library_only_project]
+
 # determine ABIs to link against the executable
 set abis { }
 foreach api [used_apis] {
