@@ -252,7 +252,7 @@ Goa evaluates the following configuration variables.
   By default, Goa uses bubblewrap for sandboxing build commands. This can be
   disabled by setting this _disable_sandbox_ config variable to 1. Note that
   this is only effective in the privileged goarc files located at '~/goarc' or
-  '/goarc'.
+  '/goarc'. Alternatively, you may set the environment variable DISABLE_SANDBOX.
 
 
 SECURITY
