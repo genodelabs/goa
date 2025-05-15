@@ -32,7 +32,8 @@ following attributes:
   mechanisms to determine the current version of this package
   (see *goa help config*). The package must either be present in the user's
   depot or a corresponding Goa project must exist in the current search
-  directory.
+  directory. Alternatively, the _path_ attribute may specify the full archive
+  path as _<user>/pkg/<name>_ or _<user>/pkg/<name>/<version>_.
 
 :info: The _info_ attribute contains a brief description of the package.
 

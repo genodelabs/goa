@@ -41,20 +41,23 @@ namespace eval goa {
 	# Get a list of pkg+arch-list pairs from an index file
 	#
 	proc pkgs_from_index { index_file } {
-		global config::depot_user
-
 		# get supported archs
 		if {[catch { set supported_archs [query_attrs_from_file /index/supports arch $index_file] }]} {
 			exit_with_error "missing <supports arch=\"...\"/> in index file" }
 
 		# helper proc to apply archs to paths found in a list of <pkg> nodes
 		proc _paths_with_arch { pkgs archs } {
+			global config::depot_user
+
 			set res ""
 			foreach pkg $pkgs {
 				set path [query_from_string string(/pkg/@path) $pkg ""]
 				set pkg_archs $archs
 				catch {
 					set pkg_archs [query_attrs_from_string /pkg arch $pkg] }
+
+				if {[catch { archive_user $path }]} {
+					set path $depot_user/pkg/$path }
 
 				lappend res $path $pkg_archs
 			}
@@ -118,7 +121,7 @@ namespace eval goa {
 		set index_file [file join $project_dir index]
 		if {[file exists $index_file] && [info exists depot_user]} {
 			foreach { pkg_name pkg_archs } [pkgs_from_index $index_file] {
-				lappend archives "$depot_user/pkg/$pkg_name" }
+				lappend archives $pkg_name }
 		}
 
 		set archives [lsort -unique $archives]
