@@ -40,7 +40,7 @@ the _runtime_ file's <requires> node:
 :<rtc/>:
   Any required _Rtc_ service is routed to a linux_rtc component.
 
-:<file_system label="<label>"/>:
+:<file_system label="<label>" writeable="no"/>:
   If <label> equals "fonts", a _File_system" requirement is routed to a
   fonts_fs component.
   For any other required _File_system_ a separate lx_fs component is added to
