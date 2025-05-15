@@ -578,8 +578,7 @@ namespace eval goa {
 			check_xml_syntax $index_file
 	
 			# check index file for any missing archives
-			foreach { pkg_name pkg_archs } [pkgs_from_index $index_file] {
-				set archive "$depot_user/pkg/$pkg_name"
+			foreach { archive pkg_archs } [pkgs_from_index $index_file] {
 	
 				catch {
 					set versioned_archive [lindex [apply_versions $archive] 0]
