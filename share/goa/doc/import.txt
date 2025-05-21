@@ -27,7 +27,8 @@ which evaluates the following mandatory variables:
   <name> part is arbitrary and used for referencing in the URL, DIR and REV
   variables. Supported <type> values are _file_ (a plain file), _archive_ (an
   archive of the types tar.gz, tar.xz, tgz, tar.bz2, or zip), _svn_ (a
-  subversion repository), and _git_ (a git repository).
+  subversion repository), _git_ (a git repository) and _sparse-git_ (a partial
+  git repository).
 
 :URL(<name>):
   This variable defines the URL of a certain download.
@@ -43,6 +44,10 @@ which evaluates the following mandatory variables:
 :REV(<name>):
   For downloads of type _git_ or _svn_, this variable defines the revision
   to be checked out.
+
+:SPARSE_PATH(<name>):
+  For downloads of type _sparse-git_, this variable defines the subdirectory to
+  be used for a sparse checkout
 
 In addition, the following optional variables are available that allow modifying
 the directory structure and source code once it has been downloaded.

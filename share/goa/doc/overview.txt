@@ -183,7 +183,8 @@ Commands
 
 :goa install-toolchain [--keep-mounted]:
   Downloads and installs the Genode toolchain as a squashfs archive into
-  the var/install/ directory if no system-wide installation was found. This
+  the directory specified by the install_dir configuration variable
+  (default: var/install/) if no system-wide installation was found. This
   command is executed as a prerequisite of the 'build-dir' command. During
   Goa's execution, the squashfs archive will be temporarily mounted using FUSE.
   When provided with the --keep-mounted option, the mount is kept persistent

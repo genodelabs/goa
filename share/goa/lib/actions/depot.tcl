@@ -261,7 +261,7 @@ namespace eval goa {
 			exit_with_error "version for archive $archive undefined\n" \
 			                "\n Create a 'version' file in your project directory, or" \
 			                "\n define 'set version($archive) <version>' in your goarc file," \
-			                "\n or specify '--version-$archive <version>' as argument\n"
+			                "\n or specify '--version-$archive <version>' as argument.\n"
 		}
 	
 		if {$binary_type != ""} {
