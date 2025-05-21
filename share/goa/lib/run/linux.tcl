@@ -424,6 +424,7 @@ proc _instantiate_nitpicker { &start_nodes &archives &modules } {
 				<config focus="rom">
 					<capture/> <event/>
 					<report hover="yes"/>
+					<background color="#115588"/>
 					<domain name="pointer"    layer="1" content="client" label="no" origin="pointer" />
 					<domain name="default"    layer="2" content="client" label="no" hover="always"/>
 					<domain name="background" layer="3" content="client" label="no" hover="always" focus="transient"/>
