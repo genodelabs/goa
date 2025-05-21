@@ -645,6 +645,9 @@ namespace eval goa {
 					if {$type == "pkg"} {
 						archive_name_and_arch $exported_archive _name _arch
 						set archive [apply_arch $archive $_arch]
+					} elseif {$type == "src"} {
+						archive_name_and_arch $exported_archive _name _arch
+						set archive "$user/bin/$_arch/$name/$vers"
 					}
 	
 					# try downloading before exporting
