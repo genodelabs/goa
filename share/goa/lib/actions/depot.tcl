@@ -582,6 +582,7 @@ namespace eval goa {
 	
 				catch {
 					set versioned_archive [lindex [apply_versions $archive] 0]
+					set pkg_name [archive_name $archive]
 	
 					# download or export archive if it has not been exported
 					set dst_dir "[file join $depot_dir $versioned_archive]"

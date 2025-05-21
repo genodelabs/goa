@@ -340,7 +340,7 @@ proc _build_project_dir_cache { type } {
 # called with -C or from $search_dir
 #
 proc find_project_dir_for_archive { type name } {
-	global config::search_dir project_dir_cache
+	global project_dir_cache
 
 	if {$type == "bin"} {
 		set type "src" }
