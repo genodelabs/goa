@@ -18,7 +18,8 @@ namespace eval goa {
 		if {$status != ""} {
 			exit_with_error "aborting Goa update because it was changed locally\n\n$status" }
 
-		if {[catch { goa_git fetch origin } msg]} {
+		set gaol_args --with-network
+		if {[catch { exec -ignorestderr {*}[goa_git_cmd $gaol_args fetch origin] } msg]} {
 			exit_with_error "Goa update could not fetch new version:\n$msg" }
 
 		if {$branch != ""} {
