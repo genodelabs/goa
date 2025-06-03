@@ -12,13 +12,24 @@ namespace eval goa {
 	#
 	proc update { branch } {
 
-		global   tool_dir
+		global   tool_dir config::disable_sandbox
 
 		set status [goa_git status -s]
 		if {$status != ""} {
 			exit_with_error "aborting Goa update because it was changed locally\n\n$status" }
 
 		set gaol_args --with-network
+		if {!$disable_sandbox} {
+			try {
+				goa_git remote get-url origin | grep https://
+			} trap CHILDSTATUS { } {
+				if {[user_confirmation "Git requires SSH to fetch from origin. Continue without sandboxing?" 0]} {
+					lappend gaol_args --disable-sandbox
+				} else {
+					exit_with_error "SSH is not supported with sandboxing." }
+			}
+		}
+	
 		if {[catch { exec -ignorestderr {*}[goa_git_cmd $gaol_args fetch origin] } msg]} {
 			exit_with_error "Goa update could not fetch new version:\n$msg" }
 

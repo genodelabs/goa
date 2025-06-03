@@ -938,3 +938,19 @@ proc exec_status { cmd } {
 			return [lindex $details 2] }
 	}
 }
+
+
+proc user_confirmation { msg default_yes } {
+	set options "\[Y/n]"
+	if { !$default_yes } {
+		set options "\[y/N]"
+	}
+
+	send_user "$msg $options: "
+	set choice [expect_user {
+		-nocase n { expr 0 }
+		-nocase y { expr 1 }
+		-re "\n"  { expr $default_yes }
+		timeout   { expr 0 }
+	}]
+}

@@ -73,15 +73,7 @@ proc run_genode { } {
 		append opt_cmd {*}$target_opt($target-cmd)
 
 		# ask user for confirmation before spawning optional command
-		send_user "Do you want to run '$opt_cmd'? \[Y/n]: "
-		set choice [expect_user {
-			-nocase n { expr 0 }
-			-nocase y { expr 1 }
-			-re "\n"  { expr 1 }
-			timeout   { expr 0 }
-		}]
-
-		if {$choice} {
+		if {[user_confirmation "Do you want to run '$opt_cmd'?" 1]} {
 			spawn sh -c "$opt_cmd"
 			set cmd_spawn_id $spawn_id
 		}
