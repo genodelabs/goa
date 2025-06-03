@@ -29,7 +29,8 @@ proc _find_tool_dir { } {
 }
 
 set tool_name [file tail $argv0]
-set tool_dir  [file join [_find_tool_dir] "share" "goa"]
+set goa_dir   [_find_tool_dir]
+set tool_dir  [file join $goa_dir "share" "goa"]
 set gaol      [file join $tool_dir lib gaol]
 
 # assist the user a bit
