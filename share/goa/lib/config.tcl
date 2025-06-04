@@ -278,20 +278,29 @@ namespace eval ::config {
 		#
 		# build list of privileged goarc files
 		#
-		lappend privileged_rcfiles [file normalize $::env(HOME)]
-		lappend privileged_rcfiles [file normalize "/"]
+		set homedir [file normalize $::env(HOME)]
+		lappend privileged_rcfiles $homedir
+		lappend privileged_rcfiles [file separator]
 
 		#
 		# Read the hierarcy of 'goarc' files
 		#
 
-		set goarc_path_elements [file split $project_dir]
+		set goarc_paths {}
+		set goarc_path {}
+		foreach path_elem [file split $project_dir] {
+			set goarc_path [file join $goarc_path $path_elem]
+			lappend goarc_paths $goarc_path
+			# add $homedir after root directory if project_dir is not in $homedir
+			if {$path_elem == [file separator] && [string first $homedir $project_dir] != 0} {
+				lappend goarc_paths $homedir
+			}
+		}
+
 		set goarc_name "goarc"
-		set goarc_path [file separator]
 
-		foreach path_elem $goarc_path_elements {
+		foreach goarc_path $goarc_paths {
 
-			set goarc_path           [file join $goarc_path $path_elem]
 			set goarc_path_candidate [file join $goarc_path $goarc_name]
 			set deprecated_goarc     [file join $goarc_path .$goarc_name]
 
