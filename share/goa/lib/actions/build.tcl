@@ -9,10 +9,10 @@ namespace eval goa {
 	namespace export extract-abi-symbols
 	namespace export install-toolchain
 
-	proc sandboxed_build_command { } {
+	proc sandboxed_build_command { {silent 0} } {
 		global config::project_dir config::depot_dir config::var_dir config::build_dir
 
-		set     cmd [gaol_with_toolchain]
+		set     cmd [gaol_with_toolchain $silent]
 		lappend cmd --ro-bind $depot_dir
 		lappend cmd --ro-bind $var_dir
 		lappend cmd --ro-bind $project_dir
