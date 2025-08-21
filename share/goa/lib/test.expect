@@ -32,7 +32,7 @@ set tests {
 #
 set test_output(hello_make)       {\[init -> hello_make\] Hello}
 set test_output(hello_posix)      {\[init -> hello_posix\] Hello POSIX}
-set test_output(hello_meson)      {\[init -> hello_meson\] Hello Meson}
+set test_output(hello_meson)      {\[init -> hello_meson\] Hello Meson: 42}
 set test_output(cmake_step2)      {\[init -> cmake_step2\] The square root of 24 is 4.89898}
 set test_output(cmake_library)    {libforty_two.lib.so}
 set test_output(qt5_core)         {\[init -> qt5_core\] Test done.}

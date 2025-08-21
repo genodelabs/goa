@@ -1,3 +1,12 @@
 project('hello_meson', 'cpp')
-executable('hello', 'hello.cc')
+
+forty_two = library('forty_two', ['lib.cc'],
+                    include_directories: include_directories('include'),
+                    install: true,)
+
+executable('hello',
+           'hello.cc',
+           include_directories: include_directories('include'),
+           link_with: forty_two,
+           install: true,)
 

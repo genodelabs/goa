@@ -53,9 +53,10 @@ file.
 Meson
 =====
 
-Meson is used, if Goa encounters a meson.build file in the _src/_ directory.
+Meson is used, if Goa encounters a _meson.build_ file in the _src/_ directory.
 Project-specific Meson configuration arguments are read from the _meson_args_
-file.
+file. Supported are both *executable* and *library* targets. For a detailed
+description on how to build Meson projects please refer to *goa help meson*.
 
 
 qmake (Qt)
@@ -99,4 +100,5 @@ Note that Goa writes the bitstream to a _<project_name>.bit_ file.
 SEE ALSO
 ########
 
-add-depot-user, api, artifacts, config, import, index, overview, runtime, targets
+add-depot-user, api, artifacts, config, import, index, overview, runtime,
+targets, meson

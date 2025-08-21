@@ -2,5 +2,6 @@
 	<config/>
 	<content>
 		<rom label="hello"/>
+		<rom label="libforty_two.so"/>
 	</content>
 </runtime>

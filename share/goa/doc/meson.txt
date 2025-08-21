@@ -1,0 +1,91 @@
+
+                                    Meson
+
+
+                               Sebastian Sumpf
+
+Goa supports Meson projects with multiple executable/library targets.
+
+
+Files
+#####
+
+:used_apis: Because Meson compiles small test applications for feature testing,
+  _genodelabs/api/posix_ and _genodelabs/api/libc_ should almost always be added
+  to this file (see: overview)
+
+:meson_args (optional): The file takes all options supported by *meson setup*,
+  the format is one option per line.
+
+:rpath_link (optional): If the project contains or produces *-rpath,$ORIGIN/..*
+  linking options, Meson assumes that the paths in *-rpath* are also used to search
+  dependencies during linking. This is not the case with the Genode toolchain.
+  Therefore, any library search path for linking, can be added to this file,
+  including _$ORIGIN/some/directory_ paths. The paths will be passed through
+  *-rpath-link* as linker arguments. It is recommended to inspect all linking
+  commands for *-rpath* options and set the paths in this file accordingly. The
+  format is one unquoted path per line.
+
+
+Subprojects
+###########
+
+If the Meson project relies on subprojects, it is recommended to fetch the
+source code for these projects after *goa import* because automatic downloads
+when the bubblewrap sandbox is enabled will fail. Example:
+
+! cd src/
+! meson subprojects download [name ...]
+
+Alternatively the downloads can be added to the _import_ file, but this is for
+advanced users only and there does not exist generic tooling to achieve this at
+the moment.
+
+
+Notes
+#####
+
+Only targets (and their dependencies) that have the *install* argument set to
+*true* are built. Example:
+
+! executable('hello','hello.cc', install: true,)
+
+The _threads_ dependency will create *-pthread* options during compilation,
+which is not supported by the Genode toolchain. All _threads_ dependencies must
+be removed from or declared empty in _meson.build_ files. Example:
+
+! thread_dep = dependency('threads')
+
+becomes
+
+! thread_dep = []
+
+When building _api_ archives, Genode requires libraries to have the _.lib.so_
+suffix (instead of just _.so_). Meson has no way of globally setting the
+suffixes or prefixes of shared libraries. Instead, you need to add *name_suffix*
+and - in case you also want to remove the _lib_ prefix - *name_prefix* to the
+_library_ or _shared-library_ targets of the projects _meson.build_ file.
+Example:
+
+! shared_library('libc_ucontext',
+!                name_prefix: '',       # remove 'lib'
+!                name_suffix: 'lib.so', # add 'lib.so'
+!               ...,
+
+Sometimes this breaks the build for the project, in this case you can try to
+alter the target name. Example from glib:
+
+! libglib = library('glib-2.0', ...
+
+became
+
+! libglib = library('glib.lib', ...
+
+
+Meson modules like Qt5, Rust, Java are not supported.
+
+
+SEE ALSO
+########
+
+build-systems, config, import, overview, api
