@@ -60,7 +60,7 @@ proc create_cross_file { dir } {
 
 proc create_or_update_build_dir { } {
 	global cppflags cflags cxxflags
-	global ldflags ldlibs_common ldlibs_exe ldlibs_so library_only_project
+	global ldflags ldlibs_common ldlibs_exe
 	global config::build_dir config::project_dir config::abi_dir config::project_name
 	global config::cross_dev_prefix config::cc_cxx_opt_std config::debug
 
@@ -114,13 +114,8 @@ proc create_or_update_build_dir { } {
 	lappend cmd "-Dc_args=$cflags $cppflags"
 	lappend cmd "-Dcpp_args=$cxxflags $cppflags"
 	lappend cmd "-Dcpp_std=[lindex [split $cc_cxx_opt_std =/] 1]"
-	if { $library_only_project } {
-		lappend cmd "-Dc_link_args=$ldflags $ldlibs_common $ldlibs_so"
-		lappend cmd "-Dcpp_link_args=$ldflags $ldlibs_common $ldlibs_so"
-	} else {
-		lappend cmd "-Dc_link_args=$ldflags $ldlibs_common $ldlibs_exe"
-		lappend cmd "-Dcpp_link_args=$ldflags $ldlibs_common $ldlibs_exe"
-	}
+	lappend cmd "-Dc_link_args=$ldflags $ldlibs_common $ldlibs_exe"
+	lappend cmd "-Dcpp_link_args=$ldflags $ldlibs_common $ldlibs_exe"
 
 	# add project-specific arguments read from 'meson_args' file
 	foreach arg [read_file_content_as_list [file join $project_dir meson_args]] {
