@@ -79,8 +79,6 @@ if {$perform(versions)} {
 }
 
 
-
-
 ##
 ## Create and initialize depot directory
 ##
@@ -97,6 +95,17 @@ if {$perform(depot-dir)} {
 if {$perform(add-depot-user)} {
 	goa add-depot-user $args(new_depot_user) $args(depot_url) \
 	                   $args(pubkey_file) $args(gpg_user_id)
+	exit
+}
+
+source [file join $tool_dir lib actions depot.tcl]
+
+##
+## Show archive info
+##
+#
+if {$perform(info)} {
+	goa archive-info $args(archive)
 	exit
 }
 
@@ -156,7 +165,6 @@ if {$perform(import)} {
 ##
 
 source [file join $tool_dir lib actions build.tcl]
-source [file join $tool_dir lib actions depot.tcl]
 
 if {$perform(build-dir)} {
 	if {[has_src_but_no_artifacts $config::project_dir]} {

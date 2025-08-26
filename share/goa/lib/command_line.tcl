@@ -174,7 +174,7 @@ if {[llength $argv] == 0} {
 
 set avail_commands [list update-goa archive-versions backtrace import diff build-dir \
                          build run run-dir export publish add-depot-user bump-version \
-                         extract-abi-symbols versions depot-dir install-toolchain]
+                         extract-abi-symbols versions depot-dir install-toolchain info]
 
 foreach command $avail_commands {
 	set perform($command) 0 }
@@ -218,6 +218,18 @@ if {$perform(update-goa)} {
 	if {[llength $argv] == 1} {
 		set args(switch_to_goa_branch) [lindex $argv 0]
 		set argv [lrange $argv 1 end]
+	}
+}
+
+if {$perform(info)} {
+	set args(archive) ""
+	if {[llength $argv] > 0} {
+		set args(archive) [lindex $argv 0]
+		set argv [lrange $argv 1 end]
+	} else {
+		exit_with_error "missing archive argument\n" \
+			            "\nExpected command:\n" \
+			            "\ngoa info <archive>\n"
 	}
 }
 

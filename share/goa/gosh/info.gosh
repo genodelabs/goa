@@ -1,0 +1,29 @@
+
+#############################
+#                           #
+#    MANUAL PAGE BACKEND    #
+# (archive info supplement) #
+#############################
+
+set version ""
+set archive ""
+
+set style_substyles(documentmain) {header abstract bibliography chapter section subsection paragraph image tikz rawinclude table footnote annotation raw itemize enumeration description verbatim plain}
+
+# process version argument
+if {[regexp {\--version ([^ ]+)} $argv dummy version]} {
+	regsub {\--version [^ ]+} $argv "" argv
+}
+
+if {[regexp {\--archive ([^ ]+)} $argv dummy archive]} {
+	regsub {\--archive [^ ]+} $argv "" argv
+}
+
+### WRITE HEADER ###
+proc produce_head_man {} {
+	global title version archive
+
+	puts ".TH \"ARCHIVE\" \"$archive\" \"$version\" \"\" \"$title\""
+
+	puts ".SH SUMMARY"
+}

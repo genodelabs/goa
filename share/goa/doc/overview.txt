@@ -166,7 +166,10 @@ Commands
   acquires version information from the version definitions in the _goarc_
   files; see *goa help config* for more details. If no version definition is
   present for a particular depot archive, Goa tries to locate the
-  corresponding project directory and evalutes the contained _version_ file.
+  corresponding project directory and evaluates the contained _version_ file.
+
+:goa info <user>/[pkg|src]/<name>[/<version>]:
+  Show documentation about the specified pkg or src archive.
 
 :goa bump-version [<version>]:
   Update version file of a Goa project. If <version> is not provided, the

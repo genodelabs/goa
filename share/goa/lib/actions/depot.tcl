@@ -7,7 +7,7 @@ namespace eval goa {
 	namespace export prepare_depot_with_debug_archives
 	namespace export export-api export-raw export-src export-pkgs export-index
 	namespace export export-dbg export-bin import-dependencies export-dependencies
-	namespace export published-archives download-foreign publish
+	namespace export published-archives download-foreign publish archive-info
 
 	proc exec_depot_tool { tool args } {
 		global verbose gaol tool_dir
@@ -208,6 +208,41 @@ namespace eval goa {
 		if {[llength $missing_debug_archives]} {
 			log "unable to download the following debug archives:\n" \
 			    [join $missing_debug_archives "\n "] }
+	}
+
+
+	proc archive-info { archive } {
+		global config::depot_dir tool_dir
+
+		set archives [apply_versions [list $archive]]
+
+		# download archive
+		prepare_depot_with_archives $archives
+
+		# look for README
+		set versioned_archive [lindex $archives 0]
+		archive_parts $versioned_archive user type name vers
+		if {$type != "pkg" && $type != "bin" && $type != "src"} {
+			exit_with_error "No info for archive type '$type' available." }
+
+		set archive_path [file join $depot_dir $versioned_archive]
+		if {$type == "bin"} {
+			set archive_path [file join $depot_dir $user src $name $vers] }
+
+		set find_cmd [list find $archive_path -type f -name README]
+		if {$type == "pkg"} {
+			lappend find_cmd -and -path "*/$vers/README"
+		} else {
+			lappend find_cmd -and -path "*/$name/README"
+		}
+
+		set candidates [exec {*}$find_cmd]
+		if {[llength $candidates] == 0} {
+			exit_with_error "Archive '$versioned_archive' does not contain a README file" }
+
+		set     cmd [file join $tool_dir gosh gosh]
+		lappend cmd --style man --style info --version $vers --archive $archive [lindex $candidates 0]| man -l -
+		system {*}$cmd
 	}
 
 
