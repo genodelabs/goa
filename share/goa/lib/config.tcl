@@ -54,11 +54,12 @@ namespace eval ::config {
 
 	# if /proc/cpuinfo exists, use number of CPUs as 'jobs'
 	if {[file exists /proc/cpuinfo]} {
-		catch {
+		try {
 			set num_cpus [exec grep "processor.*:" /proc/cpuinfo | wc -l]
 			set jobs $num_cpus
 			diag "use $jobs jobs according to /proc/cpuinfo"
-		}
+		} trap CHILDSTATUS {} {
+		} on error {msg} { error $msg $::errorInfo }
 	}
 
 
