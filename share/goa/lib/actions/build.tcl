@@ -162,7 +162,10 @@ namespace eval goa {
 	# strip debug symbols from binary
 	#
 	proc strip_binary { file } {
-		catch { exec_tool_chain strip "$file" }
+		try {
+			exec_tool_chain strip "$file"
+		} trap CHILDSTATUS {} {
+		} on error { msg } { error $msg $::errorInfo }
 	}
 
 
@@ -174,19 +177,22 @@ namespace eval goa {
 		##
 		# check whether file has debug info and bail if not
 		#
-
-		if {[catch { exec_tool_chain objdump -hj .debug_info "$file" }]} {
+		try {
+			exec_tool_chain objdump -hj .debug_info "$file"
+		} trap CHILDSTATUS {} {
 			diag "file \"$file\" has no debug info"
-			return }
+			return
+		} on error { msg } { error $msg $::errorInfo }
 
 		##
 		# create debug info file
 		#
-			#
-		if {[catch { exec_tool_chain objcopy --only-keep-debug "$file" "$file.debug" }]} {
+		try {
+			exec_tool_chain objcopy --only-keep-debug "$file" "$file.debug"
+		} trap CHILDSTATUS {} {
 			diag "unable to extract debug info file from $file"
 			return
-		}
+		} on error { msg } { error $msg $::errorInfo }
 
 		##
 		# add gnu_debuglink section to binary
@@ -197,8 +203,11 @@ namespace eval goa {
 		set orig_pwd [pwd]
 		cd [file dirname $file]
 
-		if {[catch { exec_tool_chain objcopy --add-gnu-debuglink=$filename.debug $filename }]} {
-			diag "unable to add gnu_debuglink section to $file" }
+		try {
+			exec_tool_chain objcopy --add-gnu-debuglink=$filename.debug $filename
+		} trap CHILDSTATUS {} {
+			diag "unable to add gnu_debuglink section to $file"
+		} on error { msg } { error $msg $::errorInfo }
 
 		cd $orig_pwd
 	}
@@ -225,9 +234,12 @@ namespace eval goa {
 
 		diag "generate ABI stubs"
 
-		if {[catch { exec_make_tool gen_abi_stubs.mk "APIS=[join $used_apis { }]" | sed "s/^/\[$project_name:abi\] /" >@ stdout }]} {
+		try {
+			exec_make_tool gen_abi_stubs.mk "APIS=[join $used_apis { }]" | sed "s/^/\[$project_name:abi\] /" >@ stdout
+		} trap CHILDSTATUS {} {
 			exit_with_error "failed to generate ABI stubs for the following" \
-			                "depot archives:\n" [join $used_apis "\n "] }
+			                "depot archives:\n" [join $used_apis "\n "]
+		} on error { msg } { error $msg $::errorInfo }
 	}
 	
 
@@ -252,8 +264,11 @@ namespace eval goa {
 
 		diag "generate ldso_support.lib.a"
 
-		if {[catch { exec_make_tool gen_ldso_support.mk "APIS=[join $so_api { }]" | sed "s/^/\[$project_name:abi\] /" >@ stdout }]} {
-			exit_with_error "failed to generate ldso_support.lib.a "] }
+		try {
+			exec_make_tool gen_ldso_support.mk "APIS=[join $so_api { }]" | sed "s/^/\[$project_name:abi\] /" >@ stdout
+		} trap CHILDSTATUS { } {
+			exit_with_error "failed to generate ldso_support.lib.a "
+		} on error { msg } { error $msg $::errorInfo }
 	}
 
 	##
