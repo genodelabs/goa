@@ -40,6 +40,7 @@ download:
 		missing_deps=`$(MAKE) -f $(DEPENDENCIES_CMD) 2> /dev/null | sed -n "/^ /s/ *//p"`; \
 		$(DOWNLOAD_CMD) $$missing_deps || break; \
 	done;
+	$(VERBOSE) $(DEPENDENCIES_CMD) > /dev/null 2> /dev/null;
 
 $(MAKECMDGOALS): download
 	@true
