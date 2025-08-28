@@ -320,8 +320,7 @@ proc _build_project_dir_cache { type } {
 		if {$type == "pkg"} {
 			foreach dir $project_dir_cache($type) {
 				regexp {(.*)/pkg/(.*)$} $dir dummy path name
-				catch {
-					set project_dir_cache($type,$name) [file normalize [file join $search_dir $path]] }
+				set project_dir_cache($type,$name) [file normalize [file join $search_dir $path]]
 			}
 		} else {
 			foreach dir $project_dir_cache($type) {
@@ -350,7 +349,7 @@ proc find_project_dir_for_archive { type name } {
 	if {[info exists project_dir_cache($type,$name)]} {
 		return $project_dir_cache($type,$name) }
 
-	return -code error
+	return -code error -errorcode NOT_FOUND
 }
 
 
@@ -373,7 +372,7 @@ proc project_version_from_file { dir } {
 		return [lindex $version_from_file 0]
 	}
 
-	return -code error "file $version_file does not exist"
+	return -code error -errorcode NOT_FOUND "file $version_file does not exist"
 }
 
 
@@ -383,15 +382,15 @@ proc project_version_from_file { dir } {
 proc exported_project_archive_version { dir archive } {
 	global config::version
 
-	catch {
+	try {
 		set archive_version [project_version_from_file $dir]
-	}
+		return $archive_version
 
-	if {[info exists archive_version]} {
-		return $archive_version }
+	} trap NOT_FOUND {} {
+		if {[info exists version($archive)]} {
+			return $version($archive) }
 
-	if {[info exists version($archive)]} {
-		return $version($archive) }
+	} on error {msg} { error $msg $::errorInfo }
 
 	exit_with_error "version for archive $archive undefined\n" \
 	                "\n Create a 'version' file in '$dir', or" \
@@ -466,10 +465,12 @@ proc apply_versions { archive_list } {
 
 		# try to obtain missing version information from Goa projects
 		if {![info exists version($archive)]} {
-			catch {
+			try {
 				set dir [find_project_dir_for_archive $type $name]
 				set version($archive) [project_version_from_file $dir]
-			}
+
+			} trap NOT_FOUND {} {
+			} on error {msg} { error $msg $::errorInfo }
 		}
 
 		# exit if version information is still missing
@@ -797,8 +798,13 @@ proc exit_if_not_installed { args } {
 #
 proc check_xml_syntax { xml_file } {
 
-	if {[catch {exec xmllint --noout $xml_file} result]} {
-		exit_with_error "invalid XML syntax in $xml_file:\n$result" }
+	try {
+		exec xmllint -noout $xml_file
+
+	} trap CHILDSTATUS {result} {
+		exit_with_error "invalid XML syntax in $xml_file:\n$result"
+
+	} on error {msg} { error $msg $::errorInfo }
 }
 
 
