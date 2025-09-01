@@ -579,7 +579,7 @@ proc archive_parts { archive &user &type &name &version } {
 
 	# an archive has at least 3 and at most 5 elements
 	if {[llength $elements] < 3 || [llength $elements] > 5} {
-		return -code error "invalid depot-archive path '$archive'" }
+		return -code error -errorcode INVALID_ARCHIVE "invalid depot-archive path '$archive'" }
 
 	upvar 1 ${&user}    user
 	upvar 1 ${&type}    type

@@ -98,6 +98,29 @@ namespace eval goa {
 	}
 
 
+	proc missing_dependencies { archive } {
+		set missing {}
+
+		try {
+			exec_depot_tool dependencies $archive 2> /dev/null
+
+		} trap CHILDSTATUS { msg } {
+			foreach line [split $msg \n] {
+				set archive [string trim $line]
+				try {
+					archive_parts $archive user type name vers
+					lappend missing $archive
+				} trap INVALID_ARCHIVE { } {
+					continue
+				} on error { msg } { error $msg $::errorInfo }
+			}
+
+		} on error { msg } { error $msg $::errorInfo }
+		
+		return $missing
+	}
+
+
 	proc download_archives { archives { no_err 0 } { dbg 0 }} {
 
 		if {[llength $archives] > 0} {
@@ -107,13 +130,18 @@ namespace eval goa {
 
 			diag "install depot archives: $archives"
 
-			if { $no_err } {
-				if {[catch { exec_depot_tool download {*}$args | sed "s/^Error://" >@ stdout }]} {
-					return -code error }
-			} else {
-				if {[catch { exec_depot_tool download {*}$args >@ stdout }]} {
-					return -code error }
-			}
+			try {
+				if { $no_err } {
+					exec_depot_tool download {*}$args | sed "s/^Error://" >@ stdout
+				} else {
+					exec_depot_tool download {*}$args >@ stdout
+				}
+
+			} trap CHILDSTATUS { msg } {
+				return -code error -errorcode DOWNLOAD_FAILED $msg
+
+			} on error { msg info } { puts $info
+					error $msg $::errorInfo }
 		}
 
 		return -code ok
@@ -121,11 +149,23 @@ namespace eval goa {
 
 
 	proc try_download_archives { archives } {
-		return [download_archives $archives 1] }
+		try {
+			download_archives $archives 1
+			return 1
+		} trap DOWNLOAD_FAILED {} {
+			return 0
+		} on error { msg } { error $msg $::errorInfo }
+	}
 
 
 	proc try_download_debug_archives { archives } {
-		return [download_archives $archives 1 1] }
+		try {
+			download_archives $archives 1 1
+			return 1
+		} trap DOWNLOAD_FAILED {} {
+			return 0
+		} on error { msg } { error $msg $::errorInfo }
+	}
 
 
 	##
@@ -142,18 +182,26 @@ namespace eval goa {
 			if {$user != $depot_user} {
 				continue }
 
-			catch {
+			try {
 				set dir [find_project_dir_for_archive $type $name]
 
-				# first, try downloading
-				if {[catch { try_download_archives [list $used_api] }]} {
-					if {"[exported_project_archive_version $dir $user/$type/$name]" != "$vers"} {
-						log "skipping export of $dir due to version mismatch"
-					} elseif {[catch {export_dependent_project $dir $arch} msg]} {
-						exit_with_error "failed to export depot archive $used_api: \n\t$msg"
-					}
+				if {[try_download_archives [list $used_api]]} {
+					continue }
+
+				if {"[exported_project_archive_version $dir $user/$type/$name]" != "$vers"} {
+					log "skipping export of $dir due to version mismatch"
+				} else {
+					export_dependent_project $dir $arch
 				}
-			}
+
+			} trap NOT_FOUND { } {
+				# ignore if project dir was not found
+				
+			} trap CHILDSTATUS { msg } {
+				# export failed
+				exit_with_error "failed to export depot archive $used_api: \n\t$msg"
+
+			} on error { msg } { error $msg $::errorInfo }
 		}
 	}
 
@@ -185,9 +233,14 @@ namespace eval goa {
 		set uninstalled_archives [lsort -unique $uninstalled_archives]
 
 		# download uninstalled archives
-		if {[catch { download_archives $uninstalled_archives }]} {
+		try {
+			download_archives $uninstalled_archives
+
+		} trap DOWNLOAD_FAILED { } {
 			exit_with_error "failed to download the following depot archives:\n" \
-			                [join $uninstalled_archives "\n "] }
+			                [join $uninstalled_archives "\n "]
+
+		} on error { msg } { error $msg $::errorInfo }
 	}
 
 
@@ -201,7 +254,7 @@ namespace eval goa {
 		foreach archive $archive_list {
 			set is_bin [regsub {/bin/} $archive {/dbg/} debug_archive]
 			if { $is_bin && ![file exists [file join $depot_dir $debug_archive]]} {
-				if {[catch { try_download_debug_archives [list $archive] }]} {
+				if {![try_download_debug_archives [list $archive]]} {
 					lappend missing_debug_archives $debug_archive } }
 		}
 
@@ -272,9 +325,10 @@ namespace eval goa {
 			return $depot_user/index/$sculpt_version
 		}
 	
-		catch {
+		try {
 			set archive_version [project_version_from_file $project_dir]
-		}
+		} trap NOT_FOUND { } { #ignore
+		} on error { msg } { error $msg $::errorInfo }
 	
 		#
 		# If a binary archive is requested, try to obtain its version from
@@ -615,37 +669,42 @@ namespace eval goa {
 			# check index file for any missing archives
 			foreach { archive pkg_archs } [pkgs_from_index $index_file] {
 	
-				catch {
-					set versioned_archive [lindex [apply_versions $archive] 0]
-					set pkg_name [archive_name $archive]
-	
-					# download or export archive if it has not been exported
-					set dst_dir "[file join $depot_dir $versioned_archive]"
-					if {$dst_dir != "" && ![file exists $dst_dir]} {
-						foreach pkg_arch $pkg_archs {
-							# try downloading first
-							if {![catch {try_download_archives [list [apply_arch $versioned_archive $pkg_arch]]}]} {
-								continue }
+				set versioned_archive [lindex [apply_versions $archive] 0]
+				set pkg_name [archive_name $archive]
 
-							set dir {}
-							catch { set dir [find_project_dir_for_archive pkg $pkg_name] }
-							if {$dir == ""} {
-								exit_with_error "unable to download or export missing archive $versioned_archive" }
-	
+				# download or export archive if it has not been exported
+				set dst_dir "[file join $depot_dir $versioned_archive]"
+				if {$dst_dir != "" && ![file exists $dst_dir]} {
+					foreach pkg_arch $pkg_archs {
+						# try downloading first
+						if {[try_download_archives [list [apply_arch $versioned_archive $pkg_arch]]]} {
+							continue }
+
+						try {
+							set dir [find_project_dir_for_archive pkg $pkg_name]
+							
 							# check that the expected version matches the exported version
 							set exported_archive_version [exported_project_archive_version $dir $archive]
 							if { "$archive/$exported_archive_version" != "$versioned_archive" } {
 								exit_with_error "unable to export $versioned_archive: project version is $exported_archive_version" }
-	
-							if {[catch { export_dependent_project $dir $pkg_arch $pkg_name } msg]} {
-								exit_with_error "failed to export depot archive $archive: \n\t$msg" }
-						}
-	
-					} elseif {$dst_dir != "" && [file exists $dst_dir]} {
-						# mark arch-specific archives as exported to trigger dependency check
-						foreach pkg_arch $pkg_archs {
-							lappend exported_archives [apply_arch $versioned_archive $pkg_arch] }
+
+							export_dependent_project $dir $pkg_arch $pkg_name
+
+						} trap NOT_FOUND { } {
+							# project dir not found
+							exit_with_error "unable to download or export missing archive $versioned_archive"
+
+						} trap CHILDSTATUS { msg } {
+							# export failed
+							exit_with_error "failed to export depot archive $archive: \n\t$msg"
+
+						} on error { msg } { error $msg $::errorInfo }
 					}
+
+				} elseif {$dst_dir != "" && [file exists $dst_dir]} {
+					# mark arch-specific archives as exported to trigger dependency check
+					foreach pkg_arch $pkg_archs {
+						lappend exported_archives [apply_arch $versioned_archive $pkg_arch] }
 				}
 			}
 	
@@ -665,47 +724,47 @@ namespace eval goa {
 		upvar  ${&export_projects} export_projects
 	
 		# determine dependent projects that need exporting
-		foreach exported_archive $exported_archives {	
+		foreach exported_archive $exported_archives {
 			diag "acquiring dependencies of exported depot archive: $exported_archive"
 	
 			set archives_incomplete 0
-			if {[catch { exec_depot_tool dependencies $exported_archive 2> /dev/null } msg]} {
-				foreach line [split $msg \n] {
-					set archive [string trim $line]
-					if {[catch {archive_parts $archive user type name vers}]} {
+			foreach archive [missing_dependencies $exported_archive] {
+				archive_parts $archive user type name vers
+				
+				# transfer arch from $exported_archive
+				if {$type == "pkg"} {
+					archive_name_and_arch $exported_archive _name _arch
+					set archive [apply_arch $archive $_arch]
+				} elseif {$type == "src"} {
+					archive_name_and_arch $exported_archive _name _arch
+					set archive "$user/bin/$_arch/$name/$vers"
+				}
+
+				# try downloading before exporting
+				if {[try_download_archives [list $archive]]} {
+					continue }
+
+				try {
+					set dir [find_project_dir_for_archive $type $name]
+
+					if {$user != $depot_user} {
+						log "skipping export of $dir: must be exported as depot user '$user'"
 						continue
 					}
 
-					# transfer arch from $exported_archive
-					if {$type == "pkg"} {
-						archive_name_and_arch $exported_archive _name _arch
-						set archive [apply_arch $archive $_arch]
-					} elseif {$type == "src"} {
-						archive_name_and_arch $exported_archive _name _arch
-						set archive "$user/bin/$_arch/$name/$vers"
+					if {"[exported_project_archive_version $dir $user/$type/$name]" != "$vers"} {
+						log "skipping export of $dir due to version mismatch"
+						continue
 					}
-	
-					# try downloading before exporting
-					if {![catch {try_download_archives [list $archive]}]} {
-						continue }
-	
-					if {![catch {find_project_dir_for_archive $type $name} dir]} {
-						if {$user != $depot_user} {
-							log "skipping export of $dir: must be exported as depot user '$user'"
-							continue
-						}
-	
-						if {"[exported_project_archive_version $dir $user/$type/$name]" != "$vers"} {
-							log "skipping export of $dir due to version mismatch"
-							continue
-						}
-	
-						set export_projects($archive) $dir
-					} else {
-						set archives_incomplete 1
-						log "Unable to download or to find project directory for '$archive'"
-					}
-				}
+
+					set export_projects($archive) $dir
+
+				} trap NOT_FOUND { } {
+					set archives_incomplete 1
+					log "Unable to download or to find project directory for '$archive'"
+
+				} on error { msg } { error $msg $::errorInfo }
+
 			}
 	
 			if {$archives_incomplete} {
@@ -812,12 +871,15 @@ namespace eval goa {
 
 			diag "acquiring dependencies via archives: $archives"
 
-			if {![catch { exec_depot_tool dependencies {*}$archives 2> /dev/null } msg]} {
-				foreach line [split $msg \n] {
+			try {
+				set output [exec_depot_tool dependencies {*}$archives 2> /dev/null]
+				foreach line [split $output \n] {
 					set archive [string trim $line]
-					if {[catch {archive_parts $archive user type name vers}]} {
+					try {
+						archive_parts $archive user type name vers
+					} trap INVALID_ARCHIVE { } {
 						continue
-					}
+					} on error { msg } { error $msg $::errorInfo }
 	
 					if {$user == $depot_user} {
 						continue
@@ -832,15 +894,21 @@ namespace eval goa {
 					file delete -force [file join $depot_dir $archive]
 					lappend missing_archives $archive
 				}
-			} else {
-				exit_with_error "\n$msg" }
+			} trap CHILDSTATUS { msg } {
+				exit_with_error "Failed to acquire dependencies of archives: $archives\n$msg"
+			} on error { msg } { error $msg $::errorInfo }
 		}
 	
 		# re-download missing archives
 		set missing_archives [lsort -unique $missing_archives]
-		if {[catch { download_archives $missing_archives }]} {
+		try {
+			download_archives $missing_archives
+
+		} trap DOWNLOAD_FAILED { } {
 			exit_with_error "failed to download the following depot archives:\n" \
-			                [join $missing_archives "\n "] }
+			                [join $missing_archives "\n "]
+
+		} on error { msg } { error $msg $::errorInfo }
 	}
 
 
@@ -856,9 +924,12 @@ namespace eval goa {
 	
 			diag "publish depot archives: $archives"
 	
-			if {[catch { exec_depot_tool publish {*}$args >@ stdout }]} {
+			try {
+				exec_depot_tool publish {*}$args >@ stdout
+			} trap CHILDSTATUS { } {
 				exit_with_error "failed to publish the following depot archives:\n" \
-				                [join $archives "\n "] }
+				                [join $archives "\n "]
+			} on error { msg } { error $msg $::errorInfo }
 		}
 	}
 }
