@@ -118,6 +118,7 @@ if {![looks_like_goa_project_dir $config::project_dir] && ![has_src_but_no_artif
 	exit_with_error "$config::project_dir does not look like a goa project" }
 
 
+source [file join $tool_dir lib query.tcl]
 source [file join $tool_dir lib actions versions.tcl]
 
 ##
