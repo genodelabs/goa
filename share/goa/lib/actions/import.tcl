@@ -120,8 +120,11 @@ namespace eval goa {
 				lappend args "VERBOSE=" }
 
 			lappend args >@ stdout 2>@ stdout
-			if {[catch { exec_import_tool install.mk {*}$args }]} {
-				exit_with_error "import failed" }
+			try {
+				exec_import_tool install.mk {*}$args
+			} trap CHILDSTATUS { msg } {
+				exit_with_error "import failed: $msg"
+			} on error { msg } { error $msg $::errorInfo }
 
 			foreach subdir [list src raw] {
 
