@@ -11,10 +11,12 @@ namespace eval goa {
 
 		set version_file [file join $project_dir version]
 		if {[file exists $version_file]} {
-			set old_version ""
 
-			catch {
-				set old_version [project_version_from_file $project_dir] }
+			try {
+				set old_version [project_version_from_file $project_dir]
+			} trap NOT_FOUND { } {
+				set old_version ""
+			} on error { msg }   { error $msg $::errorInfo }
 
 			# version already bumped?
 			if {[string first $target_version $old_version] == 0} {
@@ -56,8 +58,11 @@ namespace eval goa {
 				catch {
 					set pkg_archs [query_attrs_from_string /pkg arch $pkg] }
 
-				if {[catch { archive_user $path }]} {
-					set path $depot_user/pkg/$path }
+				try {
+					archive_user $path
+				} trap INVALID_ARCHIVE { } {
+					set path $depot_user/pkg/$path
+				} on error { msg }         { error $msg $::errorInfo }
 
 				lappend res $path $pkg_archs
 			}
