@@ -254,6 +254,12 @@ Goa evaluates the following configuration variables.
   this is only effective in the privileged goarc files located at '~/goarc' or
   '/goarc'. Alternatively, you may set the environment variable DISABLE_SANDBOX.
 
+:hrd:
+  By default, Goa generates the runtime config in XML syntax. By setting
+  this config variable to 1, Goa will use HRD syntax. Alternatively, HRD
+  generation can be disabled or enabled via the command-line switches
+  *--no-hrd* and *--hrd*.
+
 
 SECURITY
 ########

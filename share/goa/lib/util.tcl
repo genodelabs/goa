@@ -735,29 +735,15 @@ proc mirror_source_dir_to_build_dir { } {
 ##
 # Install Genode config into run directory
 #
-proc install_config { args } {
-	global config::run_dir
+proc install_config { data } {
+	global config::run_dir config::hrd
+
 	set fh [open [file join $run_dir config] "WRONLY CREAT TRUNC"]
-	set lines [split [join $args {}] "\n"]
 
-	# strip common indentation
-	set min_indent 1000
-	foreach line $lines {
-		if {[regexp {^\s*$} $line dummy]} { continue }
-		regexp {^\t+} $line indentation
-		set num_leading_tabs [string length $indentation]
-		if {$num_leading_tabs < $min_indent} {
-			set min_indent $num_leading_tabs }
-	}
-
-	foreach line $lines {
-
-		# leading tabs
-		regsub "^\t{2}" $line "" line
-
-		# empty lines and trailing space
-		regsub {\s+$}   $line "" line
-		puts $fh $line
+	if {$hrd} {
+		puts $fh [hrd as_string [hrd format $data]]
+	} else {
+		puts $fh [join [hrd format-xml $data] "\n"]
 	}
 
 	close $fh

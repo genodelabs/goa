@@ -44,7 +44,6 @@ Installation
 
   * _libSDL-dev_ needed to run system scenarios directly on your host OS,
   * _tclsh_ and _expect_ needed by the tools,
-  * _xmllint_ for validating configurations,
   * _bubblewrap_ for sandboxed build environments,
 
 # Clone the Goa repository:

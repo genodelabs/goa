@@ -165,11 +165,11 @@ The file must implement the following procedures:
 
 :bind_required_services:
   Gets an array of required services as argument. The array entries are named
-  after the lower-case service type. Each entry is a list of the corresponding
-  XML nodes from the _runtime_ file. The procedure is supposed to unset the
-  array entries or remove individual list items to indicate to the caller that
-  these requirements have been processed. Note that the procedure must use
-  'upvar' to access the array:
+  after the lower-case service type. Each entry is a node object representing
+  the corresponding node from the _runtime_ file. The procedure is supposed to
+  unset the array entries or remove individual list items to indicate to the
+  caller that these requirements have been processed. Note that the procedure
+  must use 'upvar' to access the array:
 
   ! proc bind_required_services { services_arr } {
   !  upvar 1 $services_arr services
@@ -185,16 +185,16 @@ The file must implement the following procedures:
   executed.
 
 :cpu_route:
-  Returns the route to the CPU service (typically "<parent\>").
+  Returns the route to the CPU service in HRD syntax (typically "+ parent").
 
 :log_route:
-  Returns the route to the LOG service (typically "<parent\>").
+  Returns the route to the LOG service in HRD syntax (typically "+ parent").
 
 :pd_route:
-  Returns the route to the PD service (typically "<parent\>").
+  Returns the route to the PD service in HRD syntax (typically "+ parent").
 
 :rom_route:
-  Returns the route to the ROM service (typically "<parent\>").
+  Returns the route to the ROM service in HRD syntax (typically "+ parent").
 
 
 SEE ALSO

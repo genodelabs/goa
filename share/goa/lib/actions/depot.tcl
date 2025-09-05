@@ -664,7 +664,7 @@ namespace eval goa {
 
 		set index_file [file join $project_dir index]
 		if {[file exists $index_file] && [file isfile $index_file]} {
-			check_xml_syntax $index_file
+			query validate-syntax $index_file
 	
 			# check index file for any missing archives
 			foreach { archive pkg_archs } [pkgs_from_index $index_file] {

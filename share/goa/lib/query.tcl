@@ -1,105 +1,91 @@
 #
 # XML/HRD query procedures
+#
+# For all procedures, input data can be a file, a node object or an HRD object.
 # 
 
-##
-# Check syntax of specified XML file using xmllint
-#
-proc check_xml_syntax { xml_file } {
+namespace eval query {
 
-	try {
-		exec xmllint -noout $xml_file
+	namespace ensemble create
+	namespace export validate-syntax
+	namespace export attributes attribute optional-attribute
+	namespace export node optional-node
 
-	} trap CHILDSTATUS {result} {
-		exit_with_error "invalid XML syntax in $xml_file:\n$result"
-
-	} on error {msg} { error $msg $::errorInfo }
-}
-
-
-proc query_from_string { xpath node default_value } {
-
-	set content [exec xmllint --xpath $xpath - << $node]
-
-	if {$content == ""} {
-		set content $default_value }
-
-	return $content
-}
-
-
-proc query_attrs_from_string { node_path attr_name xml }  {
-
-	set xpath "$node_path/attribute::$attr_name"
-	set attributes [exec xmllint --xpath $xpath - << $xml]
-
-	set values { }
-	foreach attr $attributes {
-		regexp {"(.*)"} $attr dummy value
-		lappend values $value
+	proc validate-syntax { data } {
+		try {
+			hrd tool $data format
+		} trap CHILDSTATUS { } {
+			exit_with_error "invalid syntax in $data"
+		} on error { msg } { error $msg $::errorInfo }
 	}
-	return $values
-}
 
-
-proc query_attrs_from_file { node_path attr_name xml_file }  {
-
-	set xpath "$node_path/attribute::$attr_name"
-
-	set attributes { }
-	catch {
-		set attributes [exec xmllint --xpath $xpath $xml_file] }
-
-	set values { }
-	foreach attr $attributes {
-		regexp {"(.*)"} $attr dummy value
-		lappend values $value
+	##
+	# query 'data' for attributes described by 'path'
+	# 
+	# returns list of attributes (may be empty)
+	proc attributes { data path } {
+		try {
+			return [split [hrd tool $data get $path] "\n"]
+		} trap CHILDSTATUS { msg } {
+			exit_with_error "unable to get '$path' from $data:\n $msg"
+		} on error { msg } { error $msg $::errorInfo }
 	}
-	return $values
-}
 
+	##
+	# query 'data' for the first attribute matching 'path'
+	# 
+	# returns attribute value or errorcode ATTRIBUTE_MISSING
+	proc attribute { data path } {
+		set result [attributes $data $path]
+		if {[llength $result] == 0} {
+			return -code error -errorcode ATTRIBUTE_MISSING "No attribute '$path' in $data" }
 
-proc query_attr_from_file { node_path attr_name xml_file }  {
-
-	set xpath "$node_path/attribute::$attr_name"
-	set attr_value [exec xmllint --xpath $xpath $xml_file]
-
-	# in the presence of multiple matching xpaths, return only the first
-	regexp {"(.*)"} [lindex $attr_value 0] dummy value
-	return $value
-}
-
-
-proc query_from_file { node_path xml_file }  {
-
-	set xpath "$node_path"
-	set content [exec xmllint --format --xpath $xpath $xml_file]
-
-	return $content
-}
-
-
-proc query_raw_from_file { node_path xml_file }  {
-
-	set xpath "$node_path"
-	set content [exec xmllint --xpath $xpath $xml_file]
-
-	return $content
-}
-
-
-proc desanitize_xml_characters { string } {
-	regsub -all {&gt;} $string {>} string
-	regsub -all {&lt;} $string {<} string
-	return $string
-}
-
-
-proc try_query_attr_from_file { runtime_file attr } {
-	if {[catch {
-		set result [query_attr_from_file /runtime $attr $runtime_file]
-	}]} {
-		exit_with_error "missing '$attr' attribute in <runtime> at $runtime_file"
+		return [lindex $result 0]
 	}
-	return $result
+
+	##
+	# query 'data' for the first attribute matching 'path'
+	# 
+	# returns 'default' if attribute is missing
+	proc optional-attribute { data path default } {
+		try {
+			return [attribute $data $path]
+		} trap ATTRIBUTE_MISSING { } {
+			return default
+		} on error { msg } { error $msg $::errorInfo }
+	}
+
+	##
+	# query 'data' for the first subnode matching 'path'
+	# 
+	# returns node object or errorcode NODE_MISSING
+	proc node { data path } {
+		try {
+			set query  [split [hrd tool $data --output-tcl subnodes $path] "\n"]
+			if {[llength $query] == 0} {
+				return -code error -errorcode NODE_MISSING "No node '$path' in $data" } 
+
+			set result [lindex $query 0]
+			if {![::node enabled $result]} {
+				exit_with_error "subnode '$path' from $data is disabled"
+			}
+			return $result
+			
+		} trap CHILDSTATUS { msg } {
+			exit_with_error "unable to get subnodes '$path' from $data:\n $msg"
+
+		} on error { msg } { error $msg $::errorInfo }
+	}
+
+	##
+	# query 'data' for the first subnode matching 'path'
+	#
+	# returns node object (may be empty)
+	proc optional-node { data path } {
+		try {
+			return [query node $data $path]
+		 } trap NODE_MISSING { } {
+			return [::node empty-node]
+		} on error { msg } { error $msg $::errorInfo }
+	}
 }

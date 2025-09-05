@@ -15,7 +15,7 @@ namespace eval goa {
 
 		# append rom modules of runtimes
 		foreach runtime_file [runtime_files [apply_versions $archive_list]] {
-			append rom_modules " " [query_attrs_from_file /runtime/content/rom label $runtime_file]
+			append rom_modules " " [query attributes $runtime_file "runtime | + content | + rom | : label"]
 		}
 	}
 
@@ -53,9 +53,9 @@ namespace eval goa {
 			exit_with_error "missing runtime configuration at: $runtime_file" }
 	
 		# check XML syntax of runtime config and config file at raw/
-		check_xml_syntax $runtime_file
+		query validate-syntax  $runtime_file
 		foreach config_file [glob -nocomplain [file join raw *.config]] {
-			check_xml_syntax $config_file }
+			query validate-syntax $config_file }
 		
 		#
 		# Partially prepare depot before calling 'generate_runtime_config'.

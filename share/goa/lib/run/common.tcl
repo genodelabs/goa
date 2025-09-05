@@ -18,28 +18,20 @@ proc _find_rom_in_archives { rom_name binary_archives } {
 
 ##
 ##
-# Acquire config XML
+# Acquire config
 #
 proc _acquire_config { runtime_file runtime_archives } {
 
-	set config ""
-	set routes ""
+	set routes [hrd create]
+	set config [query optional-node $runtime_file "runtime | + config"]
 
-	catch {
-		set config [query_raw_from_file /runtime/config $runtime_file]
-		set config [desanitize_xml_characters $config]
-	}
+	try {
+		set rom_name [query attribute $runtime_file "runtime | : config"]
+		hrd append routes "+ service ROM | label: config | + parent | label: $rom_name"
 
-	catch {
-		set rom_name [query_attr_from_file /runtime config $runtime_file]
-		append routes "\n\t\t\t\t\t" \
-		              "<service name=\"ROM\" label=\"config\"> " \
-		              "<parent label=\"$rom_name\"/> " \
-		              "</service>"
-
-		if {$config != ""} {
+		if {[node type $config] == "config"} {
 			exit_with_error "runtime config is ambiguous,"
-			                "specified as 'config' attribute as well as '<config>' node" }
+			                "specified as 'config' attribute as well as 'config' node" }
 
 		# check existence of $rom_name in raw/
 		set config_file [file join raw $rom_name]
@@ -48,18 +40,22 @@ proc _acquire_config { runtime_file runtime_archives } {
 			set config_file [_find_rom_in_archives $rom_name $binary_archives]
 
 			if {$config_file == ""} {
-				exit_with_error "runtime declares 'config=\"$rom_name\"' but the file raw/$rom_name is missing" }
+				exit_with_error "runtime declares 'config: $rom_name' but the file raw/$rom_name is missing" }
 		}
 
 		# load content into config variable
-		set config [query_raw_from_file /* $config_file]
-		set config [desanitize_xml_characters $config]
-	}
+		set config [query node $config_file "config"]
+	} trap ATTRIBUTE_MISSING { } {
+		# no config attribute
+	} trap NODE_MISSING { } {
+		# missing config node in config file
+		exit_with_error "missing config node in referenced rom module $config_file"
+	} on error { msg } { error $msg $::errorInfo }
 
-	if {$config == ""} {
+	if {[node type $config] != "config"} {
 		exit_with_error "runtime lacks a configuration\n" \
-		                "\n You may declare a 'config' attribute in the <runtime> node, or" \
-		                "\n define a <config> node inside the <runtime> node.\n"
+		                "\n You may declare a 'config' attribute for the 'runtime' node, or" \
+		                "\n define a 'config' node inside the 'runtime' node.\n"
 	}
 	return [list $config $routes]
 }
@@ -74,14 +70,14 @@ proc _validate_init_config { config &required_services &provided_services } {
 	upvar 1 ${&required_services} required_services
 	upvar 1 ${&provided_services} provided_services
 
-	# get services from <parent-provides>
-	set parent_provides [query_attrs_from_string "/config/parent-provides/service" name $config]
+	# get services from 'parent-provides' node
+	set parent_provides [query attributes $config "config | + parent-provides | + service | : name"]
 	set parent_provides [string tolower $parent_provides]
 
-	# check that all required services are mentioned as <parent-provides>
+	# check that all required services are mentioned as 'parent-provides'
 	foreach service_name [array names required_services] {
 		if {[lsearch -exact $parent_provides $service_name] == -1} {
-			exit_with_error "runtime requires <$service_name/>, which is not mentioned in <parent-provides>" }
+			exit_with_error "runtime requires '$service_name', which is not mentioned in 'parent-provides'" }
 	}
 
 	# check that all parent_provides services are base services or required services
@@ -89,23 +85,20 @@ proc _validate_init_config { config &required_services &provided_services } {
 		if {[lsearch -exact [list rom pd cpu log rm] $parent_service] > -1} { continue }
 
 		if {[lsearch -nocase [array names required_services] $parent_service] == -1} {
-			log "config <parent-provides> mentions a $parent_service service;" \
-			    "consider adding <$parent_service/> as a required runtime service"
+			log "config 'parent-provides' mentions a $parent_service service;" \
+			    "consider adding '$parent_service' as a required runtime service"
 		}
 	}
 
 	# get services from config
-	set services_from_config { }
-	catch {
-		set services_from_config [query_attrs_from_string /config/service name $config]
-		set services_from_config [lsort -unique [string tolower $services_from_config]]
-	}
+	set services_from_config [query attributes $config "config | + service | : name"]
+	set services_from_config [lsort -unique [string tolower $services_from_config]]
 
 	# check that provided service is mentioned in config
 	set checked_provided_services { }
 	foreach service_name [array names provided_services] {
 		if {[lsearch -exact $services_from_config $service_name] == -1} {
-			exit_with_error "runtime provides <$service_name/> but the corresponding" \
+			exit_with_error "runtime provides '$service_name' but the corresponding" \
 			                "service routing is missing in config"
 		} else {
 			lappend checked_provided_services $service_name
@@ -115,66 +108,56 @@ proc _validate_init_config { config &required_services &provided_services } {
 	# check that services mentioned/routed in config are provided
 	foreach service $services_from_config {
 		if {[lsearch -exact $checked_provided_services $service] == -1} {
-			exit_with_error "runtime does not provide <$service/> as indicated by config" }
+			exit_with_error "runtime does not provide '$service' as indicated by config" }
 	}
 }
 
 
 ##
 ##
-# Acquire list of required and provided services (as XML nodes)
+# Acquire list of required and provided services (as node objects)
 # This procedure also conducts a couple of sanity checks on the way.
 #
 proc _acquire_services { known_services runtime_file config } {
 	# get required services from runtime file
 	array set required_services { }
-	catch {
-		set service_nodes [query_from_file "/runtime/requires/*" $runtime_file]
-		set service_nodes [split $service_nodes \n]
 
-		foreach service_node $service_nodes {
-			set service_name [query_from_string "name(/*)" $service_node ""]
+	set data [query optional-node $runtime_file "runtime | + requires"]
+	node for-all-nodes $data type node {
+		if {![info exists required_services($type)]} {
+			set required_services($type) { } }
 
-			if {![info exists required_services($service_name)]} {
-				set required_services($service_name) { } }
-
-			lappend required_services($service_name) $service_node
-		}
+		lappend required_services($type) $node
 	}
 
 	# check that all required services are known
 	foreach service_name [array names required_services] {
 		if {[lsearch -exact $known_services $service_name] == -1} {
-			exit_with_error "runtime requires unknown <$service_name/>" }
+			exit_with_error "runtime requires unknown '$service_name'" }
 	}
 
 	# get provided services from runtime file
 	array set provided_services { }
-	catch {
-		set service_nodes [query_from_file "/runtime/provides/*" $runtime_file]
-		set service_nodes [split $service_nodes \n]
+	set data [query optional-node $runtime_file "runtime | + provides"]
+	node for-all-nodes $data type node {
+		if {![info exists provided_services($type)]} {
+			set provided_services($type) { } }
 
-		foreach service_node $service_nodes {
-			set service_name [query_from_string "name(/*)" $service_node ""]
-
-			if {![info exists provided_services($service_name)]} {
-				set provided_services($service_name) { } }
-
-			lappend provided_services($service_name) $service_node
-		}
+		lappend provided_services($type) $node
 	}
 
 	# check that all provided services are known
 	foreach service_name [array names provided_services] {
 		if {[lsearch -exact $known_services $service_name] == -1} {
-			exit_with_error "runtime provides unknown <$service_name/>" }
+			exit_with_error "runtime provides unknown '$service_name'" }
 	}
 
-	catch {
-		# if <parent-provides> is present in config, do more consistency checks
-		set dummy [query_from_string "/config/parent-provides" $config ""]
+	try {
+		# if 'parent-provides' is present in config, do more consistency checks
+		query node $config "config | + parent-provides"
 		_validate_init_config $config required_services provided_services
-	}
+	} trap NODE_MISSING { } {
+	} on error { msg } { error $msg $::errorInfo }
 
 	return [list [array get required_services] [array get provided_services]]
 }
@@ -191,11 +174,13 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 
 	global args config::run_dir config::var_dir config::run_as config::bin_dir
 
-	set ram    [try_query_attr_from_file $runtime_file ram]
-	set caps   [try_query_attr_from_file $runtime_file caps]
-	set binary [try_query_attr_from_file $runtime_file binary]
+	try {
+		set ram    [query attribute $runtime_file "runtime | : ram"]
+		set caps   [query attribute $runtime_file "runtime | : caps"]
+		set binary [query attribute $runtime_file "runtime | : binary"]
+	} on error { msg } { exit_with_error $msg }
 
-	# get config XML from runtime file
+	# get config (as node object) from runtime file
 	lassign [_acquire_config $runtime_file $runtime_archives] config config_route
 
 	# list of services that are do not need to mentioned as requirement
@@ -224,14 +209,14 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	# warn if base services are mentioned as requirements
 	foreach service_name [array names required_services] {
 		if {[lsearch -exact -nocase $base_services $service_name] > -1} {
-			log "runtime explicitly requires <$service_name/>, which is always routed" }
+			log "runtime explicitly requires '$service_name', which is always routed" }
 	}
 
 	# assemble list of rom modules from project's runtime file and all runtime
 	# files in the referenced pkg archives
-	set rom_modules [query_attrs_from_file "/runtime/content/rom" label $runtime_file]
+	set rom_modules [query attributes $runtime_file "runtime | + content | + rom | : label"]
 	foreach runtime_file [runtime_files [apply_versions $runtime_archives]] {
-		lappend rom_modules {*}[query_attrs_from_file "runtime/content/rom" label $runtime_file]
+		lappend rom_modules {*}[query attributes $runtime_file "runtime | + content | + rom | : label"]
 	}
 
 	set default_rom_modules [list core ld.lib.so init]
@@ -240,7 +225,7 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	if {[lsearch -exact $rom_modules $binary] < 0 &&
 		 [lsearch -exact $default_rom_modules $binary] < 0} {
 		exit_with_error "Binary '$binary' not mentioned as content ROM module. \n" \
-		                "\n You either need to add '<rom label=\"$binary\"/>' to the content ROM list" \
+		                "\n You either need to add 'rom label: \"$binary\"' to the content ROM list" \
 		                "\n or add a pkg archive to the 'archives' file from which to inherit."
 	}
 
@@ -268,38 +253,36 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 
 	lappend rom_modules {*}$default_rom_modules
 
-	set start_nodes ""
-	set provides ""
-	set routes ""
+	set start_nodes [hrd create]
+	set provides    [hrd create]
+	set routes      [hrd create]
 
-	# add provided services to <provides>
+	# add provided services
 	foreach service_name [array names provided_services] {
 		set cased_name [lindex $known_services [lsearch -exact -nocase $known_services $service_name]]
-		append provides "\n\t\t\t\t\t" \
-			{<service name="} $cased_name {"/>}
+		hrd append provides "+ service $cased_name"
 	}
 
 	# bind provided services
 	set _res [bind_provided_services provided_services]
-	append  start_nodes         [lindex $_res 0]
-	append  routes              [lindex $_res 1]
+	hrd append start_nodes      [lindex $_res 0]
+	hrd append routes           [lindex $_res 1]
 	lappend runtime_archives {*}[lindex $_res 2]
 	lappend rom_modules      {*}[lindex $_res 3]
 
 	foreach service [array names provided_services] {
-		log "runtime-declared provided <$service/> will be ignored" }
+		log "runtime-declared provided '$service' will be ignored" }
 
 	# bind services by target-specific implementation
 	set _res [bind_required_services required_services]
-	append  start_nodes         [lindex $_res 0]
-	append  routes              [lindex $_res 1]
+	hrd append start_nodes      [lindex $_res 0]
+	hrd append routes           [lindex $_res 1]
 	lappend runtime_archives {*}[lindex $_res 2]
 	lappend rom_modules      {*}[lindex $_res 3]
 
-
 	# route remaining services to blackhole component
-	set blackhole_config ""
-	set blackhole_provides ""
+	set blackhole_config   [hrd create]
+	set blackhole_provides [hrd create]
 
 	foreach service [array names required_services] {
 		if {[llength $required_services($service)] == 0} { continue }
@@ -307,92 +290,78 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 		if {[lsearch -exact $blackhole_supported_services $service] > -1} {
 			set cased_name [lindex $known_services [lsearch -exact -nocase $known_services $service]]
 
-			append blackhole_config {
-					<} $service {/>}
-			append blackhole_provides {
-					<service name="} $cased_name {"/>}
+			hrd append blackhole_config   "+ $service"
+			hrd append blackhole_provides "+ service $cased_name"
 
 			foreach service_node $required_services($service) {
-				set label [query_from_string string(*/@label) $service_node ""]
+				node with-attribute $service_node "label" label {
+					hrd append routes "+ service $cased_name | label_last: $label | + child black_hole"
 
-				if {$label == ""} {
-					append routes "\n\t\t\t\t\t" \
-						{<service name="} $cased_name {"> <child name="black_hole"/> </service>}
+					log "routing '$service label: \"$label\"' requirement to black-hole component"
+				} default {
+					hrd append routes "+ service $cased_name | + child black_hole"
 
-					log "routing <$service/> requirement to black-hole component"
-				} else {
-					append routes "\n\t\t\t\t\t" \
-						{<service name="} $cased_name {" label_last="} $label {">}\
-						{ <child name="black_hole"/> </service>}
-
-					log "routing <$service label=\"$label\"/> requirement to black-hole component"
+					log "routing '$service' requirement to black-hole component"
 				}
 			}
 
-
 		} else {
 			foreach service_node $required_services($service) {
-				log "runtime-declared $service_node requirement is not supported" }
+				log "runtime-declared '[hrd first [hrd format $service_node]]' requirement is not supported" }
 		}
 	}
 
-	if {$blackhole_config != ""} {
-		append start_nodes {
-			<start name="black_hole" caps="100">
-				<resource name="RAM" quantum="2M"/>
-				<provides> } $blackhole_provides {
-				</provides>
-				<config> } $blackhole_config {
-				</config>
-				<route>
-					<service name="PD">  <parent/> </service>
-					<service name="CPU"> <parent/> </service>
-					<service name="LOG"> <parent/> </service>
-					<service name="ROM"> <parent/> </service>
-					<service name="Timer">  <child name="timer"/> </service>
-				</route>
-			</start>
-		}
+	if {![hrd empty $blackhole_config]} {
+		hrd append start_nodes "+ start black_hole | caps: 100 | ram: 2M" \
+		                       "  + provides" [hrd indent 2 $blackhole_provides] \
+		                       "  + config"   [hrd indent 2 $blackhole_config] \
+		                       "  + route" \
+		                       "    + service PD    | + parent" \
+		                       "    + service CPU   | + parent" \
+		                       "    + service LOG   | + parent" \
+		                       "    + service ROM   | + parent" \
+		                       "    + service Timer | + child timer"
 
 		lappend rom_modules black_hole
 
 		lappend runtime_archives "$run_as/src/black_hole"
 	}
 
-	set inline_config ""
-	if {$config_route == ""} {
-		set inline_config $config }
-
-	set parent_provides ""
-	foreach s [parent_services] {
-		append parent_provides "\n\t\t\t\t" {<service name="} $s {"/>} }
-
-	install_config {
-		<config>
-			<parent-provides>
-				<service name="ROM"/>
-				<service name="PD"/>
-				<service name="CPU"/>
-				<service name="LOG"/> } $parent_provides {
-			</parent-provides>
-
-			} $start_nodes {
-
-			<start name="} $args(run_pkg) {" caps="} $caps {">
-				<resource name="RAM" quantum="} $ram {"/>
-				<binary name="} $binary {"/>
-				<provides>} $provides {</provides>
-				<route>} $config_route $routes {
-					<service name="ROM">   } [rom_route] { </service>
-					<service name="PD">    } [pd_route]  { </service>
-					<service name="CPU">   } [cpu_route] { </service>
-					<service name="LOG">   } [log_route] { </service>
-				</route>
-				} $inline_config {
-			</start>
-		</config>
+	set inline_config {}
+	if {[hrd empty $config_route]} {
+		set inline_config $config
+	} else {
+		set routes [hrd create $config_route $routes]
 	}
 
+	set parent_provides [hrd create "+ parent-provides" \
+	                                "  + service ROM" \
+	                                "  + service PD" \
+	                                "  + service CPU" \
+	                                "  + service LOG"]
+
+	foreach s [parent_services] {
+		hrd append parent_provides "  + service $s"
+	}
+
+	hrd append routes "+ service ROM | [rom_route]" \
+	                  "+ service PD  | [pd_route]" \
+	                  "+ service CPU | [cpu_route]" \
+	                  "+ service LOG | [log_route]"
+
+	if {![hrd empty $provides]} {
+		set provides [hrd create "+ provides" [hrd indent 2 $provides]] }
+
+	hrd append start_nodes "+ start $args(run_pkg) | caps: $caps | ram: $ram" \
+	                       "  + binary $binary" \
+	                       $provides \
+	                       "  + route" [hrd indent 2 $routes] \
+	                       [hrd indent 1 [hrd format $inline_config]]
+
+	install_config [hrd create "+ config" \
+	                           [hrd indent 1 $parent_provides] \
+	                           [hrd indent 1 $start_nodes]]
+	                      
 	lappend runtime_archives {*}[base_archives]
 
 	# remove duplicates from rom_modules but keep sorting of runtime_archives

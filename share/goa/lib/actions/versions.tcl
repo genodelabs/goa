@@ -44,48 +44,47 @@ namespace eval goa {
 	#
 	proc pkgs_from_index { index_file } {
 		# get supported archs
-		if {[catch { set supported_archs [query_attrs_from_file /index/supports arch $index_file] }]} {
-			exit_with_error "missing <supports arch=\"...\"/> in index file" }
-
-		# helper proc to apply archs to paths found in a list of <pkg> nodes
-		proc _paths_with_arch { pkgs archs } {
-			global config::depot_user
-
-			set res ""
-			foreach pkg $pkgs {
-				set path [query_from_string string(/pkg/@path) $pkg ""]
-				set pkg_archs $archs
-				catch {
-					set pkg_archs [query_attrs_from_string /pkg arch $pkg] }
-
-				try {
-					archive_user $path
-				} trap INVALID_ARCHIVE { } {
-					set path $depot_user/pkg/$path
-				} on error { msg }         { error $msg $::errorInfo }
-
-				lappend res $path $pkg_archs
-			}
-			return $res
-		}
+		set supported_archs [query attributes $index_file "index | + supports | : arch"]
+		if {[llength $supported_archs] == 0} {
+			exit_with_error "missing '+ supports arch: ...' in index file" }
 
 		# helper for recursive processing of index nodes
-		proc _index_with_arch { xml archs result } {
-			# iterate <index> nodes
-			catch {
-				foreach index_xml [split [query_from_string /index/index $xml ""] \n] {
-					set index_archs [split [query_from_string string(/index/@arch) $index_xml "$archs"] " "]
-					set index_name [query_from_string string(/index/@name) $index_xml ""]
-					set pkgs [split [query_from_string /index/pkg $index_xml ""] \n]
-					lappend result {*}[_paths_with_arch $pkgs $index_archs]
+		proc _index_with_arch { input archs result } {
+			global ::config::depot_user
 
-					set result [_index_with_arch $index_xml $index_archs $result]
+			# iterate <index> nodes
+			node for-each-node $input "index" node {
+				node with-attribute $node "arch" value {
+					set archs [list $value]
+				} default { }
+
+				node for-each-node $node "pkg" pkg_node {
+
+					node with-attribute $pkg_node "arch" value {
+						set pkg_archs [list $value]
+					} default {
+						set pkg_archs $archs
+					}
+
+					node with-attribute $pkg_node "path" value {
+						try {
+							archive_user $value
+						} trap INVALID_ARCHIVE { } {
+							set value $depot_user/pkg/$value
+						} on error { msg } { error $msg $::errorInfo }
+					
+						lappend result $value $pkg_archs
+					} default {
+						exit_with_error "Missing 'path' attribute for 'pkg' node in index file"
+					}
 				}
+
+				set result [_index_with_arch $node $archs $result]
 			}
 			return $result
 		}
 
-		return [_index_with_arch [query_from_file /index $index_file] $supported_archs ""]
+		return [_index_with_arch [query node $index_file "index"] $supported_archs ""]
 	}
 
 
