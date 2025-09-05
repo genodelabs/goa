@@ -753,6 +753,12 @@ proc import_hrd_from_xml { xml } {
 }
 
 
+proc import_hrd_from_tcl { tcl } {
+
+	return $tcl
+}
+
+
 proc print_hrd_as_xml { hrd { indent 0 } } {
 
 	if {![hrd_enabled $hrd]} {
@@ -828,7 +834,7 @@ proc file_content { path } {
 }
 
 set short_usage_msg {
-  usage: hrd [--import-xml] <command> [<options>] <hrd-file>}
+  usage: hrd [--import-xml|--import-tcl] <command> [<options>] <hrd-file>}
 
 append help_hint_msg $short_usage_msg "\n" {
   Use '--help' to get more information. }
@@ -953,6 +959,9 @@ set print_hrd_fn  print_hrd_as_tree
 
 consume_flag_arg --import-xml {
 	set import_hrd_fn import_hrd_from_xml }
+
+consume_flag_arg --import-tcl {
+	set import_hrd_fn import_hrd_from_tcl }
 
 consume_flag_arg --output-xml {
 	set print_hrd_fn print_hrd_as_xml }
