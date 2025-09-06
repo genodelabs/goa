@@ -399,29 +399,29 @@ namespace eval goa {
 
 
 	proc artifact_file_list_from_list_file { list_file_path artifact_path } {
-	
+
 		set artifact_files { }
 		set artifacts [read_file_content_as_list $list_file_path]
-	
+
 		foreach artifact $artifacts {
-	
+
 			# strip comments and empty lines
 			regsub "#.*"   $artifact "" artifact
 			regsub {^\s*$} $artifact "" artifact
 			if {$artifact == ""} {
 				continue }
-	
+
 			if {![regexp {^(.+:)?\s*(.+)$} $artifact dummy container selector]} {
 				exit_with_error "invalid artifact declaration in $list_file_path:\n" \
 				                "$artifact" }
-	
+
 			regsub {\s*:$} $container "" container
-	
+
 			# accept files and directories for archives, but only files for ROM modules
 			set selected_types "f d"
 			if {$container == ""} {
 				set selected_types "f" }
-	
+
 			# determine list of selected files
 			if {[regexp {/$} $selector dummy]} {
 				# selector refers to the content of a directory
@@ -432,10 +432,10 @@ namespace eval goa {
 				# selector refers to single file
 				set files [list [file join $artifact_path $selector]]
 			}
-	
+
 			# ROM module(s)
 			if {$container == ""} {
-	
+
 				set missing_files { }
 				set invalid_files { }
 				foreach file $files {
@@ -444,50 +444,50 @@ namespace eval goa {
 					if {[file isdirectory $file]} {
 						append invalid_files "\n $file" }
 				}
-	
+
 				if {[llength $missing_files] > 0} {
 					exit_with_error "build artifact does not exist at $artifact_path:" \
 					                "$missing_files" }
-	
+
 				if {[llength $invalid_files] > 0} {
 					exit_with_error "build artifact is not a file: $invalid_files" }
-	
+
 				foreach file $files {
 					lappend artifact_files $file
 				}
 			}
 		}
-	
+
 		return $artifact_files
 	}
-	
-	
+
+
 	proc create_artifact_containers_from_list_file { list_file_path } {
 
 		global gaol config::bin_dir config::build_dir config::project_dir
-	
+
 		set artifact_files { }
 		set artifacts [read_file_content_as_list $list_file_path]
-	
+
 		foreach artifact $artifacts {
-	
+
 			# strip comments and empty lines
 			regsub "#.*"   $artifact "" artifact
 			regsub {^\s*$} $artifact "" artifact
 			if {$artifact == ""} {
 				continue }
-	
+
 			if {![regexp {^(.+:)?\s*(.+)$} $artifact dummy container selector]} {
 				exit_with_error "invalid artifact declaration in $list_file_path:\n" \
 				                "$artifact" }
-	
+
 			regsub {\s*:$} $container "" container
-	
+
 			# accept files and directories for archives, but only files for ROM modules
 			set selected_types "f d"
 			if {$container == ""} {
 				set selected_types "f" }
-	
+
 			# determine list of selected files
 			if {[regexp {/$} $selector dummy]} {
 				# selector refers to the content of a directory
@@ -498,17 +498,17 @@ namespace eval goa {
 				# selector refers to single file
 				set files [list [file join $build_dir $selector]]
 			}
-	
+
 			# tar archive
 			if {[regexp {^([^:]+\.tar)(/.*/)?} $container dummy archive_name archive_sub_dir]} {
-	
+
 				# strip leading slash from archive sub directory
 				regsub {^/} $archive_sub_dir "" archive_sub_dir
-	
+
 				set archive_path [file join $bin_dir $archive_name]
-	
+
 				diag "create $archive_path"
-	
+
 				foreach file $files {
 					set cmd $gaol
 					lappend cmd --system-usr
@@ -520,62 +520,62 @@ namespace eval goa {
 					lappend cmd --dereference
 					lappend cmd --transform "s#^#$archive_sub_dir#"
 					lappend cmd [file tail $file]
-	
+
 					if {[catch { exec -ignorestderr {*}$cmd }]} {
 						exit_with_error "creation of tar artifact failed" }
 				}
 			}
 		}
 	}
-	
-	
+
+
 	proc artifact_is_library { artifact } {
-	
+
 		set so_extension ".lib.so"
 		set so_pattern "*$so_extension"
-	
+
 		return [string match $so_pattern $artifact];
 	}
-	
-	
+
+
 	proc extract_artifacts_from_build_dir { } {
 
 		global config::project_dir config::build_dir config::bin_dir
 		global config::dbg_dir config::debug
 		variable library_artifacts { }
-	
+
 		set artifacts_file_path [file join $project_dir artifacts]
-	
+
 		# remove artifacts from last build
 		if {[file exists $bin_dir]} {
 			file delete -force $bin_dir }
 		if {[file exists $dbg_dir]} {
 			file delete -force $dbg_dir }
-	
+
 		if {![file exists $artifacts_file_path]} {
 			return }
-	
+
 		file mkdir $bin_dir
 		if { $debug } { file mkdir $dbg_dir }
-	
+
 		foreach file [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
 			set symlink_path [file join $bin_dir [file tail $file]]
 			file link $symlink_path [file fullnormalize $file]
-	
+
 			if {[artifact_is_library $file]} {
 				lappend library_artifacts $file }
-	
+
 			extract_debug_info $file
 			if { $debug && [file exists "$file.debug"]} {
 				file link [file join $dbg_dir "[file tail $file].debug"] "$file.debug" }
-	
+
 			strip_binary $file
 		}
-	
+
 		create_artifact_containers_from_list_file $artifacts_file_path
 	}
-	
-	
+
+
 	proc check_abis { } {
 
 		global tool_dir gaol
@@ -624,59 +624,103 @@ namespace eval goa {
 	proc extract_api_artifacts { } {
 
 		global config::project_dir config::build_dir config::api_dir
-	
+
 		set api_file_path [file join $project_dir api]
-	
+
 		# remove artifacts from last build
 		if {[file exists $api_dir]} {
 			file delete -force $api_dir }
-	
+
 		if {![file exists $api_file_path]} {
 			return }
-	
+
 		file mkdir $api_dir
-	
-		foreach file [artifact_file_list_from_list_file $api_file_path $build_dir] {
-			regsub "$build_dir/" $file "" link_src
-			regsub "install/" $link_src "" link_src
-			set dir [file dirname $link_src]
-			set target_dir [file join $api_dir $dir]
-			set link_target [file join $target_dir [file tail $file]]
-	
-			if {![file exists $target_dir]} {
-				file mkdir $target_dir
+
+		set apis_files { }
+		set artifacts [read_file_content_as_list $api_file_path]
+
+		foreach artifact $artifacts {
+
+			# strip comments and empty lines
+			regsub "#.*"   $artifact "" artifact
+			regsub {^\s*$} $artifact "" artifact
+			if {$artifact == ""} {
+				continue }
+
+			if {![regexp {^(.+:)?\s*(.+)$} $artifact dummy container selector]} {
+				exit_with_error "invalid artifact declaration in $list_file_path:\n" \
+				                "$artifact" }
+
+			regsub {\s*:$} $container "" container
+
+
+			# determine list of selected files
+			if {[regexp {/$} $selector dummy]} {
+				# selector refers to the content of a directory
+				regsub {/$} $selector "" selector
+
+				set selected_dir [file join $build_dir $selector]
+				if {![file exists $selected_dir]} {
+					exit_with_error "api directory $selector does not exist" }
+
+				set files [glob -directory $selected_dir -nocomplain -types f *]
+			} else {
+				# selector refers to single file
+				set files [list [file join $build_dir $selector]]
 			}
-			file link $link_target $file
+
+			foreach file $files {
+				if {![file exists $file]} {
+					exit_with_error "api artifact does not exist: $file" }
+				if {[file isdirectory $file]} {
+					exit_with_error "api artifact is not a file: $file" }
+
+				regsub "$build_dir/" $file "" link_src
+				regsub "install/" $link_src "" link_src
+
+				# link to container directory if specified
+				set dir $container
+				if {$container == ""} {
+					set dir [file dirname $link_src] }
+
+				set target_dir [file join $api_dir $dir]
+				set link_target [file join $target_dir [file tail $file]]
+
+				if {![file exists $target_dir]} {
+					file mkdir $target_dir }
+
+				file link $link_target $file
+			}
 		}
 	}
-	
-	
+
+
 	proc extract_library_symbols { } {
 
 		global tool_dir gaol
 		global config::build_dir config::project_dir
-	
+
 		set artifacts_file_path [file join $project_dir artifacts]
-	
+
 		if {![file exists $artifacts_file_path]} {
 			return }
-	
+
 		set so_extension ".lib.so"
 		set symbols_dir [file join $project_dir symbols]
-	
+
 		set libraries { }
 		foreach artifact [artifact_file_list_from_list_file $artifacts_file_path $build_dir] {
-	
+
 			if {[artifact_is_library $artifact]} {
-	
+
 				# remove library extension
 				regsub $so_extension $artifact "" symbols_file_name
-	
+
 				set symbols_file_name [file tail $symbols_file_name]
 				set library_file_path [file join $build_dir $artifact]
 				if {![file exists $library_file_path]} {
 					exit_with_error "build artifact does not exist $artifact"}
-	
+
 				file mkdir $symbols_dir
 				set symbols_file_path [file join $symbols_dir $symbols_file_name]
 				set     cmd $gaol
@@ -688,7 +732,7 @@ namespace eval goa {
 				if {[catch { exec {*}$cmd}]} {
 					exit_with_error "unable to extract abi symbols"
 				}
-	
+
 				lappend libraries $symbols_file_name
 			}
 		}
@@ -699,11 +743,11 @@ namespace eval goa {
 
 		set libraries [extract_library_symbols]
 		if {[llength $libraries] > 0} {
-	
+
 			puts "The following library symbols file(s) were created:"
 			foreach library $libraries {
 				puts "  > `symbols/$library" }
-	
+
 			puts "Please review the symbols files(s) and add them to your repository."
 		} else {
 			exit_with_error "No libraries listed in the artifacts." }

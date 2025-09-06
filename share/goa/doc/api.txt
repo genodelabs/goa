@@ -12,11 +12,18 @@ produces a library.
 Syntax
 ######
 
-The file consists of an arbitrary number of lines where each line refers to a
-path relative to the build directory. The paths select the files and
-directories to be featured in the api archive of the library.
-A trailing slash in the path denotes a directory.
-If a path refers to a directory, all contained files are included.
+The file consists of an arbitrary number of lines where each line has the
+following structure:
+
+! [<directory>:]<selector>[/]
+
+<selector> path is relative to the build directory. The selector comprises the
+files and directories to be featured in the api archive of the library. A
+trailing slash after the selector denotes all files of a directory.  <directory>
+refers to the directory where <selector> files will be installed within the
+_api_. In case <directory> is not specified, the path given by <selector> is
+used. Otherwise, <directory> will be used and created. This allows for having
+files in different _api_ locations compared to the build directory.
 
 When using API archives, Goa adds the following contained directories to the
 list of include directories (if they exist and apply to the target architecture):
@@ -45,6 +52,12 @@ Examples
 
 :install/include/spdlog/: All files found in the directory _install/include/spdlog_ below the build
   directory are added as artifacts to _include/spdlog_ of the api archive.
+
+:include:install/lib/glib-2.0/include/glibconfig.h: Install _glibconfig.h_ into
+  the _include_ directory of the api archive.
+
+:include/glib:install/include/glib-2.0/glib/: Install all files in
+  _install/include/glib-2.0/glib/_ into _include/glib/_.
 
 SEE ALSO
 ########
