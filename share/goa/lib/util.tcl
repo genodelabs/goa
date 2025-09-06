@@ -693,7 +693,7 @@ proc mirror_source_dir_to_build_dir { } {
 
 	set saved_pwd [pwd]
 	cd src
-	set dirs  [exec find . -type d]
+	set dirs  [split [exec find . -type d] "\n"]
 	set files [split [exec find . -not -type d -and -not -name "*~"] "\n"]
 	cd $saved_pwd
 
