@@ -38,9 +38,9 @@ If Goa encounters a _Cargo.toml_ file in the _src/_ directory, it uses Cargo - s
 configured to build a release binary. Use the *--debug* command-line argument in
 goa to switch to the dev profile
 - see [https://doc.rust-lang.org/cargo/reference/profiles.html] - and build a debug
-binary. For more information on obtaining a Rust toolchain for Genode, consult
-the release notes for Genode 23.08 at
-[https://genode.org/documentation/release-notes/23.08].
+binary. Goa requires _rustup_ to be available on the host system in order to
+install a Genode-compatible Rust toolchain locally, i.e. in Goa's _install_dir_
+(see *goa help config*).
 
 
 CMake
