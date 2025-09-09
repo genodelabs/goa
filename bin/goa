@@ -31,7 +31,7 @@ proc _find_tool_dir { } {
 set tool_name [file tail $argv0]
 set goa_dir   [_find_tool_dir]
 set tool_dir  [file join $goa_dir "share" "goa"]
-set gaol      [file join $tool_dir lib gaol]
+set gaol      [file join $tool_dir gaol]
 
 # assist the user a bit
 if {[llength $argv] == 0} {
@@ -287,7 +287,7 @@ if {$perform(run)} {
 		lappend cmd --ro-bind $config::var_dir
 		lappend cmd --ro-bind $config::depot_dir
 		lappend cmd --chdir $config::run_dir
-		exec {*}$cmd [file join $tool_dir lib backtrace] $config::binary_name >@ stdout < $filename
+		exec {*}$cmd [file join $tool_dir backtrace] $config::binary_name >@ stdout < $filename
 	}
 
 	exit
