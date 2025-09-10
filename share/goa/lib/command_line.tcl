@@ -328,7 +328,9 @@ if {$perform(export)} {
 }
 
 if {$perform(archive-versions)} {
-	set config::depot_user [consume_optional_cmdline_arg "--depot-user" $config::depot_user] }
+	set config::depot_user [consume_optional_cmdline_arg "--depot-user" $config::depot_user]
+	set args(archives)     [consume_cmdline_arg_list     "--archive"]
+}
 
 # consume target-specific arguments
 consume_prefixed_cmdline_args "--target-opt-" config::target_opt

@@ -161,12 +161,14 @@ Commands
 :goa --version:
   Print current major version of the Goa tool.
 
-:goa archive-versions:
+:goa archive-versions [--archive <archive-name> [--archive ...]]:
   Print information about known depot-archive versions. By default, Goa
   acquires version information from the version definitions in the _goarc_
   files; see *goa help config* for more details. If no version definition is
   present for a particular depot archive, Goa tries to locate the
   corresponding project directory and evaluates the contained _version_ file.
+  If any <archive-name> is supplied, Goa only prints version information for
+  the requested archives.
 
 :goa info <user>/[pkg|src]/<name>[/<version>]:
   Show documentation about the specified pkg or src archive.

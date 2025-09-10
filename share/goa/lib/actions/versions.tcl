@@ -88,10 +88,19 @@ namespace eval goa {
 	}
 
 
-	proc archive-versions { } {
+	proc archive-versions { archives } {
 
 		global config::versions_from_genode_dir config::depot_user config::version
 		global config::project_dir
+
+		if {[llength $archives] > 0} {
+			set versioned_archives [apply_versions $archives]
+			foreach a $archives v $versioned_archives {
+				set vers [archive_version $v]
+				puts "set version($a) $vers"
+			}
+			exit
+		}
 
 		if {[info exists versions_from_genode_dir] && [info exists depot_user]} {
 

@@ -124,6 +124,25 @@ proc consume_optional_cmdline_arg { tag default_value } {
 
 
 ##
+# Determine value of optional command-line argument (may occur multiple times)
+#
+# \return List of consumed argument values
+#
+proc consume_cmdline_arg_list { tag } {
+	global argv
+
+	# find argument name in argv list
+	set tag_idx_list [lsearch -all $argv $tag]
+
+	set result {}
+	foreach idx [lreverse $tag_idx_list] {
+		lappend result [_consume_cmdline_arg_at $idx] }
+
+	return $result
+}
+
+
+##
 # Consume optional command-line switch
 #
 # \return 1 if command-line switch was specified

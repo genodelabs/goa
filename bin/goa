@@ -138,7 +138,7 @@ if {$perform(bump-version)} {
 ##
 
 if {$perform(archive-versions)} {
-	goa archive-versions
+	goa archive-versions $args(archives)
 	exit
 }
 
