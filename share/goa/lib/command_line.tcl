@@ -315,6 +315,8 @@ if {$perform(build)} {
 	if {[consume_optional_cmdline_switch "--hrd"]}            { set config::hrd 1 }
 	if {[consume_optional_cmdline_switch "--no-hrd"]}         { set config::hrd 0 }
 
+	if {[consume_optional_cmdline_switch "--update-index"]}   { set config::update_index 1 }
+
 	set config::olevel [consume_optional_cmdline_arg "--olevel" $config::olevel]
 }
 
@@ -330,6 +332,8 @@ if {$perform(export)} {
 if {$perform(archive-versions)} {
 	set config::depot_user [consume_optional_cmdline_arg "--depot-user" $config::depot_user]
 	set args(archives)     [consume_cmdline_arg_list     "--archive"]
+
+	if {[consume_optional_cmdline_switch "--update-index"]} { set config::update_index 1 }
 }
 
 # consume target-specific arguments

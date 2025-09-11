@@ -446,10 +446,30 @@ proc validate_archives { archives } {
 # specified genode directory supersedes version information found in goarc
 # files.
 #
+# Version information is also looked up from depot-index files.
+#
 # If no version information is available, the original working directory is
 # scanned for corresponding Goa projects.
 proc apply_versions { archive_list } {
-	global config::version config::versions_from_genode_dir
+	global config::version config::versions_from_genode_dir config::update_index
+	global config::arch config::depot_dir config::sculpt_version
+
+	# update depot index if requested
+	if {$update_index} {
+		# acquire depot users referenced by archive_list
+		set users {}
+		foreach archive $archive_list {
+			try {
+				lappend users [archive_user $archive]
+			} trap INVALID_ARCHIVE {} {
+				# ignore
+			} on error { msg } { error $msg $::errorInfo }
+		}
+
+		foreach user [lsort -unique $users] {
+			goa update-index $user
+		}
+	}
 
 	set versioned_archives { }
 	foreach archive [validate_archives $archive_list] {
@@ -459,6 +479,7 @@ proc apply_versions { archive_list } {
 		if {[llength $elements] < 3 || [llength $elements] > 4} {
 			exit_with_error "invalid depot-archive path '$archive'" }
 
+		set user [lindex $elements 0]
 		set type [lindex $elements 1]
 		set name [lindex $elements 2]
 
@@ -490,6 +511,20 @@ proc apply_versions { archive_list } {
 
 			} trap NOT_FOUND {} {
 			} on error {msg} { error $msg $::errorInfo }
+		}
+
+		# try to obtain current version information from depot index
+		set index_file [file join $depot_dir $user index $sculpt_version]
+		if {![info exists version($archive)] && [file exists $index_file]} {
+			set indexed_archives [goa from-index $type $index_file]
+			set idxs [lsearch -all -glob $indexed_archives "$archive/*"]
+			foreach idx $idxs {
+				set archs [lindex $indexed_archives [expr $idx+1]]
+				if {[lsearch $archs $arch] > -1} {
+					set version($archive) [archive_version [lindex $indexed_archives $idx]]
+					break
+				}
+			}
 		}
 
 		# exit if version information is still missing

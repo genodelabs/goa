@@ -3,7 +3,7 @@
 #
 
 namespace eval goa {
-	namespace export archive-versions bump-version
+	namespace export archive-versions bump-version from-index
 
 	proc bump-version { target_version } {
 
@@ -40,16 +40,17 @@ namespace eval goa {
 
 
 	##
-	# Get a list of pkg+arch-list pairs from an index file
+	# Get a list of archive+arch-list pairs from an index file for the given
+	# archive type.
 	#
-	proc pkgs_from_index { index_file } {
+	proc from-index { type index_file } {
 		# get supported archs
 		set supported_archs [query attributes $index_file "index | + supports | : arch"]
 		if {[llength $supported_archs] == 0} {
 			exit_with_error "missing '+ supports arch: ...' in index file" }
 
 		# helper for recursive processing of index nodes
-		proc _index_with_arch { input archs result } {
+		proc _index_with_arch { input archs type result } {
 			global ::config::depot_user
 
 			# iterate <index> nodes
@@ -58,33 +59,33 @@ namespace eval goa {
 					set archs [list $value]
 				} default { }
 
-				node for-each-node $node "pkg" pkg_node {
+				node for-each-node $node $type subnode {
 
-					node with-attribute $pkg_node "arch" value {
-						set pkg_archs [list $value]
+					node with-attribute $subnode "arch" value {
+						set subarchs [list $value]
 					} default {
-						set pkg_archs $archs
+						set subarchs $archs
 					}
 
-					node with-attribute $pkg_node "path" value {
+					node with-attribute $subnode "path" value {
 						try {
 							archive_user $value
 						} trap INVALID_ARCHIVE { } {
-							set value $depot_user/pkg/$value
+							set value $depot_user/$type/$value
 						} on error { msg } { error $msg $::errorInfo }
 					
-						lappend result $value $pkg_archs
+						lappend result $value $subarchs
 					} default {
-						exit_with_error "Missing 'path' attribute for 'pkg' node in index file"
+						exit_with_error "Missing 'path' attribute for '$type' node in index file"
 					}
 				}
 
-				set result [_index_with_arch $node $archs $result]
+				set result [_index_with_arch $node $archs $type $result]
 			}
 			return $result
 		}
 
-		return [_index_with_arch [query node $index_file "index"] $supported_archs ""]
+		return [_index_with_arch [query node $index_file "index"] $supported_archs $type ""]
 	}
 
 
@@ -133,7 +134,7 @@ namespace eval goa {
 
 		set index_file [file join $project_dir index]
 		if {[file exists $index_file] && [info exists depot_user]} {
-			foreach { pkg_name pkg_archs } [pkgs_from_index $index_file] {
+			foreach { pkg_name pkg_archs } [from-index "pkg" $index_file] {
 				lappend archives $pkg_name }
 		}
 

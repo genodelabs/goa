@@ -167,6 +167,9 @@ Commands
   files; see *goa help config* for more details. If no version definition is
   present for a particular depot archive, Goa tries to locate the
   corresponding project directory and evaluates the contained _version_ file.
+  If this fails as well, Goa looks for version information published in the
+  corresponding depot user's index. Note that Goa only downloads/updates a depot
+  index if the '--update-index' option is present.
   If any <archive-name> is supplied, Goa only prints version information for
   the requested archives.
 

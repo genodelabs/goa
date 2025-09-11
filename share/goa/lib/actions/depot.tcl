@@ -8,6 +8,7 @@ namespace eval goa {
 	namespace export export-api export-raw export-src export-pkgs export-index
 	namespace export export-dbg export-bin import-dependencies export-dependencies
 	namespace export published-archives download-foreign publish archive-info
+	namespace export update-index
 
 	proc exec_depot_tool { tool args } {
 		global verbose gaol tool_dir
@@ -699,6 +700,26 @@ namespace eval goa {
 	}
 
 
+	proc update-index { user } {
+		global config::sculpt_version config::depot_dir config::public_dir
+		global config::depot_user
+
+		# remove index from depot_dir and public_dir to trigger redownload
+		if {![info exists depot_user] || $user != $depot_user} {
+			set public_path [file join $public_dir $user index]
+			set depot_path  [file join $depot_dir  $user index]
+
+			if {[file exists [file join $public_path $sculpt_version.xz.sig]]} {
+				file delete -force [file join $public_path $sculpt_version.xz]
+				file delete -force [file join $public_path $sculpt_version.xz.sig]
+				file delete -force [file join $depot_path  $sculpt_version]
+			}
+		}
+
+		try_download_archives [list $user/index/$sculpt_version]
+	}
+
+
 	proc export-index { &exported_archives } {
 
 		global config::project_dir config::depot_user config::depot_dir
@@ -709,7 +730,7 @@ namespace eval goa {
 			query validate-syntax $index_file
 	
 			# check index file for any missing archives
-			foreach { archive pkg_archs } [pkgs_from_index $index_file] {
+			foreach { archive pkg_archs } [from-index "pkg" $index_file] {
 	
 				set versioned_archive [lindex [apply_versions $archive] 0]
 				set pkg_name [archive_name $archive]
@@ -896,7 +917,7 @@ namespace eval goa {
 			# pkg path to make sure that the corresponding bin archives are
 			# downloadable)
 			#
-			foreach { pkg_path pkg_archs } [pkgs_from_index [file join $depot_dir $index_archive]] {
+			foreach { pkg_path pkg_archs } [from-index "pkg" [file join $depot_dir $index_archive]] {
 				foreach pkg_arch $pkg_archs {
 					lappend archives [apply_arch $pkg_path $pkg_arch] } }
 		}

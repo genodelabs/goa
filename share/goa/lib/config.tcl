@@ -47,6 +47,7 @@ namespace eval ::config {
 	variable install_dir              ""
 	variable disable_sandbox          [info exists ::env(DISABLE_SANDBOX)]
 	variable hrd                      0
+	variable update_index             0
 	variable target_opt
 	array set target_opt {}
 	variable version

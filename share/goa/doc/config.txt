@@ -239,6 +239,11 @@ Goa evaluates the following configuration variables.
   genodelabs depot, you probably want to guide Goa to your personal depot by
   setting the _run_as_ variable.
 
+:update_index:
+  If set to 1, Goa downloads depot index files in order to acquire version
+  information of depot archives. Alternatively to setting the _update_index_
+  variable, the command-line argument *--update-index* can be supplied.
+
 :search_dir:
   By default, Goa uses the original working directory for looking up versions
   of other Goa projects. This can be changed by setting the _search_dir_
