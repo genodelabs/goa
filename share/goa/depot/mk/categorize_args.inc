@@ -9,7 +9,7 @@
 #
 
 ARCHIVE_PATHS := $(sort $(MAKECMDGOALS))
-ARCHIVE_TYPES := api src raw bin pkg
+ARCHIVE_TYPES := api src raw bin pkg index
 
 
 #

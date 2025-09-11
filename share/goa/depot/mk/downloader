@@ -37,7 +37,26 @@ TARGETS := $(addprefix $(DEPOT_DIR)/,$(MAKECMDGOALS))
 
 ARCHIVES := $(MAKECMDGOALS)
 
+ARCHIVES_XZ     := $(filter $(addprefix %/index/,$(notdir $(ARCHIVES))),$(ARCHIVES))
+ARCHIVES_TAR_XZ := $(filter-out $(ARCHIVES_XZ),$(ARCHIVES))
+
+INDEX_TARGETS   := $(addprefix $(DEPOT_DIR)/,$(ARCHIVES_XZ))
+
 include $(DEPOT_TOOL_DIR)/mk/gpg.inc
+
+$(INDEX_TARGETS): $(DEPOT_DIR)/%: $(PUBLIC_DIR)/%.xz $(PUBLIC_DIR)/%.xz.sig
+	$(VERBOSE)pubkey_file=$(call pubkey_path,$*); \
+	          $(GPG) --yes -o $$pubkey_file.dearmored --dearmor $$pubkey_file; \
+	          ( $(GPG) --no-tty --no-default-keyring \
+	                --keyring $$pubkey_file.dearmored \
+	                --verify $(PUBLIC_DIR)/$*.xz.sig 2> /dev/null; retval=$$?; \
+	            rm -f $$pubkey_file.dearmored; \
+	            exit $$retval \
+	          ) || ( echo -e "Error: could not verify '$*', signature does not match\n" \
+	                          "      public key '$$pubkey_file'"; \
+	                 false )
+	$(VERBOSE)mkdir -p $(dir $@)
+	$(VERBOSE)xz --stdout -d $(PUBLIC_DIR)/$*.xz > $@
 
 $(DEPOT_DIR)/% : $(PUBLIC_DIR)/%.tar.xz $(PUBLIC_DIR)/%.tar.xz.sig
 	$(VERBOSE)pubkey_file=$(call pubkey_path,$*); \
@@ -53,8 +72,10 @@ $(DEPOT_DIR)/% : $(PUBLIC_DIR)/%.tar.xz $(PUBLIC_DIR)/%.tar.xz.sig
 	$(VERBOSE)mkdir -p $(dir $@)
 	$(VERBOSE)tar xfJ $(PUBLIC_DIR)/$*.tar.xz -C $(dir $@)
 
-DOWNLOADED_FILES := $(addprefix $(PUBLIC_DIR)/,$(MAKECMDGOALS:=.tar.xz)) \
-                    $(addprefix $(PUBLIC_DIR)/,$(MAKECMDGOALS:=.tar.xz.sig))
+DOWNLOADED_FILES := $(addprefix $(PUBLIC_DIR)/,$(ARCHIVES_TAR_XZ:=.tar.xz)) \
+                    $(addprefix $(PUBLIC_DIR)/,$(ARCHIVES_TAR_XZ:=.tar.xz.sig)) \
+                    $(addprefix $(PUBLIC_DIR)/,$(ARCHIVES_XZ:=.xz)) \
+                    $(addprefix $(PUBLIC_DIR)/,$(ARCHIVES_XZ:=.xz.sig))
 
 .PRECIOUS: $(DOWNLOADED_FILES)
 

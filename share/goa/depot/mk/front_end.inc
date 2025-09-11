@@ -58,6 +58,9 @@ bin_archive_spec    = $(call path_element,3,$1)
 bin_archive_recipe  = $(call path_element,4,$1)
 bin_archive_version = $(call path_element,5,$1)
 
+# index archive have the form <user>/index/<version>
+index_archive_version = $(call path_element,3,$1)
+
 grep_archive_type = $(foreach A,$2,$(if $(call archive_has_type,$A,$1),$A,))
 grep_archive_user = $(foreach A,$2,$(if $(call archive_has_user,$A,$1),$A,))
 
