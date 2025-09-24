@@ -47,8 +47,8 @@ namespace eval gaol {
 		dict lappend state symlinks usr/lib   /lib
 
 		set path "/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
-		if {[dict exists state env PATH]} {
-			append path ":[dict get state env PATH]" }
+		if {[dict exists $state env PATH]} {
+			append path ":[dict get $state env PATH]" }
 
 		dict set state env PATH $path
 
@@ -81,8 +81,8 @@ namespace eval gaol {
 		gaol::validate_no_opt $path
 
 		variable state
-		if {[dict exists state env PATH]} {
-			set path "[dict get state env PATH]:$path" }
+		if {[dict exists $state env PATH]} {
+			set path "[dict get $state env PATH]:$path" }
 
 		dict set state env PATH $path
 
@@ -232,7 +232,7 @@ namespace eval gaol {
 
 	proc --empty-gpg { args } {
 		variable state
-		if {[dict exists state gpg]} {
+		if {[dict exists $state gpg]} {
 			return -code error "--empty-gpg conflicts with --user-gpg" }
 
 		dict set state gpg "empty"
@@ -241,7 +241,7 @@ namespace eval gaol {
 
 	proc --user-gpg { args } {
 		variable state
-		if {[dict exists state gpg]} {
+		if {[dict exists $state gpg]} {
 			return -code error "--user-gpg conflicts with --empty-gpg" }
 
 		dict set state gpg "user"
