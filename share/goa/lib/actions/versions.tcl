@@ -43,49 +43,52 @@ namespace eval goa {
 	# Get a list of archive+arch-list pairs from an index file for the given
 	# archive type.
 	#
-	proc from-index { type index_file } {
+	proc from-index { index_file args } {
 		# get supported archs
 		set supported_archs [query attributes $index_file "index | + supports | : arch"]
 		if {[llength $supported_archs] == 0} {
 			exit_with_error "missing '+ supports arch: ...' in index file" }
 
 		# helper for recursive processing of index nodes
-		proc _index_with_arch { input archs type result } {
+		proc _index_with_arch { node archs result args } {
 			global ::config::depot_user
 
-			# iterate <index> nodes
-			node for-each-node $input "index" node {
-				node with-attribute $node "arch" value {
-					set archs [list $value]
-				} default { }
-
-				node for-each-node $node $type subnode {
-
+			set types $args
+			node for-all-nodes $node type subnode {
+				if {$type == "index"} {
 					node with-attribute $subnode "arch" value {
-						set subarchs [list $value]
-					} default {
-						set subarchs $archs
-					}
+						set archs [list $value]
+					} default { }
 
-					node with-attribute $subnode "path" value {
-						try {
-							archive_user $value
-						} trap INVALID_ARCHIVE { } {
-							set value $depot_user/$type/$value
-						} on error { msg } { error $msg $::errorInfo }
-					
-						lappend result $value $subarchs
-					} default {
-						exit_with_error "Missing 'path' attribute for '$type' node in index file"
-					}
+					set result [_index_with_arch $subnode $archs $result {*}$types]
 				}
 
-				set result [_index_with_arch $node $archs $type $result]
+				if {[lsearch -exact $types $type] < 0} {
+					continue }
+
+				node with-attribute $subnode "arch" value {
+					set subarchs [list $value]
+				} default {
+					set subarchs $archs
+				}
+
+				node with-attribute $subnode "path" value {
+					try {
+						archive_user $value
+					} trap INVALID_ARCHIVE { } {
+						set value $depot_user/$type/$value
+					} on error { msg } { error $msg $::errorInfo }
+				
+					lappend result $value $subarchs
+				} default {
+					exit_with_error "Missing 'path' attribute for '$type' node in index file"
+				}
 			}
+
 			return $result
 		}
 
-		return [_index_with_arch [query node $index_file "index"] $supported_archs $type ""]
+		return [_index_with_arch [query node $index_file "index"] $supported_archs "" {*}$args]
 	}
 
 
@@ -134,7 +137,7 @@ namespace eval goa {
 
 		set index_file [file join $project_dir index]
 		if {[file exists $index_file] && [info exists depot_user]} {
-			foreach { pkg_name pkg_archs } [from-index "pkg" $index_file] {
+			foreach { pkg_name pkg_archs } [from-index $index_file "pkg" "src" "api"] {
 				lappend archives $pkg_name }
 		}
 

@@ -440,6 +440,8 @@ namespace eval goa {
 			set result [hrd create $index_hrd]
 			node for-all-nodes $node node_type subnode {
 				switch -exact $node_type {
+					api -
+					src -
 					pkg {
 						node with-attribute $subnode "path" path {
 							try {
@@ -722,55 +724,94 @@ namespace eval goa {
 
 	proc export-index { &exported_archives } {
 
-		global config::project_dir config::depot_user config::depot_dir
+		global config::project_dir config::depot_dir
 		upvar  ${&exported_archives} exported_archives
+
+		# helper for downloading archives and exporting projects
+		proc _make_archive_available { versioned_archive archive_arch } {
+			global config::depot_user
+
+			archive_parts $versioned_archive user type name vers
+
+			# try downloading first
+			if {[try_download_archives [list [apply_arch $versioned_archive $archive_arch]]]} {
+				continue }
+
+			# do not continue if archive user does not match the current depot user
+			if { $depot_user != $user } {
+				exit_with_error "unable to download missing archive $versioned_archive" }
+
+			# try to find corresponding project and export
+			try {
+				set dir [find_project_dir_for_archive $type $name]
+				
+				# check that the expected version matches the exported version
+				set exported_archive_version [exported_project_archive_version $dir $user/$type/$name]
+				if { "$archive/$exported_archive_version" != "$versioned_archive" } {
+					exit_with_error "unable to export $versioned_archive: project version is $exported_archive_version" }
+
+
+				set pkg_name ""
+				if {$type == "pkg"} {
+					set pkg_name $name }
+				export_dependent_project $dir $archive_arch $pkg_name
+
+			} trap NOT_FOUND { } {
+				# project dir not found
+				exit_with_error "unable to download or export missing archive $versioned_archive"
+
+			} trap CHILDSTATUS { msg } {
+				# export failed
+				exit_with_error "failed to export depot archive $versioned_archive: \n\t$msg"
+
+			} on error { msg } { error $msg $::errorInfo }
+		}
 
 		set index_file [file join $project_dir index]
 		if {[file exists $index_file] && [file isfile $index_file]} {
 			query validate-syntax $index_file
 	
 			# check index file for any missing archives
-			foreach { archive pkg_archs } [from-index "pkg" $index_file] {
+			foreach { archive archs } [from-index $index_file "pkg" "src" "api"] {
 	
 				set versioned_archive [lindex [apply_versions $archive] 0]
-				set pkg_name [archive_name $archive]
+				archive_parts $versioned_archive user type name vers
 
-				# download or export archive if it has not been exported
-				set dst_dir "[file join $depot_dir $versioned_archive]"
-				if {$dst_dir != "" && ![file exists $dst_dir]} {
-					foreach pkg_arch $pkg_archs {
-						# try downloading first
-						if {[try_download_archives [list [apply_arch $versioned_archive $pkg_arch]]]} {
-							continue }
-
-						try {
-							set dir [find_project_dir_for_archive pkg $pkg_name]
-							
-							# check that the expected version matches the exported version
-							set exported_archive_version [exported_project_archive_version $dir $archive]
-							if { "$archive/$exported_archive_version" != "$versioned_archive" } {
-								exit_with_error "unable to export $versioned_archive: project version is $exported_archive_version" }
-
-							export_dependent_project $dir $pkg_arch $pkg_name
-
-						} trap NOT_FOUND { } {
-							# project dir not found
-							exit_with_error "unable to download or export missing archive $versioned_archive"
-
-						} trap CHILDSTATUS { msg } {
-							# export failed
-							exit_with_error "failed to export depot archive $archive: \n\t$msg"
-
-						} on error { msg } { error $msg $::errorInfo }
+				# make binary archives available
+				if {$type == "src"} {
+					foreach $archive_arch $archs {
+						set dst_dir "[file join $depot_dir [apply_arch $versioned_archive $archive_arch]]"
+						if {$dst_dir != "" && ![file exists $dst_dir]} {
+							_make_archive_available $versioned_archive $archive_arch }
 					}
-
-				} elseif {$dst_dir != "" && [file exists $dst_dir]} {
-					# mark arch-specific archives as exported to trigger dependency check
-					foreach pkg_arch $pkg_archs {
-						lappend exported_archives [apply_arch $versioned_archive $pkg_arch] }
 				}
+
+				# download missing api and src archives or export for any architecture
+				if {$type == "api" || $type == "src"} {
+					set dst_dir "[file join $depot_dir $versioned_archive]"
+					if {$dst_dir != "" && ![file exists $dst_dir]} {
+						_make_archive_available $versioned_archive [lindex $archs 0]}
+				}
+
+				# download or export missing pkg archives
+				if {$type == "pkg"} {
+					set dst_dir "[file join $depot_dir $versioned_archive]"
+					if {$dst_dir != "" && ![file exists $dst_dir]} {
+
+						foreach archive_arch $archs {
+							_make_archive_available $versioned_archive $arch }
+
+					} elseif {$dst_dir != "" && [file exists $dst_dir]} {
+
+						# mark arch-specific archives as exported to trigger dependency check
+						foreach archive_arch $archs {
+							lappend exported_archives [apply_arch $versioned_archive $archive_arch] }
+
+					}
+				}
+
 			}
-	
+
 			set dst_file [prepare_project_archive_directory index]
 			if {$dst_file != ""} {
 				augment_index_versions $index_file $dst_file
@@ -912,14 +953,12 @@ namespace eval goa {
 		if {[file exists $index_file] && [file isfile $index_file]} {
 			set index_archive [versioned_project_archive index]
 	
-			#
-			# add pkg paths found in index file to archives (adding arch part to
-			# pkg path to make sure that the corresponding bin archives are
-			# downloadable)
-			#
-			foreach { pkg_path pkg_archs } [from-index "pkg" [file join $depot_dir $index_archive]] {
-				foreach pkg_arch $pkg_archs {
-					lappend archives [apply_arch $pkg_path $pkg_arch] } }
+			foreach { path archs } [from-index [file join $depot_dir $index_archive] "pkg" "src"] {
+				foreach archive_arch $pkg_archs {
+					lappend archives [apply_arch $path $archive_arch] } }
+
+			foreach { path archs } [from-index [file join $depot_dir $index_archive] "api"] {
+				lappend archives $path }
 		}
 
 		return [list $archives $index_archive]

@@ -516,7 +516,7 @@ proc apply_versions { archive_list } {
 		# try to obtain current version information from depot index
 		set index_file [file join $depot_dir $user index $sculpt_version]
 		if {![info exists version($archive)] && [file exists $index_file]} {
-			set indexed_archives [goa from-index $type $index_file]
+			set indexed_archives [goa from-index $index_file $type]
 			set idxs [lsearch -all -glob $indexed_archives "$archive/*"]
 			foreach idx $idxs {
 				set archs [lindex $indexed_archives [expr $idx+1]]
@@ -541,13 +541,19 @@ proc apply_versions { archive_list } {
 # Applys architecture to an archive of type pkg
 #
 proc apply_arch { archive arch } {
-	set elements [split $archive /]
-	set i [lsearch $elements pkg]
-	if {$i == -1} {
-		return -code error "apply_arch was called for non-pkg archive" }
+	archive_parts $archive user type name vers
 
-	set elements_with_arch [linsert $elements [expr $i + 1] $arch]
-	return [join $elements_with_arch /]
+	switch $type {
+		pkg {
+			return "$user/pkg/$arch/$name/$vers"
+		}
+		src {
+			return "$user/bin/$arch/$name/$vers"
+		}
+		default {
+			return -code error "apply_arch was called for archive type $type"
+		}
+	}
 }
 
 
