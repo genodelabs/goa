@@ -3,6 +3,6 @@ VERSION   := master
 DOWNLOADS := cmake_step2.sparse-git
 
 URL(cmake_step2) := https://github.com/Kitware/CMake
-REV(cmake_step2) := HEAD
+REV(cmake_step2) := v4.1.1
 DIR(cmake_step2) := src
 SPARSE_PATH(cmake_step2) := Help/guide/tutorial/Step2
