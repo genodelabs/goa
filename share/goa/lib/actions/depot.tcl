@@ -422,23 +422,65 @@ namespace eval goa {
 	# Supplement index file pkg paths with user and version information
 	#
 	proc augment_index_versions { src_file dst_file } {
-		global config::depot_user
-	
-		# read src_file
-		set fd [open $src_file r]
-		set content [read $fd]
-		close $fd
-	
-		# filter 'path' attribute
-		set pattern "(\<pkg\[^\>\]+?path=\")(\[^/\]+)(\")"
-		while {[regexp $pattern $content dummy head pkg tail]} {
-			set pkg_path [apply_versions $depot_user/pkg/$pkg]
-			regsub $pattern $content "$head$pkg_path$tail" content
+		global config::hrd
+
+		proc _process_sub_index { node } {
+			global config::depot_user
+
+			set index_hrd "+ index"
+			node with-attribute $node "name" name {
+				append index_hrd " $name"
+			} default { }
+
+			node with-attribute $node "arch" arch {
+				append index_hrd " | arch: $arch"
+			} default { }
+
+			set result [hrd create $index_hrd]
+			node for-all-nodes $node node_type subnode {
+				switch -exact $node_type {
+					pkg {
+						node with-attribute $subnode "path" path {
+							try {
+								archive_parts $path user type name vers
+								set archive $path
+							} trap INVALID_ARCHIVE { } {
+								set archive "$depot_user/$node_type/$path"
+							} on error { msg } { error $msg $::errorInfo }
+
+							set tmp "  + $node_type | path: [apply_versions $archive]"
+							node with-attribute $subnode "info" info {
+								append tmp " | info: $info"
+							} default { }
+
+							node with-attribute $subnode "arch" arch {
+								append tmp " | arch: $arch"
+							} default { }
+
+							hrd append result $tmp
+						} default { }
+					}
+					supports {
+						node with-attribute $subnode "arch" arch {
+							hrd append result "  + supports | arch: $arch"
+						} default { }
+					}
+					index {
+						hrd append result [hrd indent 1 [_process_sub_index $subnode]]
+					}
+				}
+			}
+			return $result
 		}
-	
-		# write to dst_file
-		set fd [open $dst_file w]
-		puts $fd $content
+
+		set data [_process_sub_index [query node $src_file "index"]]
+
+		set fd [open $dst_file "w"]
+		if {$hrd} {
+			puts $fd [hrd as_string [hrd format $data]]
+		} else {
+			puts $fd [join [hrd format-xml $data] "\n"]
+		}
 		close $fd
 	}
 
