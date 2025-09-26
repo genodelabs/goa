@@ -124,15 +124,19 @@ if {[using_api blit]} {
 
 	set blit_dir [file join [api_archive_dir blit] src lib blit]
 
+	variable extra_dirs
 	if {$arch == "x86_64"} {
-		lappend include_dirs [file join $blit_dir spec x86]
-		lappend include_dirs [file join $blit_dir spec x86_64]
+		lappend extra_dirs [file join $blit_dir spec x86]
+		lappend extra_dirs [file join $blit_dir spec x86_64]
 	}
 	if {$arch == "arm_v8a"} {
-		lappend include_dirs [file join $blit_dir spec arm_64]
+		lappend extra_dirs [file join $blit_dir spec arm_64]
 	}
 
-	lappend lib_src [file join $blit_dir blit.cc]
+	set name "blit.lib.a"
+	prepare_abi_static $name [list {*}$include_dirs {*}$extra_dirs] [file join $blit_dir blit.cc]
+	lappend ldlibs_exe "-l:$name"
+	lappend ldlibs_so  "-l:$name"
 }
 
 global cxxflags

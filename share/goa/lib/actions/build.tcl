@@ -272,6 +272,35 @@ namespace eval goa {
 	}
 
 	##
+	# Generate static libraries (used by quirks, only support single source file)
+	# 
+	proc prepare_abi_static { name include_dirs src } {
+		global config::abi_dir config::depot_dir config::cross_dev_prefix
+		global config::project_name
+		global cxxflags
+
+		diag "generate $name"
+
+		try {
+			set     cmd [gaol_with_toolchain]
+			lappend cmd --bind $depot_dir
+			lappend cmd --bind $abi_dir
+			lappend cmd ${cross_dev_prefix}gcc
+			lappend cmd {*}$cxxflags
+			foreach dir $include_dirs {
+				lappend cmd "-I$dir" }
+
+			lappend cmd -c $src
+			lappend cmd -o [file join $abi_dir $name]
+
+			exec -ignorestderr {*}$cmd | sed "s/^/\[$project_name:abi\] /" >@ stdout
+			
+		} trap CHILDSTATUS { } {
+			exit_with_error "failed to generate $name"
+		} on error { msg } { error $msg $::errorInfo }
+	}
+
+	##
 	# Make tool chain available (download and install if necessary)
 	#
 	proc install-toolchain { keep_mounted } {
