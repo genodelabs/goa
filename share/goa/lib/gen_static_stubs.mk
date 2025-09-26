@@ -18,9 +18,6 @@ default: $(STATIC_LIBS)
 $(ABI_DIR)/empty.c:
 	$(VERBOSE)touch $(ABI_DIR)/empty.c
 
-$(ABI_DIR)/libutil.o:
-	$(VERBOSE)$(CROSS_DEV_PREFIX)g++ $(CFLAGS) $(CPP_FLAGS) $(CC_MARCH) -c $(RUST_COMPAT_LIB) -o $@
-
 $(ABI_DIR)/%.o: $(ABI_DIR)/empty.c
 	$(VERBOSE)$(CROSS_DEV_PREFIX)gcc $(CC_MARCH) -c $< -o $@
 

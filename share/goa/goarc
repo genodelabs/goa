@@ -9,7 +9,6 @@ set  version(genodelabs/api/base)                        2025-04-09
 set  version(genodelabs/api/base-linux)                  2025-04-09
 set  version(genodelabs/api/blit)                        2025-04-28
 set  version(genodelabs/api/block_session)               2025-04-28
-set  version(genodelabs/api/compat-libc)                 2023-10-03
 set  version(genodelabs/api/curl)                        2025-02-26
 set  version(genodelabs/api/file_system_session)         2025-04-09
 set  version(genodelabs/api/framebuffer_session)         2024-10-07

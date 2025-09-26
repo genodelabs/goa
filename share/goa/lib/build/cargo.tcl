@@ -2,7 +2,7 @@
 proc create_or_update_build_dir { } { mirror_source_dir_to_build_dir }
 
 proc generate_static_stubs { libs } {
-	global tool_dir verbose cflags cppflags lib_src
+	global tool_dir verbose cflags cppflags
 	global config::abi_dir config::cross_dev_prefix config::cc_march config::project_name
 
 	set     cmd [sandboxed_build_command]
@@ -16,7 +16,6 @@ proc generate_static_stubs { libs } {
 	lappend cmd "CC_MARCH=[join $cc_march { }]"
 	lappend cmd "CFLAGS=$cflags"
 	lappend cmd "CPPFLAGS=$cppflags"
-	lappend cmd "RUST_COMPAT_LIB=$lib_src"
 	if {$verbose == 1} {
 		lappend cmd "VERBOSE=''"
 	}
@@ -79,7 +78,7 @@ proc prepare_toolchain { } {
 proc build { } {
 
 	global verbose tool_dir rustup_home cargo_home cargo_path
-	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe lib_src
+	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe
 	global config::build_dir config::cross_dev_prefix config::debug config::arch
 	global config::project_name config::jobs config::project_dir config::cc_march
 

@@ -35,14 +35,6 @@ if {[goa using_api libc]} {
 	lappend cppflags "-D__FreeBSD__=12"
 }
 
-global lib_src
-if {[goa using_api compat-libc]} {
-
-	set compat_libc_dir [file join [api_archive_dir compat-libc] src lib compat-libc]
-
-	lappend lib_src [file join $compat_libc_dir compat.cc]
-}
-
 # Standard C++ library
 
 append_include_dir_for_api stdcxx  include stdcxx
