@@ -24,16 +24,17 @@ the depot index.
 !   <supports arch="arm_v8a"/>
 !  ...
 
-An _index_ file further contains an arbitrary number of _<pkg>_ nodes which
-define the packages provided in this depot. A _<pkg>_ node contains the
+An _index_ file further contains an arbitrary number of _<pkg>_, _<src>_
+or _<api>_ nodes which
+define the archives provided in this depot. Such a node contains the
 following attributes:
 
-:path: The _path_ attribute specifies the package name. Goa uses its built-in
-  mechanisms to determine the current version of this package
-  (see *goa help config*). The package must either be present in the user's
+:path: The _path_ attribute specifies the archive name. Goa uses its built-in
+  mechanisms to determine the current version of this archive
+  (see *goa help config*). The archive must either be present in the user's
   depot or a corresponding Goa project must exist in the current search
   directory. Alternatively, the _path_ attribute may specify the full archive
-  path as _<user>/pkg/<name>_ or _<user>/pkg/<name>/<version>_.
+  path as _<user>/<type>/<name>_ or _<user>/<type>/<name>/<version>_.
 
 :info: The _info_ attribute contains a brief description of the package.
 
