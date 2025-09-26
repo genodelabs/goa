@@ -180,7 +180,7 @@ _git_dir = $(call _assert,$(DIR($1)),Missing declaration of DIR($*))
 		sparse_sane=$$(echo $(SPARSE_PATH($*)) |  sed -e 's-^/--') ;\
 		test -d $$dir || ( $(MSG_DOWNLOAD)$(URL($*)); \
 			tmp=$$(mktemp -d); \
-			git clone --depth 1 --filter=blob:none --sparse $(URL($*)) $$tmp &> >(sed 's/^/$(MSG_GIT)/'); \
+			$(GIT) clone --depth 1 --filter=blob:none --sparse --no-single-branch $(URL($*)) $$tmp &> >(sed 's/^/$(MSG_GIT)/'); \
 			$(GIT) -C $$tmp sparse-checkout set $$sparse_sane && \
 			$(GIT) -C $$tmp checkout -q $(REV($*)); \
 			mv $$tmp/$$sparse_sane $$dir; rm -rf $$tmp )
