@@ -1,6 +1,6 @@
 proc _make_cmd { } {
 	global verbose
-	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe lib_src
+	global cppflags cflags cxxflags ldflags ldlibs_common ldlibs_exe
 	global ldflags_so ldlibs_so api_dirs
 	global config::build_dir config::cross_dev_prefix config::jobs config::project_dir
 	global config::depot_dir config::var_dir
@@ -16,7 +16,6 @@ proc _make_cmd { } {
 	lappend cmd "CXX=$cross_dev_prefix\g++"
 	lappend cmd "CC=$cross_dev_prefix\gcc"
 	lappend cmd "CROSS_DEV_PREFIX=$cross_dev_prefix"
-	lappend cmd "LIB_SRC=$lib_src"
 	lappend cmd "-j$jobs"
 	lappend cmd "MAKE_SHARED_LINKER_FLAGS=$ldflags_so $ldlibs_common $ldlibs_so"
 	lappend cmd "PKG_CONFIG_LIBDIR=''"

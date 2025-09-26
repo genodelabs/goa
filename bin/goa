@@ -208,7 +208,6 @@ if {$perform(build-dir)} {
 	}
 
 	set api_dirs { }
-	set lib_src { }
 
 	goa build-dir
 }
