@@ -1,0 +1,14 @@
+runtime | ram: 2M | caps: 1000 | binary: profiling
+  + requires | + timer
+  + config
+    + libc | stdout: /dev/log
+           | stderr: /dev/log
+    + vfs
+      + dir dev | + log
+  + content
+    + rom | label: profiling
+    + rom | label: vfs.lib.so
+    + rom | label: libc.lib.so
+    + rom | label: libm.lib.so
+    + rom | label: posix.lib.so
+-

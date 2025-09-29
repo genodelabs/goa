@@ -1,0 +1,4 @@
+set run_as jschlatow_test
+set versions_from_genode_dir ~/repos/genode/
+set depot_dir ~/repos/genode/depot
+set public_dir ~/repos/genode/public
