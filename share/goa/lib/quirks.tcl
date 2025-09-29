@@ -139,6 +139,18 @@ if {[using_api blit]} {
 	lappend ldlibs_so  "-l:$name"
 }
 
+# Genode's profile library
+
+if {[using_api profile]} {
+	lappend cxxflags -finstrument-functions
+	lappend cxxflags -finstrument-functions-exclude-file-list=base/,util/,profile/,input/event.h,trace/,stdcxx/
+
+	set name "profile.lib.a"
+	prepare_abi_static $name $include_dirs [file join [api_archive_dir profile] src lib profile profile.cc]
+	lappend ldlibs_exe "-l:$name"
+	lappend ldlibs_so  "-l:$name"
+}
+
 global cxxflags
 if {[using_api gui_session]} {
 

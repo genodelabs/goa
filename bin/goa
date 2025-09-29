@@ -261,6 +261,11 @@ if {$perform(run)} {
 			set fd [open $filename]
 			while {[gets $fd line] != -1} {
 				if {[regexp {\-\> (.*)\] backtrace} $line dummy binary_name]} {
+					set config::binary_name $binary_name
+					break
+				} elseif {[regexp {\-\> (.*)\] Call stack of} $line dummy binary_name]} {
+					set config::binary_name $binary_name
+					break
 				}
 			}
 			close $fd
