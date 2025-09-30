@@ -387,8 +387,6 @@ namespace eval gaol {
 		lappend bwrap_cmd --new-session
 		lappend bwrap_cmd --clearenv
 		lappend bwrap_cmd --die-with-parent
-		lappend bwrap_cmd --dir $run_dir
-		lappend bwrap_cmd --setenv XDG_RUNTIME_DIR "$run_dir"
 		lappend bwrap_cmd --setenv DISPLAY ":0.0"
 		lappend bwrap_cmd --setenv HOME $::env(HOME)
 
@@ -399,16 +397,21 @@ namespace eval gaol {
 			}
 
 			if {[info exists gpg]} {
+				set gpg_homedir   [file join $::env(HOME) .gnupg]
+				set gpg_socketdir [file join $run_dir gnupg]
+
+				set gpgdirs [exec gpgconf --list-dirs]
+				foreach dir $gpgdirs {
+					lassign [split $dir ":"] name path
+					switch $name {
+						homedir   { set gpg_homedir   $path }
+						socketdir { set gpg_socketdir $path }
+					}
+				}
+
 				switch $gpg {
 					user {
-						set gpgdirs [exec gpgconf --list-dirs]
-						foreach dir $gpgdirs {
-							lassign [split $dir ":"] name path
-							switch $name {
-								homedir   { lappend binds $path $path }
-								socketdir { lappend binds $path $path }
-							}
-						}
+						lappend binds $gpg_homedir $gpg_homedir
 					}
 					empty {
 						# if ~/.gnupg does not exist, gpg creates a common.conf with use-keyboxd
@@ -416,6 +419,19 @@ namespace eval gaol {
 						lappend bwrap_cmd --perms 0700 --tmpfs [file join $::env(HOME) .gnupg]
 					}
 				}
+
+				# gnupg always uses $run_dir if present, thus if sockets are
+				# present in another directory, we must omit $run_dir
+				if {$gpg_socketdir != [file join $run_dir gnupg]} {
+					set run_dir ""
+					if {$gpg_socketdir != $gpg_homedir} {
+						lappend binds $gpg_socketdir $gpg_socketdir }
+				}
+			}
+
+			if {$run_dir != ""} {
+				lappend bwrap_cmd --dir $run_dir
+				lappend bwrap_cmd --setenv XDG_RUNTIME_DIR "$run_dir"
 			}
 
 			set pipeargs {}
