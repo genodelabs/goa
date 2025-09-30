@@ -43,6 +43,7 @@ set cflags { }
 lappend cflags -fPIC
 lappend cflags $olevel
 lappend cflags -D__GENODE__
+lappend cflags -fdiagnostics-color=always
 
 if {$cc_march != ""} {
 	lappend cflags $cc_march }
