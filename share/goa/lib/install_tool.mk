@@ -34,10 +34,10 @@ VERBOSE ?= @
 # Available tools and checksums #
 #################################
 
-TOOLS := genode-toolchain-23.05
+TOOLS := genode-toolchain-25.05
 
-URL(genode-toolchain-23.05) := https://github.com/genodelabs/genode/releases/download/23.05/genode-toolchain-23.05.tar.xz
-SHA(genode-toolchain-23.05) := 880886efba0f592a3d3c5ffb9fa63e692cb6bd643e13c5c468d0da027c22716e
+URL(genode-toolchain-25.05) := https://github.com/genodelabs/genode/releases/download/25.05/genode-toolchain-25.05-ubuntu-24.04.tar.xz
+SHA(genode-toolchain-25.05) := 6cab8e5f4490399a296a73b01695d5fb055a40f6ac04d61a3f7a7344003eb739
 
 ######################
 # check dependencies #
