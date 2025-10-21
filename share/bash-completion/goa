@@ -15,7 +15,7 @@ __goa()
     run_opts="--pkg --run-as --target"
     user_opts="--depot-url --gpg-user-id --pubkey-file"
 
-    globalopts="--arch --rebuild --debug --warn-strict --no-warn-strict --with-backtrace -C --license --versions-from-genode-dir --depot-dir --public-dir --project-name --contrib-dir --build-dir --abi-dir --bin-dir --dbg-dir --run-dir --common-var-dir --verbose -r --jobs --cross-dev-prefix --ld-march --olevel --search-dir --install-dir --hrd --no-hrd --update-index"
+    globalopts="--arch --rebuild --debug --warn-strict --no-warn-strict --with-backtrace -C --license --versions-from-genode-dir --depot-dir --public-dir --project-name --contrib-dir --build-dir --abi-dir --bin-dir --dbg-dir --run-dir --common-var-dir --verbose -r --jobs --cross-dev-prefix --ld-march --olevel --search-dir --install-dir --hrd --no-hrd --update-index --keep-going"
 
     stropts="--depot-url|--gpg-user-id|--depot-user|--ld-march|--run_as"
     fileopts="--license|--pubkey-file|--cross-dev-prefix"
@@ -84,7 +84,7 @@ __goa()
         fi
         return 0
     elif [[ ${second} == "bump-version" ]]; then
-        COMPREPLY=( $(compgen -W "-r" -- ${cur}) )
+        COMPREPLY=( $(compgen -W "-r -C --keep-going" -- ${cur}) )
         return 0
     fi
 

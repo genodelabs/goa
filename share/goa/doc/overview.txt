@@ -291,6 +291,10 @@ Optional Arguments and Configuration Overrides
   Recursively scan for project directories in the current working directory
   and execute the command for each project.
 
+:--keep-going:
+  Do not error out during recursive execution but keep going and print
+  a list of failed project directories at the end.
+
 Goa is further configured using configuration files called _goarc_. For most
 configuration variables, there is also a command-line argument that overrides
 the corresponding variable. Please refer to *goa help config* for further

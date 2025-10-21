@@ -107,9 +107,12 @@ source [file join $tool_dir lib config.tcl]
 #
 if {[consume_optional_cmdline_switch "-r"]} {
 
+	set keep_going [consume_optional_cmdline_switch "--keep-going"]
+
 	# make sure to populate allowed_paths
 	config::load_privileged_goarc_files
 
+	set failed_project_dirs { }
 	foreach dir [goa_project_dirs] {
 
 		# assemble command for invoking the per-project execution of goa
@@ -125,8 +128,20 @@ if {[consume_optional_cmdline_switch "-r"]} {
 			lappend cmd $arg }
 
 		if {[catch { exec -ignorestderr {*}$cmd >@ stdout }]} {
-			exit 1 }
+			if {$keep_going} {
+				lappend failed_project_dirs $dir
+			} else {
+				exit 1
+			}
+		}
 	}
+	if {[llength $failed_project_dirs] > 0} {
+		foreach failed_dir $failed_project_dirs {
+			puts "Recursive processing failed for directory '$failed_dir'"
+		}
+		exit 1
+	}
+
 	exit 0
 }
 
