@@ -150,7 +150,7 @@ proc bind_required_services { &services } {
 		array set networks { }
 		foreach nic_node $nic_services_unique {
 
-			node with-attribute $nic_node "label" value {
+			node with-attribute $nic_node "tap_name" value {
 				set tap_name $value
 			} default {
 				set tap_name "tap0"
