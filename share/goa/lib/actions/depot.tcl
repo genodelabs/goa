@@ -735,7 +735,7 @@ namespace eval goa {
 
 			# try downloading first
 			if {[try_download_archives [list [apply_arch $versioned_archive $archive_arch]]]} {
-				continue }
+				return }
 
 			# do not continue if archive user does not match the current depot user
 			if { $depot_user != $user } {
@@ -799,7 +799,7 @@ namespace eval goa {
 					if {$dst_dir != "" && ![file exists $dst_dir]} {
 
 						foreach archive_arch $archs {
-							_make_archive_available $versioned_archive $arch }
+							_make_archive_available $versioned_archive $archive_arch }
 
 					} elseif {$dst_dir != "" && [file exists $dst_dir]} {
 
@@ -954,7 +954,7 @@ namespace eval goa {
 			set index_archive [versioned_project_archive index]
 	
 			foreach { path archs } [from-index [file join $depot_dir $index_archive] "pkg" "src"] {
-				foreach archive_arch $pkg_archs {
+				foreach archive_arch $archs {
 					lappend archives [apply_arch $path $archive_arch] } }
 
 			foreach { path archs } [from-index [file join $depot_dir $index_archive] "api"] {
