@@ -31,9 +31,10 @@ proc _consume_cmdline_switches { pattern } {
 # Main
 #
 
-set tool_dir [file dirname $argv0]
+# tool_dir is our location with 'lib' removed
+set tool_dir [file join [file dirname $argv0] ../]
 
-source [file join $tool_dir util.tcl]
+source [file join $tool_dir lib util.tcl]
 
 # print version and exit
 if {[consume_optional_cmdline_switch --version]} {
