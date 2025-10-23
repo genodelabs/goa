@@ -106,7 +106,7 @@ namespace eval goa {
 			exit
 		}
 
-		if {[info exists versions_from_genode_dir] && [info exists depot_user]} {
+		if {[info exists versions_from_genode_dir]} {
 
 			puts "#\n# depot-archive versions from $versions_from_genode_dir\n#"
 			set repos [glob -nocomplain [file join $versions_from_genode_dir repos *]]

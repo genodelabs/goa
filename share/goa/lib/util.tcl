@@ -450,9 +450,24 @@ proc validate_archives { archives } {
 #
 # If no version information is available, the original working directory is
 # scanned for corresponding Goa projects.
-proc apply_versions { archive_list } {
+proc apply_versions { wildcard_archive_list } {
 	global config::version config::versions_from_genode_dir config::update_index
-	global config::arch config::depot_dir config::sculpt_version
+	global config::arch config::depot_dir config::sculpt_version config::depot_user
+
+	# replace wildcard depot user "_" with current depot_user
+	set archive_list { }
+	if {$depot_user != "_"} {
+		foreach archive [validate_archives $wildcard_archive_list] {
+			set elements [split $archive "/"]
+			if {[lindex $elements 0] == "_"} {
+				lappend archive_list [join [lreplace $elements 0 0 $depot_user] "/"]
+			} else {
+				lappend archive_list $archive
+			}
+		}
+	} else {
+		set archive_list $wildcard_archive_list
+	}
 
 	# update depot index if requested
 	if {$update_index} {
@@ -501,6 +516,13 @@ proc apply_versions { archive_list } {
 				diag "using recipe version $recipe_version for $archive"
 				set version($archive) $recipe_version
 			}
+		}
+
+		# try to obtain version information from wildcard user "_"
+		if {![info exists version($archive)]} {
+			set wildcard_archive [join [lreplace $elements 0 0 "_"] "/"]
+			if {[info exists version($wildcard_archive)]} {
+				set version($archive) $version($wildcard_archive) }
 		}
 
 		# try to obtain missing version information from Goa projects
@@ -870,7 +892,7 @@ proc avail_goa_branches { } {
 proc assert_definition_of_depot_user { } {
 
 	global config::depot_user
-	if {[info exists depot_user]} {
+	if {[info exists depot_user] && $depot_user != "_"} {
 		return }
 
 	exit_with_error "missing definition of depot user\n" \

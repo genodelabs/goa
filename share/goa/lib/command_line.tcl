@@ -332,13 +332,13 @@ if {$perform(build)} {
 
 	if {[consume_optional_cmdline_switch "--update-index"]}   { set config::update_index 1 }
 
-	set config::olevel [consume_optional_cmdline_arg "--olevel" $config::olevel]
+	set config::olevel     [consume_optional_cmdline_arg "--olevel"     $config::olevel]
+	set config::depot_user [consume_optional_cmdline_arg "--depot-user" $config::depot_user]
 }
 
 if {$perform(export)} {
 	set config::depot_overwrite [consume_optional_cmdline_switch "--depot-overwrite"]
 	set config::depot_retain    [consume_optional_cmdline_switch "--depot-retain"]
-	set config::depot_user      [consume_optional_cmdline_arg "--depot-user"     $config::depot_user]
 	set config::license         [consume_optional_cmdline_arg "--license"        $config::license]
 	set config::sculpt_version  [consume_optional_cmdline_arg "--sculpt-version" $config::sculpt_version]
 	set args(publish_pkg)       [consume_optional_cmdline_arg "--pkg"            ""]

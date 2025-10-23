@@ -130,6 +130,8 @@ Goa evaluates the following configuration variables.
   update. However, while iteratively testing a new version, it is often useful
   to overwrite existing depot content. This can be achieved by setting the
   value to 1 or by specifying the *--depot-overwrite* command-line argument.
+  Note that _depot_overwrite_ will be implicitly set to 1 when _depot_user_ is
+  set to "_".
 
 :depot_retain:
   Whenever Goa encounters the situation where a *goa export* or *goa publish*
@@ -144,7 +146,13 @@ Goa evaluates the following configuration variables.
   the GPG keyring must contain a private key that matches the specified
   depot user's pubkey. Alternatively to setting the _depot_user_ variable,
   the name can be specified for the *export* or *publish* commands
-  via the *--depot-user <name>* argument.
+  via the *--depot-user <name>* argument. The default _depot_user_ value is
+  "_", which is treated as a wildcard user throughout Goa. More precisely,
+  referenced archives with "_" as depot user will be replaced by the current
+  _depot_user_ value. Vice versa, archive version specifications for depot
+  user "_" will be used as a fallback for depot archives with the same type
+  and name. Note that the *publish* command requires a depot user other than
+  "_".
 
 :run_as:
   The *goa run* command requires several archives from the official genodelabs

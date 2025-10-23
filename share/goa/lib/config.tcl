@@ -25,7 +25,7 @@ namespace eval ::config {
 	variable depot_overwrite          0
 	variable depot_retain             0
 	variable license                  ""
-	variable depot_user               ""
+	variable depot_user               "_"
 	variable run_as                   "genodelabs"
 	variable target                   "linux"
 	variable sculpt_version           ""
@@ -375,10 +375,11 @@ namespace eval ::config {
 		variable binary_name
 		variable var_dir
 		variable toolchain_version
+		variable depot_overwrite
 
 		if {$versions_from_genode_dir == ""} { unset versions_from_genode_dir }
 		if {$license                  == ""} { unset license }
-		if {$depot_user               == ""} { unset depot_user }
+		if {$depot_user               == ""} { set depot_user "_" }
 		if {$arch                     == ""} { unset arch }
 		if {$cross_dev_prefix         == ""} { unset cross_dev_prefix }
 		if {$ld_march                 == ""} { unset ld_march }
@@ -410,6 +411,9 @@ namespace eval ::config {
 			default { set cc_march "" }
 			}
 		}
+
+		if { $depot_user == "_" } {
+			set depot_overwrite 1 }
 
 		set var_dir [file join $project_dir var]
 		if {$common_var_dir != ""} {

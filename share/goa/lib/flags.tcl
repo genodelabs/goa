@@ -59,7 +59,7 @@ lappend cflags -g
 lappend cflags -fdebug-prefix-map=$depot_dir=/depot
 
 # on export of dbg archives, replace build dir with depot dir
-if {$debug && [info exists depot_user]} {
+if {$debug} {
 	set archive_version [exported_project_archive_version $project_dir $depot_user/src/$project_name]
 	lappend cflags -fdebug-prefix-map=$build_dir=/depot/$depot_user/src/$project_name/$archive_version
 }

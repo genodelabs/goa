@@ -299,8 +299,6 @@ if {$perform(run)} {
 
 if {$perform(export)} {
 
-	assert_definition_of_depot_user
-
 	set exported_archives ""
 	goa export-api
 	goa export-raw
@@ -317,6 +315,8 @@ if {$perform(export)} {
 
 
 if {$perform(publish)} {
+
+	assert_definition_of_depot_user
 
 	set pubkey_file [file join $config::depot_dir $config::depot_user pubkey]
 	if {![file exists $pubkey_file]} {

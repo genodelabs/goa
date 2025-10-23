@@ -84,7 +84,8 @@ namespace eval goa {
 			lappend cmd --pkg $pkg_name }
 
 		# keep existing exports of dependent projects untouched
-		lappend cmd --depot-retain
+		if {$depot_user != "_"} {
+			lappend cmd --depot-retain }
 
 		if {!$verbose} {
 			log "exporting project $dir" }
@@ -124,12 +125,21 @@ namespace eval goa {
 
 	proc download_archives { archives { no_err 0 } { dbg 0 }} {
 
-		if {[llength $archives] > 0} {
-			set args $archives
+		# skip '_' archives
+		set args [lmap archive $archives {
+			if {![regexp {^_/.*} $archive]} {
+				set archive
+			} elseif {!$no_err} {
+				return -code error -errorcode DOWNLOAD_FAILED ""
+			} else { continue }
+		}]
+
+		if {[llength $args] > 0} {
+
 			if { $dbg } {
 				lappend args "DBG=1" }
 
-			diag "install depot archives: $archives"
+			diag "install depot archives: $args"
 
 			try {
 				if { $no_err } {
@@ -176,8 +186,6 @@ namespace eval goa {
 
 		global config::depot_user config::arch
 
-		assert_definition_of_depot_user
-
 		foreach used_api [used_apis] {
 			archive_parts $used_api user type name vers
 			if {$user != $depot_user} {
@@ -211,7 +219,7 @@ namespace eval goa {
 	# Download archives into depot
 	#
 	proc prepare_depot_with_archives { archive_list } {
-		global config::depot_dir
+		global config::depot_dir config::arch
 
 		# create list of depot users without duplicates
 		set depot_users { }
@@ -221,18 +229,55 @@ namespace eval goa {
 
 		# check if all depot users are present in the depot
 		foreach user $depot_users {
-			if {![file exists [file join $depot_dir $user]]} {
+			set depot_user_dir [file join $depot_dir $user]
+			if {![file exists $depot_user_dir]} {
+				if {$user == "_"} {
+					file mkdir $depot_user_dir
+					continue
+				}
 				exit_with_error "depot user '$user' is not known" \
-				                "in depot at $depot_dir" } }
+				                "in depot at $depot_dir"
+			}
+		}
 
 		# create list of uninstalled archives
 		set uninstalled_archives { }
+		set wildcard_archives { }
 		foreach archive $archive_list {
 			if {![file exists [file join $depot_dir $archive]]} {
-				lappend uninstalled_archives $archive } }
+				if {[regexp {^_/.*} $archive]} {
+					lappend wildcard_archives $archive
+				} else {
+					lappend uninstalled_archives $archive
+				}
+			}
+		}
 
 		set uninstalled_archives [lsort -unique $uninstalled_archives]
+		set wildcard_archives    [lsort -unique $wildcard_archives]
 
+		# export wildcard archives
+		foreach archive $wildcard_archives {
+			archive_parts $archive user type name vers
+			try {
+				set dir [find_project_dir_for_archive $type $name]
+
+				if {"[exported_project_archive_version $dir $user/$type/$name]" != "$vers"} {
+					log "skipping export of $dir due to version mismatch"
+				} else {
+					export_dependent_project $dir $arch
+				}
+
+			} trap NOT_FOUND { } {
+				exit_with_error "unable to find project dir for exporting $archive"
+				
+			} trap CHILDSTATUS { msg } {
+				# export failed
+				exit_with_error "failed to export depot archive $archive \n\t$msg"
+
+			} on error { msg } { error $msg $::errorInfo }
+		}
+	
 		# download uninstalled archives
 		try {
 			download_archives $uninstalled_archives
@@ -314,8 +359,6 @@ namespace eval goa {
 		if {$type == "pkg" && $pkg_name != ""} {
 			set name $pkg_name }
 	
-		assert_definition_of_depot_user
-	
 		if {$type == "index"} {
 			if {$sculpt_version == ""} {
 				exit_with_error "missing definition of sculpt version\n" \
@@ -345,7 +388,11 @@ namespace eval goa {
 	
 		if {![info exists archive_version]} {
 			if {[info exists version($archive)]} {
-				set archive_version $version($depot_user/$type/$name) } }
+				set archive_version $version($archive)
+			} elseif {[info exists version(_/$type/$name)]} {
+				set archive_version $version(_/$type/$name)
+			}
+		}
 	
 		if {![info exists archive_version]} {
 			exit_with_error "version for archive $archive undefined\n" \
@@ -566,9 +613,7 @@ namespace eval goa {
 		# create src archive
 		set src_dir [file join $project_dir src]
 		if {[file exists $src_dir] && [file isdirectory $src_dir]} {
-	
-			set used_apis [apply_versions [read_file_content_as_list used_apis]]
-	
+
 			set files { }
 			lappend files "src"
 	
@@ -706,8 +751,11 @@ namespace eval goa {
 		global config::sculpt_version config::depot_dir config::public_dir
 		global config::depot_user
 
+		if {$user == "_"} {
+			return }
+
 		# remove index from depot_dir and public_dir to trigger redownload
-		if {![info exists depot_user] || $user != $depot_user} {
+		if {$user != $depot_user} {
 			set public_path [file join $public_dir $user index]
 			set depot_path  [file join $depot_dir  $user index]
 
