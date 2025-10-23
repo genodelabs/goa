@@ -20,7 +20,6 @@ foreach api [used_apis] {
 set libgcc_path    [unsafe_file normalize [eval "exec_tool_chain gcc -print-libgcc-file-name"]]
 set libgcc_include [file join [file dirname $libgcc_path] include]
 
-lappend include_dirs [unsafe_file normalize $libgcc_include]
 
 #
 # CPP flags

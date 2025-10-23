@@ -412,6 +412,9 @@ namespace eval goa {
 				lappend existing_include_dirs $dir } }
 		set include_dirs $existing_include_dirs
 
+		# libgcc include last because it contains header files provided by libc
+		lappend include_dirs [unsafe_file normalize $libgcc_include]
+
 		# supplement 'cppflags' with include directories
 		foreach dir $include_dirs {
 			lappend cppflags "-I$dir" }
