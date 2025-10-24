@@ -59,9 +59,10 @@ lappend cflags -g
 lappend cflags -fdebug-prefix-map=$depot_dir=/depot
 
 # on export of dbg archives, replace build dir with depot dir
-if {$debug} {
-	set archive_version [exported_project_archive_version $project_dir $depot_user/src/$project_name]
-	lappend cflags -fdebug-prefix-map=$build_dir=/depot/$depot_user/src/$project_name/$archive_version
+global perform
+if {$debug && $perform(export)} {
+	set versioned_archive [goa::versioned_project_archive src]
+	lappend cflags -fdebug-prefix-map=$build_dir=/depot/$versioned_archive
 }
 
 

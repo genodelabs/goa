@@ -399,22 +399,29 @@ proc project_version_from_file { dir } {
 # Determine project version for a particular archive during export
 #
 proc exported_project_archive_version { dir archive } {
-	global config::version
+	global argv0
 
 	try {
-		set archive_version [project_version_from_file $dir]
-		return $archive_version
-
+		return [project_version_from_file $dir]
 	} trap NOT_FOUND {} {
-		if {[info exists version($archive)]} {
-			return $version($archive) }
-
+		# handled below
 	} on error {msg} { error $msg $::errorInfo }
 
-	exit_with_error "version for archive $archive undefined\n" \
-	                "\n Create a 'version' file in '$dir', or" \
-	                "\n define 'set version($archive) <version>' in your goarc file," \
-	                "\n or specify '--version-$archive <version>' as argument\n"
+	
+	# exec 'goa archive-versions --archive $archive' in $dir
+	set cmd { }
+	lappend cmd expect $argv0 archive-versions
+	lappend cmd -C $dir
+	lappend cmd --archive $archive
+
+	try {
+		diag "Executing: $cmd"
+		set output [exec {*}$cmd]
+		foreach line [split $output "\n"] {
+			if {[regexp "^set version.*" $line]} {
+				return [lindex [split $line] end] }
+		}
+	} on error {msg} { error $msg $::errorInfo }
 }
 
 
@@ -529,7 +536,7 @@ proc apply_versions { wildcard_archive_list } {
 		if {![info exists version($archive)]} {
 			try {
 				set dir [find_project_dir_for_archive $type $name]
-				set version($archive) [project_version_from_file $dir]
+				set version($archive) [exported_project_archive_version $dir $archive]
 
 			} trap NOT_FOUND {} {
 			} on error {msg} { error $msg $::errorInfo }
