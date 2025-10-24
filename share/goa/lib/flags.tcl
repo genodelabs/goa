@@ -63,6 +63,7 @@ global perform
 if {$debug && $perform(export)} {
 	set versioned_archive [goa::versioned_project_archive src]
 	lappend cflags -fdebug-prefix-map=$build_dir=/depot/$versioned_archive
+	lappend cflags -fdebug-prefix-map=$project_dir=/depot/$versioned_archive
 }
 
 
