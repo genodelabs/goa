@@ -903,5 +903,3 @@ proc user_confirmation { msg default_yes } {
 		timeout   { expr 0 }
 	}]
 }
-
-source [file join $tool_dir lib query.tcl]
