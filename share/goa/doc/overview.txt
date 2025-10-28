@@ -176,11 +176,14 @@ Commands
 :goa info <user>/[pkg|src]/<name>[/<version>]:
   Show documentation about the specified pkg or src archive.
 
-:goa bump-version [<version>]:
+:goa bump-version [--if-needed [--pkg <pkg-name>] [--depot-user <user>]] [<version>]:
   Update version file of a Goa project. If <version> is not provided, the
   current date is taken. If the project version already matches the desired
   date, "-a" is added as a suffix and alphabetically incremented for every
-  version bump.
+  version bump. When provided with the --if-needed option, the version update
+  is omitted if the exported/published version is already up-to-date.
+  If <pkg-name> is supplied, only the scenario at pkg/<pkg-name> is compared
+  against the corresponding exported/published archive.
 
 :goa exported [--pkg <pkg-name>] [--depot-user <user>]:
   Compare project status with the archives exported for <user> and

@@ -265,6 +265,9 @@ if {$perform(exported) || $perform(published)} {
 }
 
 if {$perform(bump-version)} {
+	set args(if_needed)    [consume_optional_cmdline_switch "--if-needed"]
+	set args(compare_pkg)  [consume_optional_cmdline_arg    "--pkg" ""]
+	set config::depot_user [consume_optional_cmdline_arg    "--depot-user" $config::depot_user]
 	set args(target_version) [clock format [clock seconds] -format %Y-%m-%d]
 	if {[llength $argv] == 1} {
 		set args(target_version) [lindex $argv 0]

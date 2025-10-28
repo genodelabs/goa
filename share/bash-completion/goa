@@ -84,7 +84,7 @@ __goa()
         fi
         return 0
     elif [[ ${second} == "bump-version" ]]; then
-        COMPREPLY=( $(compgen -W "-r -C --keep-going" -- ${cur}) )
+        COMPREPLY=( $(compgen -W "-r -C --keep-going --if-needed --pkg --depot-user" -- ${cur}) )
         return 0
     fi
 

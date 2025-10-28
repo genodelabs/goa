@@ -170,6 +170,22 @@ if {$perform(exported)} {
 #
 
 if {$perform(bump-version)} {
+	if {$args(if_needed)} {
+		assert_definition_of_depot_user
+
+		set dummy {}
+		set status [expr [goa compare-src dummy] && \
+		                 [goa compare-raw dummy] && \
+		                 [goa compare-api dummy] && \
+		                 [goa compare-pkgs $args(compare_pkg) dummy]]
+
+		if {$status} {
+			log "Skipping version bump"
+			exit
+		} else {
+			log "Version update required"
+		}
+	}
 	goa bump-version $args(target_version)
 	exit
 }
