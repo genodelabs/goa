@@ -5,7 +5,7 @@
 namespace eval goa {
 	namespace export prepare_depot_with_apis prepare_depot_with_archives
 	namespace export prepare_depot_with_debug_archives
-	namespace export export-api export-raw export-src export-pkgs export-index
+	namespace export export-api export-raw export-src export-pkg export-index
 	namespace export export-dbg export-bin import-dependencies export-dependencies
 	namespace export published-archives download-foreign publish archive-info
 	namespace export update-index
@@ -419,6 +419,32 @@ namespace eval goa {
 	
 		return "$depot_user/$type/$name/$archive_version"
 	}
+
+
+	##
+	# Return list of versioned archives of exported pkg runtime
+	# 
+	proc versioned_runtime_archives { pkg } {
+		global config::project_dir
+
+		set runtime_archives { }
+
+		# add archives specified at the pkg's 'archives' file
+		set archives_file [file join pkg $pkg archives]
+		if {[file exists $archives_file]} {
+			set runtime_archives [apply_versions [read_file_content_as_list $archives_file]] }
+
+		# automatically add the project's local raw and src archives
+		set raw_dir [file join $project_dir raw]
+		if {[file exists $raw_dir] && [file isdirectory $raw_dir]} {
+			lappend runtime_archives [versioned_project_archive raw] }
+
+		set src_dir [file join $project_dir src]
+		if {[file exists $src_dir] && [file isdirectory $src_dir]} {
+			lappend runtime_archives [versioned_project_archive src] }
+		
+		return $runtime_archives
+	}
 	
 	
 	##
@@ -660,62 +686,37 @@ namespace eval goa {
 	}
 
 
-	proc export-pkgs { &exported_archives } {
+	proc export-pkg { pkg &exported_archives } {
 
 		global args config::arch config::project_dir
 		upvar  ${&exported_archives} exported_archives
 
-		set pkg_expr "*"
-		if {$args(publish_pkg) != ""} {
-			set pkg_expr $args(publish_pkg) }
-		set pkgs [glob -nocomplain -directory pkg -tail $pkg_expr -type d]
-		foreach pkg $pkgs {
-	
-			set pkg_dir [file join pkg $pkg]
-	
-			set readme_file [file join $pkg_dir README]
-			if {![file exists $readme_file]} {
-				exit_with_error "missing README file at $readme_file" }
-	
-			set runtime_archives { }
-	
-			# automatically add the project's local raw and src archives
-			set raw_dir [file join $project_dir raw]
-			if {[file exists $raw_dir] && [file isdirectory $raw_dir]} {
-				lappend runtime_archives [versioned_project_archive raw] }
+		set pkg_dir [file join pkg $pkg]
 
-			set src_dir [file join $project_dir src]
-			if {[file exists $src_dir] && [file isdirectory $src_dir]} {
-				lappend runtime_archives [versioned_project_archive src] }
-	
-			# add archives specified at the pkg's 'archives' file
-			set archives_file [file join $pkg_dir archives]
-			if {[file exists $archives_file]} {
-				set runtime_archives [concat [read_file_content_as_list $archives_file] \
-				                             $runtime_archives] }
-	
-			# supplement version info
-			set runtime_archives [apply_versions $runtime_archives]
-	
-			set dst_dir [prepare_project_archive_directory pkg $pkg]
-			if {$dst_dir != ""} {
-				# copy content from pkg directory as is
-				set files [exec find $pkg_dir -not -type d -and -not -name "*~" -and -not -type l]
-				foreach file $files {
-					file copy $file [file join $dst_dir [file tail $file]] }
-	
-				# overwrite exported 'archives' file with specific versions
-				if {[llength $runtime_archives] > 0} {
-					set fh [open [file join $dst_dir archives] "WRONLY CREAT TRUNC"]
-					puts $fh [join $runtime_archives "\n"]
-					close $fh
-				}
-	
-				log "exported $dst_dir"
+		set readme_file [file join $pkg_dir README]
+		if {![file exists $readme_file]} {
+			exit_with_error "missing README file at $readme_file" }
+
+		set runtime_archives [versioned_runtime_archives $pkg]
+
+		set dst_dir [prepare_project_archive_directory pkg $pkg]
+		if {$dst_dir != ""} {
+			# copy content from pkg directory as is
+			set files [exec find $pkg_dir -not -type d -and -not -name "*~" -and -not -type l]
+			foreach file $files {
+				file copy $file [file join $dst_dir [file tail $file]] }
+
+			# overwrite exported 'archives' file with specific versions
+			if {[llength $runtime_archives] > 0} {
+				set fh [open [file join $dst_dir archives] "WRONLY CREAT TRUNC"]
+				puts $fh [join $runtime_archives "\n"]
+				close $fh
 			}
-	
-			lappend exported_archives [apply_arch [versioned_project_archive pkg $pkg] $arch]
+
+			log "exported $dst_dir"
 		}
+
+		lappend exported_archives [apply_arch [versioned_project_archive pkg $pkg] $arch]
 	}
 
 

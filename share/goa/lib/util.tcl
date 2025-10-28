@@ -933,3 +933,15 @@ proc user_confirmation { msg default_yes } {
 		timeout   { expr 0 }
 	}]
 }
+
+
+proc for_each_pkg { &pkg pkg_expr body } {
+	upvar ${&pkg} pkg
+
+	if {$pkg_expr == ""} {
+		set pkg_expr "*" }
+
+	set pkgs [glob -nocomplain -directory pkg -tail $pkg_expr -type d]
+	foreach pkg $pkgs {
+		uplevel 1 $body }
+}

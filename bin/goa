@@ -303,7 +303,8 @@ if {$perform(export)} {
 	goa export-api
 	goa export-raw
 	goa export-src
-	goa export-pkgs  exported_archives
+	for_each_pkg pkg $args(publish_pkg) {
+		goa export-pkg $pkg exported_archives }
 	goa export-bin   exported_archives
 	if {$config::debug} { goa export-dbg }
 	goa export-index exported_archives
