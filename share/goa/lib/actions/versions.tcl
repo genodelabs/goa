@@ -3,7 +3,24 @@
 #
 
 namespace eval goa {
-	namespace export archive-versions bump-version from-index
+	namespace export archive-versions bump-version from-index used_apis
+
+	##
+	# Return list of versioned archives referenced by used_apis file
+	# 
+	proc used_apis { } {
+
+		variable _used_apis
+
+		if {![info exists _used_apis]} {
+			set _used_apis [apply_versions [read_file_content_as_list used_apis]]
+			if {[llength $_used_apis] > 0} {
+				diag "used APIs: $_used_apis" }
+		}
+
+		return $_used_apis
+	}
+
 
 	proc bump-version { target_version } {
 

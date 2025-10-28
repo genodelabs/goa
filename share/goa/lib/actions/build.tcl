@@ -3,7 +3,7 @@
 #
 
 namespace eval goa {
-	namespace export build-dir build using_api used_apis check_abis
+	namespace export build-dir build using_api check_abis
 	namespace export build extract_artifacts_from_build_dir extract_api_artifacts
 	namespace export gaol_with_toolchain
 	namespace export extract-abi-symbols
@@ -144,19 +144,6 @@ namespace eval goa {
 		return 0
 	}
 
-
-	proc used_apis { } {
-
-		variable _used_apis
-
-		if {![info exists _used_apis]} {
-			set _used_apis [apply_versions [read_file_content_as_list used_apis]]
-			if {[llength $_used_apis] > 0} {
-				diag "used APIs: $_used_apis" }
-		}
-
-		return $_used_apis
-	}
 
 	##
 	# strip debug symbols from binary
