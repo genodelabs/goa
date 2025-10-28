@@ -915,6 +915,7 @@ proc exec_status { cmd } {
 		if {[lindex $details 0] eq "CHILDSTATUS"} {
 			return [lindex $details 2] }
 	}
+	return 0
 }
 
 
