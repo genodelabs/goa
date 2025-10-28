@@ -182,6 +182,16 @@ Commands
   date, "-a" is added as a suffix and alphabetically incremented for every
   version bump.
 
+:goa exported [--pkg <pkg-name>] [--depot-user <user>]:
+  Compare project status with the archives exported for <user> and
+  the currently set archive versions. If <pkg-name> is supplied, only the
+  scenario at pkg/<pkg-name> is compared against the corresponding
+  exported archive.
+
+:goa published [--pkg <pkg-name>] [--depot-user <user>]:
+  Implicies the *exported* command and additionally checks for the presence
+  of the project's archives in the public_dir.
+
 :goa import:
   Download and patch 3rd-party source code according to the rules given by
   an _import_ file.

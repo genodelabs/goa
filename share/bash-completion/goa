@@ -7,9 +7,9 @@ __goa()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions depot-dir run-dir bump-version backtrace install-toolchain info"
+    commands="help update-goa --version import diff build-dir build extract-abi-symbols run export publish add-depot-user archive-versions depot-dir run-dir bump-version backtrace install-toolchain info exported published"
     help_commands="config api build-systems artifacts add-depot-user import targets runtime index meson"
-    depot_commands="export|publish"
+    depot_commands="export|publish|exported|published"
     run_commands="run|run-dir|backtrace"
     depot_opts="--depot-user --depot-overwrite --depot-retain --pkg"
     run_opts="--pkg --run-as --target"

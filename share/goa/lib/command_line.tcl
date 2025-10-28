@@ -189,7 +189,8 @@ if {[llength $argv] == 0} {
 
 set avail_commands [list update-goa archive-versions backtrace import diff build-dir \
                          build run run-dir export publish add-depot-user bump-version \
-                         extract-abi-symbols versions depot-dir install-toolchain info]
+                         extract-abi-symbols versions depot-dir install-toolchain info \
+                         exported published]
 
 foreach command $avail_commands {
 	set perform($command) 0 }
@@ -220,6 +221,7 @@ action_dependency build           build-dir
 action_dependency build-dir       install-toolchain
 action_dependency build-dir       depot-dir
 action_dependency add-depot-user  depot-dir
+action_dependency published       exported
 
 if {[file exists import] && [file isfile import]} {
 	action_dependency build-dir import }
@@ -254,6 +256,12 @@ if {$perform(backtrace)} {
 	set config::binary_name [consume_optional_cmdline_arg "--binary-name" ""]
 	set config::with_backtrace 1
 	set config::debug 1
+}
+
+if {$perform(exported) || $perform(published)} {
+	set args(compare_pkg)  [consume_optional_cmdline_arg "--pkg" ""]
+	set config::depot_user [consume_optional_cmdline_arg "--depot-user" $config::depot_user]
+	set args(force_download) $perform(published)
 }
 
 if {$perform(bump-version)} {

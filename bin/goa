@@ -131,6 +131,39 @@ if {$perform(archive-versions)} {
 if {![looks_like_goa_project_dir $config::project_dir] && ![has_src_but_no_artifacts $config::project_dir]} {
 	exit_with_error "$config::project_dir does not look like a goa project" }
 
+##
+# Compare with exported/published archive
+# 
+if {$perform(exported)} {
+
+	assert_definition_of_depot_user
+
+	set exported_archives {}
+
+	set status [expr [goa compare-src exported_archives] && \
+	                 [goa compare-raw exported_archives] && \
+	                 [goa compare-api exported_archives] && \
+	                 [goa compare-pkgs $args(compare_pkg) exported_archives]]
+	if {!$status} {
+		log "Version update recommended"
+		exit 1
+	} else {
+		log "Exported archives are up-to-date"
+
+		if {$perform(published)} {
+			set result 0
+			foreach archive $exported_archives {
+				if {![file exists [file join $config::public_dir $archive.tar.xz.sig]]} {
+					log "$archive has not been published"
+					set result 1
+				}
+			}
+			exit $result
+		}
+	}
+
+	exit
+}
 
 ##
 # Bump project version

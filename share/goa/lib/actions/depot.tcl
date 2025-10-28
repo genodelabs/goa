@@ -9,6 +9,7 @@ namespace eval goa {
 	namespace export export-dbg export-bin import-dependencies export-dependencies
 	namespace export published-archives download-foreign publish archive-info
 	namespace export update-index
+	namespace export compare-src compare-raw compare-pkgs compare-api
 
 	proc exec_depot_tool { tool args } {
 		global verbose gaol tool_dir
@@ -574,7 +575,7 @@ namespace eval goa {
 	}
 
 
-	proc export-api { } {
+	proc export-api { { dst_dir "" } } {
 
 		global config::api_dir config::project_dir
 
@@ -582,7 +583,12 @@ namespace eval goa {
 
 			set license_file [license_file]
 
-			set dst_dir [prepare_project_archive_directory api]
+			set silent 1
+			if {$dst_dir == ""} {
+				set dst_dir [prepare_project_archive_directory api]
+				set silent 0
+			}
+
 			if {$dst_dir != ""} {
 				set files [exec find $api_dir -not -type d -and -not -name "*~"]
 				foreach file $files {
@@ -621,19 +627,21 @@ namespace eval goa {
 
 				file copy $license_file [file join $dst_dir LICENSE]
 	
-				log "exported $dst_dir"
+				if {!$silent} {
+					log "exported $dst_dir" }
 			}
 		}
 	}
 
 
-	proc export-raw { } {
+	proc export-raw { { dst_dir "" } } {
 
 		global config::project_dir
 
 		set raw_dir [file join $project_dir raw]
 		if {[file exists $raw_dir] && [file isdirectory $raw_dir]} {
-			set dst_dir [prepare_project_archive_directory raw]
+			if {$dst_dir == ""} {
+				set dst_dir [prepare_project_archive_directory raw] }
 			if {$dst_dir != ""} {
 				set files [exec find $raw_dir -not -type d -and -not -name "*~" -and -not -type l]
 				foreach file $files {
@@ -645,7 +653,7 @@ namespace eval goa {
 	}
 
 
-	proc export-src { } {
+	proc export-src { { dst_dir "" } } {
 
 		global config::project_dir
 
@@ -662,7 +670,12 @@ namespace eval goa {
 	
 			set license_file [license_file]
 	
-			set dst_dir [prepare_project_archive_directory src]
+			set silent 1
+			if {$dst_dir == ""} {
+				set dst_dir [prepare_project_archive_directory src]
+				set silent 0
+			}
+
 			if {$dst_dir != ""} {
 				foreach file $files {
 					file copy $file [file join $dst_dir [file tail $file]] }
@@ -680,13 +693,14 @@ namespace eval goa {
 					puts $fh $api }
 				close $fh
 	
-				log "exported $dst_dir"
+				if {!$silent} {
+					log "exported $dst_dir" }
 			}
 		}
 	}
 
 
-	proc export-pkg { pkg &exported_archives } {
+	proc export-pkg { pkg &exported_archives { dst_dir "" }} {
 
 		global args config::arch config::project_dir
 		upvar  ${&exported_archives} exported_archives
@@ -699,7 +713,12 @@ namespace eval goa {
 
 		set runtime_archives [versioned_runtime_archives $pkg]
 
-		set dst_dir [prepare_project_archive_directory pkg $pkg]
+		set silent 1
+		if {$dst_dir == ""} {
+			set dst_dir [prepare_project_archive_directory pkg $pkg]
+			set silent 0
+		}
+
 		if {$dst_dir != ""} {
 			# copy content from pkg directory as is
 			set files [exec find $pkg_dir -not -type d -and -not -name "*~" -and -not -type l]
@@ -713,7 +732,8 @@ namespace eval goa {
 				close $fh
 			}
 
-			log "exported $dst_dir"
+			if {!$silent} {
+				log "exported $dst_dir" }
 		}
 
 		lappend exported_archives [apply_arch [versioned_project_archive pkg $pkg] $arch]
@@ -1091,5 +1111,151 @@ namespace eval goa {
 				                [join $archives "\n "]
 			} on error { msg } { error $msg $::errorInfo }
 		}
+	}
+
+
+	proc download_if_missing { archive } {
+		global config::depot_dir config::public_dir args
+
+		if {![file exists [file join $depot_dir $archive]]} {
+			try {
+				download_archives $archive
+
+			} trap DOWNLOAD_FAILED { } {
+					exit_with_error "failed to download $archive"
+
+			} on error { msg } { error $msg $::errorInfo }
+		}
+
+		if {$args(force_download)} {
+			if {![file exists [file join $public_dir $archive.tar.xz.sig]]} {
+				try {
+					download_archives $archive "force_download" "no_err"
+
+				} trap DOWNLOAD_FAILED { } {
+				} on error { msg } { error $msg $::errorInfo }
+			}
+		}
+	}
+
+
+	proc compare-raw { &exported_archives } {
+		global config::depot_dir config::project_dir
+
+		upvar ${&exported_archives} exported_archives
+		
+		set raw_dir [file join $project_dir raw]
+		if {[file exists $raw_dir] && [file isdirectory $raw_dir]} {
+			set other_archive [versioned_project_archive raw]
+			download_if_missing $other_archive
+			set other_dir [file join $depot_dir $other_archive]
+
+			set status [exec_status [list diff -qNr raw $other_dir > /dev/null]]
+			if {$status != 0} {
+				log "$other_archive differs from current project state"
+				return false
+			}
+
+			lappend exported_archives $other_archive
+		}
+
+		return true
+	}
+
+
+	proc compare-src { &exported_archives } {
+		global config::depot_dir config::project_dir config::project_name
+
+		upvar ${&exported_archives} exported_archives
+		
+		set src_dir [file join $project_dir src]
+		if {[file exists $src_dir] && [file isdirectory $src_dir]} {
+			set other_archive [versioned_project_archive src]
+			download_if_missing $other_archive
+			set other_dir [file join $depot_dir $other_archive]
+
+			set dst_dir [file join $depot_dir _ src $project_name compare]
+			file delete -force $dst_dir
+			file mkdir $dst_dir
+			export-src $dst_dir
+
+			set status [exec_status [list diff -qNr $dst_dir $other_dir > /dev/null]]
+			file delete -force $dst_dir
+			if {$status != 0} {
+				log "$other_archive differs from current project state"
+				return false
+			}
+
+			lappend exported_archives $other_archive
+		}
+
+		return true
+	}
+
+
+	proc compare-pkgs { pkg_expr &exported_archives } {
+		global config::depot_dir config::project_dir config::project_name
+
+		upvar ${&exported_archives} exported_archives
+
+		set result true
+		for_each_pkg pkg $pkg_expr {
+			set pkg_dir [file join pkg $pkg]
+
+			set other_archive [versioned_project_archive pkg $pkg]
+			download_if_missing $other_archive
+			set other_dir [file join $depot_dir $other_archive]
+
+			set dst_dir [file join $depot_dir _ pkg $pkg compare]
+			file delete -force $dst_dir
+			file mkdir $dst_dir
+
+			set dummy ""
+			export-pkg $pkg dummy $dst_dir
+
+			set status [exec_status [list diff -qNr $dst_dir $other_dir > /dev/null]]
+			file delete -force $dst_dir
+			if {$status != 0} {
+				log "$other_archive differs from current project state"
+				set result false
+			}
+
+			lappend exported_archives $other_archive
+		}
+
+		return $result
+	}
+
+
+	proc compare-api { &exported_archives } {
+		global config::depot_dir config::api_dir config::project_dir
+		global config::project_name
+
+		upvar ${&exported_archives} exported_archives
+ 
+		if {[file exists $api_dir] && [file isdirectory $api_dir]} {
+			set other_archive [versioned_project_archive api]
+			download_if_missing $other_archive
+			set other_dir [file join $depot_dir $other_archive]
+
+			set dst_dir [file join $depot_dir _ api $project_name compare]
+			file delete -force $dst_dir
+			file mkdir $dst_dir
+			export-api $dst_dir
+
+			set status [exec_status [list diff -qNr $dst_dir $other_dir > /dev/null]]
+			file delete -force $dst_dir
+			if {$status != 0} {
+				log "$other_archive differs from current project state"
+				return false
+			}
+
+			lappend exported_archives $other_archive
+
+		} elseif {[file exists [file join $project_dir api]]} {
+			log "skipping comparison with api archive - please execute 'goa build' first"
+		}
+
+		return true
 	}
 }
