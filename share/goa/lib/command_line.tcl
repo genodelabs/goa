@@ -237,6 +237,8 @@ if {$perform(update-goa)} {
 }
 
 if {$perform(info)} {
+	if {[consume_optional_cmdline_switch "--update-index"]} { set config::update_index 1 }
+
 	set args(archive) ""
 	if {[llength $argv] > 0} {
 		set args(archive) [lindex $argv 0]
