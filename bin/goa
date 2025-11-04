@@ -114,6 +114,16 @@ if {$perform(info)} {
 }
 
 
+##
+## Show archive versions
+##
+
+if {$perform(archive-versions)} {
+	goa archive-versions $args(archives)
+	exit
+}
+
+
 #
 # The following commands only work when the current working directory is a goa
 # project.
@@ -128,16 +138,6 @@ if {![looks_like_goa_project_dir $config::project_dir] && ![has_src_but_no_artif
 
 if {$perform(bump-version)} {
 	goa bump-version $args(target_version)
-	exit
-}
-
-
-##
-## Show archive versions
-##
-
-if {$perform(archive-versions)} {
-	goa archive-versions $args(archives)
 	exit
 }
 

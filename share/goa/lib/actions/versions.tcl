@@ -129,27 +129,29 @@ namespace eval goa {
 			}
 		}
 
-		puts "\n#\n# depot-archive versions referenced by $project_dir\n#"
-		set archives [read_file_content_as_list used_apis]
-		set archive_files [glob -nocomplain [file join $project_dir pkg * archives]]
-		foreach file $archive_files {
-			set archives [concat $archives [read_file_content_as_list $file]] }
+		if {[looks_like_goa_project_dir $project_dir]} {
+			puts "\n#\n# depot-archive versions referenced by $project_dir\n#"
+			set archives [read_file_content_as_list used_apis]
+			set archive_files [glob -nocomplain [file join $project_dir pkg * archives]]
+			foreach file $archive_files {
+				set archives [concat $archives [read_file_content_as_list $file]] }
 
-		set index_file [file join $project_dir index]
-		if {[file exists $index_file] && [info exists depot_user]} {
-			foreach { pkg_name pkg_archs } [from-index $index_file "pkg" "src" "api"] {
-				lappend archives $pkg_name }
+			set index_file [file join $project_dir index]
+			if {[file exists $index_file] && [info exists depot_user]} {
+				foreach { pkg_name pkg_archs } [from-index $index_file "pkg" "src" "api"] {
+					lappend archives $pkg_name }
+			}
+
+			set archives [lsort -unique $archives]
+			# Note: omitting 'validate_archives' because 'apply_versions' does it
+			set versioned_archives [apply_versions $archives]
+			foreach a $archives v $versioned_archives {
+				set vers [archive_version $v]
+				puts "set version($a) $vers"
+			}
 		}
 
-		set archives [lsort -unique $archives]
-		# Note: omitting 'validate_archives' because 'apply_versions' does it
-		set versioned_archives [apply_versions $archives]
-		foreach a $archives v $versioned_archives {
-			set vers [archive_version $v]
-			puts "set version($a) $vers"
-		}
-
-		puts "\n#\n# additional depot-archive versions from goarc\n#"
+			puts "\n#\n# additional depot-archive versions from goarc\n#"
 		if {[info exists version]} {
 			foreach archive [array names version] {
 				if {[lsearch -exact $archives $archive] < 0} {
