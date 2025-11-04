@@ -23,6 +23,7 @@ export GENODE_DIR := $(realpath $(dir $(MAKEFILE_LIST))/../..)
 
 PUBLIC_DIR     ?= $(GENODE_DIR)/public
 DEPOT_TOOL_DIR ?= $(GENODE_DIR)/tool/depot
+FORCE_DOWNLOAD ?=
 
 include $(DEPOT_TOOL_DIR)/mk/front_end.inc
 
@@ -32,8 +33,17 @@ ARGS := $(subst ..,__,$(MAKECMDGOALS))
 DEPENDENCIES_CMD = $(DEPOT_TOOL_DIR)/dependencies $(ARGS)
 DOWNLOAD_CMD     = $(DEPOT_TOOL_DIR)/mk/downloader VERBOSE=$(VERBOSE)
 
-.PHONY: download
-download:
+.PHONY: download force_download
+
+ifneq ($(FORCE_DOWNLOAD),)
+force_download:
+	$(VERBOSE)$(DOWNLOAD_CMD) $(ARGS)
+else
+force_download:
+	@true
+endif
+	
+download: force_download
 	$(VERBOSE)\
 	while true; do \
 		if $(DEPENDENCIES_CMD) > /dev/null 2> /dev/null; then break; fi; \

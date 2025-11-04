@@ -123,10 +123,20 @@ namespace eval goa {
 	}
 
 
-	proc download_archives { archives { no_err 0 } { dbg 0 }} {
+	proc download_archives { archives args } {
+		set no_err         0
+		set dbg            0
+		set force_download 0
+		foreach arg $args {
+			switch -exact $arg {
+				dbg            { set dbg 1 }
+				no_err         { set no_err 1 }
+				force_download { set force_download 1 }
+			}
+		}
 
 		# skip '_' archives
-		set args [lmap archive $archives {
+		set cmd_args [lmap archive $archives {
 			if {![regexp {^_/.*} $archive]} {
 				set archive
 			} elseif {!$no_err} {
@@ -134,18 +144,21 @@ namespace eval goa {
 			} else { continue }
 		}]
 
-		if {[llength $args] > 0} {
+		if {[llength $cmd_args] > 0} {
+
+			diag "install depot archives: $cmd_args"
 
 			if { $dbg } {
-				lappend args "DBG=1" }
+				lappend cmd_args "DBG=1" }
 
-			diag "install depot archives: $args"
+			if { $force_download } {
+				lappend cmd_args "FORCE_DOWNLOAD=1" }
 
 			try {
 				if { $no_err } {
-					exec_depot_tool download {*}$args | sed "s/^Error://" >@ stdout
+					exec_depot_tool download {*}$cmd_args | sed "s/^Error://" >@ stdout
 				} else {
-					exec_depot_tool download {*}$args >@ stdout
+					exec_depot_tool download {*}$cmd_args >@ stdout
 				}
 
 			} trap CHILDSTATUS { msg } {
@@ -161,7 +174,7 @@ namespace eval goa {
 
 	proc try_download_archives { archives } {
 		try {
-			download_archives $archives 1
+			download_archives $archives "no_err"
 			return 1
 		} trap DOWNLOAD_FAILED {} {
 			return 0
@@ -171,7 +184,7 @@ namespace eval goa {
 
 	proc try_download_debug_archives { archives } {
 		try {
-			download_archives $archives 1 1
+			download_archives $archives "no_err" "dbg"
 			return 1
 		} trap DOWNLOAD_FAILED {} {
 			return 0
@@ -1038,10 +1051,6 @@ namespace eval goa {
 					if {[file exists [file join $public_dir "$archive.tar.xz.sig"]]} {
 						continue }
 
-					diag "deleting $archive from depot to trigger re-download"
-	
-					# remove archive from depot_dir to trigger re-download
-					file delete -force [file join $depot_dir $archive]
 					lappend missing_archives $archive
 				}
 			} trap CHILDSTATUS { msg } {
@@ -1052,7 +1061,7 @@ namespace eval goa {
 		# re-download missing archives
 		set missing_archives [lsort -unique $missing_archives]
 		try {
-			download_archives $missing_archives
+			download_archives $missing_archives "force_download"
 
 		} trap DOWNLOAD_FAILED { } {
 			exit_with_error "failed to download the following depot archives:\n" \
