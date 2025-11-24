@@ -394,6 +394,7 @@ namespace eval goa {
 		source [file join $tool_dir lib quirks.tcl]
 
 		# filter out non-existing include directories
+		set existing_include_dirs {}
 		foreach dir $include_dirs {
 			if {[file exists $dir] || [is_toolchain_path $dir]} {
 				lappend existing_include_dirs $dir } }
