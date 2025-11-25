@@ -13,43 +13,43 @@ namespace eval node {
 	namespace export attr-tag attr-value
 	namespace export for-each-node for-all-nodes with-attribute default
 
-	# a node is a list with 8 elements
+	# a node is a list with 10 elements
 	proc empty-node { } {
-		return {} {} {} {} {} {} {} {} }
+		return {} {} {} {} {} {} {} {} {} {}}
 
 	proc type       { data } { return [lindex $data 0] }
-	proc enabled    { data } { return [expr {[string trim [lindex $data 3]] != "x"}] }
-	proc attributes { data } { return [lindex $data 5] }
-	proc children   { data } { return [lindex $data 6] }
+	proc enabled    { data } { return [expr {[string trim [lindex $data 4]] != "x"}] }
+	proc attributes { data } { return [lindex $data 6] }
+	proc children   { data } { return [lindex $data 7] }
 
 	proc attr-tag   { data } { return [lindex $data 2] }
 	proc attr-value { data } { return [string trim [lindex $data 4]] }
 
 	proc first-node { data } {
-		# TCL-encoded HID node has 8 elements
-		if {[llength $data] >= 8 && [expr [llength $data] % 8] == 0} {
-			return [lrange $data 0 7]
+		# TCL-encoded HID node has 10 elements
+		if {[llength $data] >= 10 && [expr [llength $data] % 10] == 0} {
+			return [lrange $data 0 9]
 		} else {
 			exit_with_error "TCL data does not appear to be valid HID nodes: $data"
 		}
 	}
 
 	proc valid { data } {
-		# TCL-encoded HID node is a list with 8 elements
-		if {[llength $data] == 8} {
+		# TCL-encoded HID node is a list with 10 elements
+		if {[llength $data] == 10} {
 
 			# node type must not contain spaces
 			if {[llength [node type $data]] != 1} {
 				return false }
 
-			# attributes have length 3
+			# attributes have length 6
 			foreach attr [node attributes $data] {
-				if {[llength $attr] != 5} {
+				if {[llength $attr] != 6} {
 					return false } }
 
 			# children must be nodes as well
 			foreach child [node children $data] {
-				if {[llength $child] != 8} {
+				if {[llength $child] != 10} {
 					return false } }
 
 			return true
