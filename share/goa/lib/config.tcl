@@ -38,6 +38,7 @@ namespace eval ::config {
 	variable depot_dir                ""
 	variable public_dir               ""
 	variable contrib_dir              ""
+	variable contrib_cache_dir        ""
 	variable import_dir               ""
 	variable abi_dir                  ""
 	variable build_dir                ""
@@ -425,17 +426,18 @@ namespace eval ::config {
 				set var $value }
 		}
 
-		set_if_undefined depot_dir   [file join $var_dir depot]
-		set_if_undefined public_dir  [file join $var_dir public]
-		set_if_undefined contrib_dir [file join $var_dir contrib]
-		set_if_undefined import_dir  [file join $var_dir import]
-		set_if_undefined build_dir   [file join $var_dir build $arch]
-		set_if_undefined abi_dir     [file join $var_dir abi   $arch]
-		set_if_undefined bin_dir     [file join $var_dir bin   $arch]
-		set_if_undefined dbg_dir     [file join $var_dir dbg   $arch]
-		set_if_undefined run_dir     [file join $var_dir run]
-		set_if_undefined api_dir     [file join $var_dir api]
-		set_if_undefined install_dir [file join $var_dir install]
+		set_if_undefined depot_dir         [file join $var_dir depot]
+		set_if_undefined public_dir        [file join $var_dir public]
+		set_if_undefined contrib_dir       [file join $var_dir contrib]
+		set_if_undefined contrib_cache_dir [file join $var_dir contrib/cache]
+		set_if_undefined import_dir        [file join $var_dir import]
+		set_if_undefined build_dir         [file join $var_dir build $arch]
+		set_if_undefined abi_dir           [file join $var_dir abi   $arch]
+		set_if_undefined bin_dir           [file join $var_dir bin   $arch]
+		set_if_undefined dbg_dir           [file join $var_dir dbg   $arch]
+		set_if_undefined run_dir           [file join $var_dir run]
+		set_if_undefined api_dir           [file join $var_dir api]
+		set_if_undefined install_dir       [file join $var_dir install]
 	}
 
 	# make namespace procs available as subcommands

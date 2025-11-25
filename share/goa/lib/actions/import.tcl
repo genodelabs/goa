@@ -7,7 +7,8 @@ namespace eval goa {
 
 	proc exec_import_tool { tool args } {
 		global verbose gaol tool_dir
-		global config::contrib_dir config::project_dir config::jobs
+		global config::contrib_dir config::contrib_cache_dir
+		global config::project_dir config::jobs
 
 		set     cmd $gaol
 		lappend cmd --system-usr
@@ -19,6 +20,9 @@ namespace eval goa {
 			lappend cmd --bind $contrib_dir
 			lappend cmd --chdir $contrib_dir
 		}
+		if {[file exists $contrib_cache_dir]} {
+			lappend cmd --bind $contrib_cache_dir
+		}
 
 		lappend cmd "make"
 		lappend cmd "-f" [file join $tool_dir ports mk $tool]
@@ -26,8 +30,8 @@ namespace eval goa {
 		lappend cmd "-j$jobs"
 		lappend cmd "PORT=[file join $project_dir import]"
 		lappend cmd "REP_DIR=$project_dir"
-		if {[file exists $contrib_dir]} {
-			lappend cmd "GENODE_CONTRIB_CACHE=$contrib_dir" }
+		if {[file exists $contrib_cache_dir]} {
+			lappend cmd "GENODE_CONTRIB_CACHE=$contrib_cache_dir" }
 		lappend cmd {*}$args
 
 		return [exec {*}$cmd]
@@ -91,6 +95,7 @@ namespace eval goa {
 		global verbose tool_dir
 		global config::contrib_dir config::jobs config::project_dir
 		global config::build_dir config::import_dir
+		global config::contrib_cache_dir
 
 		if {![file exists import] || ![file isfile import]} {
 			exit_with_error "missing 'import' file" }
@@ -110,10 +115,13 @@ namespace eval goa {
 					exit_with_error "$subdir/ contains local changes," \
 					                 "review via 'goa diff'" } }
 
-			if {[file exists $contrib_dir]} {
-				file delete -force $contrib_dir }
+			foreach path [glob -nocomplain $contrib_dir/*] {
+				if {$path != $contrib_cache_dir} {
+					file delete -force $path }
+			}
 
 			file mkdir $contrib_dir
+			file mkdir $contrib_cache_dir
 
 			set args {}
 			if {$verbose} {

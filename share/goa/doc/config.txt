@@ -93,6 +93,9 @@ Goa evaluates the following configuration variables.
   command should be installed. The default is _var/contrib_ within the
   project directory.
 
+:contrib_cache_dir: The location where downloads of 3rd-party software archives
+  are stored. The default is _var/contrib/cache_ within the project directory.
+
 :build_dir: The build directory used by the build system. The default
   is _var/build/<arch>/_ within the project directory.
 
