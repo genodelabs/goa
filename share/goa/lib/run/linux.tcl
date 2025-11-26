@@ -59,8 +59,8 @@ proc bind_provided_services { &services } {
 	# make sure to declare variables locally
 	variable start_nodes routes archives modules
 
-	set start_nodes [hrd create]
-	set routes      [hrd create]
+	set start_nodes [hid create]
+	set routes      [hid create]
 	set archives    { }
 	set modules     { }
 
@@ -75,7 +75,7 @@ proc bind_provided_services { &services } {
 			_instantiate_uplink_client "" start_nodes archives modules
 		}
 
-		hrd append routes "+ service Uplink"
+		hid append routes "+ service Uplink"
 
 		unset services(uplink)
 	}
@@ -91,8 +91,8 @@ proc bind_required_services { &services } {
 	# make sure to declare variables locally
 	variable start_nodes routes archives modules
 
-	set routes      [hrd create]
-	set start_nodes [hrd create]
+	set routes      [hid create]
+	set start_nodes [hid create]
 	set archives    { }
 	set modules     { }
 
@@ -100,7 +100,7 @@ proc bind_required_services { &services } {
 	foreach service_name [parent_services] {
 		set name_lc [string tolower $service_name]
 		if {[info exists services($name_lc)]} {
-			hrd append routes "+ service $service_name | + parent"
+			hid append routes "+ service $service_name | + parent"
 			unset services($name_lc)
 		}
 	}
@@ -110,7 +110,7 @@ proc bind_required_services { &services } {
 
 	# route timer if required by runtime
 	if {[info exists services(timer)]} {
-		hrd append routes "+ service Timer | + child timer"
+		hid append routes "+ service Timer | + child timer"
 		unset services(timer)
 	}
 
@@ -118,21 +118,21 @@ proc bind_required_services { &services } {
 	set use_nitpicker 0
 	if {[info exists services(event)]} {
 		set use_nitpicker 1
-		hrd append routes "+ service Event | + child nitpicker"
+		hid append routes "+ service Event | + child nitpicker"
 		unset services(event)
 	}
 
 	if {[info exists services(capture)]} {
 		set use_nitpicker 1
-		hrd append routes "+ service Capture | + child nitpicker"
+		hid append routes "+ service Capture | + child nitpicker"
 		unset services(capture)
 	}
 
 	if {[info exists services(gui)]} {
 		set use_nitpicker 1
-		hrd append routes "+ service Gui | label_suffix: backdrop"
-		hrd append routes "  + child nitpicker | label: backdrop"
-		hrd append routes "+ service Gui | + child nitpicker"
+		hid append routes "+ service Gui | label_suffix: backdrop"
+		hid append routes "  + child nitpicker | label: backdrop"
+		hid append routes "+ service Gui | + child nitpicker"
 		unset services(gui)
 	}
 
@@ -154,7 +154,7 @@ proc bind_required_services { &services } {
 				set tap_name $value
 			} default {
 				set tap_name "tap0"
-				set nic_node_short [hrd first [hrd format $nic_node]]
+				set nic_node_short [hid first [hid format $nic_node]]
 				log "Binding '$nic_node_short' to tap device '$tap_name'." \
 				    "You can change the used tap device by adding a 'tap_name' attribute."
 			}
@@ -170,11 +170,11 @@ proc bind_required_services { &services } {
 			}
 
 			node with-attribute $nic_node "label" nic_label {
-				hrd append routes "+ service Nic | label: $nic_label"
+				hid append routes "+ service Nic | label: $nic_label"
 			} default {
-				hrd append routes "+ service Nic"
+				hid append routes "+ service Nic"
 			}
-			hrd append routes "  + child $networks($tap_name)"
+			hid append routes "  + child $networks($tap_name)"
 		}
 
 		unset services(nic)
@@ -198,12 +198,12 @@ proc bind_required_services { &services } {
 					set writeable $value
 				} default { }
 
-				hrd append routes "+ service File_system | label_prefix: $label ->"
-				hrd append routes "  + child $name"
+				hid append routes "+ service File_system | label_prefix: $label ->"
+				hid append routes "  + child $name"
 
 			} default {
-				hrd append routes "+ service File_system"
-				hrd append routes "  + child fs"
+				hid append routes "+ service File_system"
+				hid append routes "  + child fs"
 			}
 
 			if {$label == "fonts"} {
@@ -226,7 +226,7 @@ proc bind_required_services { &services } {
 		if {[llength ${services(rtc)}] > 1} {
 			log "Ignoring all but the first required 'rtc' service" }
 
-		hrd append routes "+ service Rtc | + child rtc"
+		hid append routes "+ service Rtc | + child rtc"
 
 		_instantiate_rtc start_nodes archives modules
 
@@ -239,8 +239,8 @@ proc bind_required_services { &services } {
 		set services(rom) [lmap rom_node ${services(rom)} {
 			node with-attribute $rom_node "label" label {
 				if {$label == "mesa_gpu.lib.so"} {
-					hrd append routes "+ service ROM | label: mesa_gpu.lib.so" 
-					hrd append routes "  + parent | label: mesa_gpu-softpipe.lib.so"
+					hid append routes "+ service ROM | label: mesa_gpu.lib.so" 
+					hid append routes "  + parent | label: mesa_gpu-softpipe.lib.so"
 
 					lappend modules mesa_gpu-softpipe.lib.so
 
@@ -282,10 +282,10 @@ proc bind_required_services { &services } {
 	}
 
 	if {$clipboard_rom_node != ""} {
-		hrd append routes "+ service ROM | label: clipboard | + child clipboard" }
+		hid append routes "+ service ROM | label: clipboard | + child clipboard" }
 
 	if {$clipboard_report_node != ""} {
-		hrd append routes "+ service Report | label: clipboard | + child clipboard" }
+		hid append routes "+ service Report | label: clipboard | + child clipboard" }
 
 	if {$clipboard_rom_node != "" || $clipboard_report_node != ""} {
 		_instantiate_clipboard start_nodes archives modules }
@@ -296,7 +296,7 @@ proc bind_required_services { &services } {
 		set provided_external_rom 0
 		set services(rom) [lmap rom_node $services(rom) {
 			node with-attribute $rom_node "label" label {
-				hrd append routes "+ service ROM | label: $label | + child rom"
+				hid append routes "+ service ROM | label: $label | + child rom"
 				incr provided_external_rom
 				return -code continue
 			} default { }
@@ -321,7 +321,7 @@ proc _instantiate_timer { &start_nodes &archives &modules } {
 	upvar 1 ${&archives} archives
 	upvar 1 ${&modules} modules
 
-	hrd append start_nodes "+ start timer | caps: 100 | ram: 1M" \
+	hid append start_nodes "+ start timer | caps: 100 | ram: 1M" \
 	                       "  + provides | + service Timer" \
 	                       "  + route" \
 	                       "    + service PD  | + parent" \
@@ -340,7 +340,7 @@ proc _instantiate_nitpicker { &start_nodes &archives &modules } {
 
 	global config::run_as
 
-	hrd append start_nodes "+ start drivers | caps: 1000" \
+	hid append start_nodes "+ start drivers | caps: 1000" \
 	                       "                | ram: 36M" \
 	                       "                | managing_system: yes" \
 	                       "  + binary init" \
@@ -451,23 +451,23 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules &
 	set driver_name nic_$tap_name
 	set router_name nic_router_$tap_name
 
-	set forward_rules [hrd create]
+	set forward_rules [hid create]
 
 	node for-each-node $nic_node "tcp-forward" rule {
-		hrd append forward_rules [hrd format $rule] }
+		hid append forward_rules [hid format $rule] }
 
 	node for-each-node $nic_node "udp-forward" rule {
-		hrd append forward_rules [hrd format $rule] }
+		hid append forward_rules [hid format $rule] }
 
-	set extra_domains [hrd create]
+	set extra_domains [hid create]
 	node for-each-node $nic_node "domain" domain {
-		hrd append extra_domains [hrd format $domain] }
+		hid append extra_domains [hid format $domain] }
 
-	set extra_policies [hrd create]
+	set extra_policies [hid create]
 	node for-each-node $nic_node "policy" policy {
-		hrd append extra_policies [hrd format $policy] }
+		hid append extra_policies [hid format $policy] }
 
-	hrd append start_nodes "+ start $driver_name | caps: 100 | ld: no | ram: 4M" \
+	hid append start_nodes "+ start $driver_name | caps: 100 | ld: no | ram: 4M" \
 	                       "  + binary linux_nic" \
 	                       "  + provides | + service Nic" \
 	                       "  + config | tap: $tap_name" \
@@ -482,13 +482,13 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules &
 	                       "  + config | verbose_domain_state: yes" \
 	                       "    + default-policy | domain: default" \
 	                       "    + policy | label_prefix: $driver_name -> | domain: uplink" \
-	                       [hrd indent 2 $extra_policies] \
+	                       [hid indent 2 $extra_policies] \
 	                       "    + domain uplink" \
 	                       "      + nat | domain: default" \
 	                       "            | tcp-ports: 1000" \
 	                       "            | udp-ports: 1000" \
 	                       "            | icmp-ids:  1000" \
-	                       [hrd indent 3 $forward_rules] \
+	                       [hid indent 3 $forward_rules] \
 	                       "    + domain default | interface: 10.0.$subnet_id.1/24" \
 	                       "      + dhcp-server | ip_first: 10.0.$subnet_id.2" \
 	                       "                    | ip_last:  10.0.$subnet_id.253" \
@@ -498,7 +498,7 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules &
 	                       "      + udp | dst: 0.0.0.0/0" \
 	                       "        + permit-any | domain: uplink" \
 	                       "      + icmp | dst: 0.0.0.0/0 | domain: uplink" \
-	                       [hrd indent 2 $extra_domains] \
+	                       [hid indent 2 $extra_domains] \
 	                       "  + route" \
 	                       "    + service Timer | + child name: timer" \
 	                       "    + any-service | + parent"
@@ -519,14 +519,14 @@ proc _instantiate_uplink_client { uplink_label &start_nodes &archives &modules }
 
 	global config::project_name config::run_as
 
-	hrd append start_nodes "+ start nic | caps: 100 | ld: no | ram: 4M" \
+	hid append start_nodes "+ start nic | caps: 100 | ld: no | ram: 4M" \
 	                       "  + binary linux_nic" \
 	                       "  + provides | + service Uplink" \
 	                       
 	if {$uplink_label != ""} {
-		hrd append start_nodes "  + config | tap: $uplink_label" }
+		hid append start_nodes "  + config | tap: $uplink_label" }
 
-	hrd append start_nodes "  + route" \
+	hid append start_nodes "  + route" \
 	                       "    + service Uplink | + child $project_name" \
 	                       "    + any-service | + parent"
 
@@ -543,7 +543,7 @@ proc _instantiate_fonts_fs { &start_nodes &archives &modules } {
 
 	global config::run_as
 
-	hrd append start_nodes "+ start fonts_fs | caps: 100 | ram: 2M" \
+	hid append start_nodes "+ start fonts_fs | caps: 100 | ram: 2M" \
 	                       "  + binary vfs" \
 	                       "  + provides | + service File_system" \
 	                       "  + route" \
@@ -570,7 +570,7 @@ proc _instantiate_file_system { name label writeable &start_nodes &archives &mod
 	# make sure label is not empty
 	if {$label == ""} { set label "_" }
 
-	hrd append start_nodes "+ start $name | caps: 100 | ld: no | ram: 1M" \
+	hid append start_nodes "+ start $name | caps: 100 | ld: no | ram: 1M" \
 	                       "  + binary lx_fs" \
 	                       "  + provides | + service File_system" \
 	                       "  + config" \
@@ -602,7 +602,7 @@ proc _instantiate_rom_provider { &start_nodes &archives &modules } {
 
 	global config::run_as config::var_dir
 
-	hrd append start_nodes "+ start rom_fs | caps: 100 | ld: no | ram: 1M" \
+	hid append start_nodes "+ start rom_fs | caps: 100 | ld: no | ram: 1M" \
 	                       "  + binary lx_fs" \
 	                       "  + provides | + service File_system" \
 	                       "  + config" \
@@ -645,7 +645,7 @@ proc _instantiate_rtc { &start_nodes &archives &modules } {
 
 	global config::run_as
 
-	hrd append start_nodes "+ start rtc | caps: 100 | ld: no | ram: 1M" \
+	hid append start_nodes "+ start rtc | caps: 100 | ld: no | ram: 1M" \
 	                       "  + binary linux_rtc" \
 	                       "  + provides | + service Rtc" \
 	                       "  + route | + any-service | + parent"
@@ -663,7 +663,7 @@ proc _instantiate_clipboard { &start_nodes &archives &modules } {
 
 	global config::project_name config::run_as
 
-	hrd append start_nodes "+ start clipboard | caps: 100 | ram: 2M" \
+	hid append start_nodes "+ start clipboard | caps: 100 | ram: 2M" \
 	                       "  + binary report_rom" \
 	                       "  + provides" \
 	                       "    + service Report" \

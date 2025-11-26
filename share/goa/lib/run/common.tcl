@@ -22,12 +22,12 @@ proc _find_rom_in_archives { rom_name binary_archives } {
 #
 proc _acquire_config { runtime_file runtime_archives } {
 
-	set routes [hrd create]
+	set routes [hid create]
 	set config [query optional-node $runtime_file "runtime | + config"]
 
 	try {
 		set rom_name [query attribute $runtime_file "runtime | : config"]
-		hrd append routes "+ service ROM | label: config | + parent | label: $rom_name"
+		hid append routes "+ service ROM | label: config | + parent | label: $rom_name"
 
 		if {[node type $config] == "config"} {
 			exit_with_error "runtime config is ambiguous,"
@@ -253,20 +253,20 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 
 	lappend rom_modules {*}$default_rom_modules
 
-	set start_nodes [hrd create]
-	set provides    [hrd create]
-	set routes      [hrd create]
+	set start_nodes [hid create]
+	set provides    [hid create]
+	set routes      [hid create]
 
 	# add provided services
 	foreach service_name [array names provided_services] {
 		set cased_name [lindex $known_services [lsearch -exact -nocase $known_services $service_name]]
-		hrd append provides "+ service $cased_name"
+		hid append provides "+ service $cased_name"
 	}
 
 	# bind provided services
 	set _res [bind_provided_services provided_services]
-	hrd append start_nodes      [lindex $_res 0]
-	hrd append routes           [lindex $_res 1]
+	hid append start_nodes      [lindex $_res 0]
+	hid append routes           [lindex $_res 1]
 	lappend runtime_archives {*}[lindex $_res 2]
 	lappend rom_modules      {*}[lindex $_res 3]
 
@@ -275,14 +275,14 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 
 	# bind services by target-specific implementation
 	set _res [bind_required_services required_services]
-	hrd append start_nodes      [lindex $_res 0]
-	hrd append routes           [lindex $_res 1]
+	hid append start_nodes      [lindex $_res 0]
+	hid append routes           [lindex $_res 1]
 	lappend runtime_archives {*}[lindex $_res 2]
 	lappend rom_modules      {*}[lindex $_res 3]
 
 	# route remaining services to blackhole component
-	set blackhole_config   [hrd create]
-	set blackhole_provides [hrd create]
+	set blackhole_config   [hid create]
+	set blackhole_provides [hid create]
 
 	foreach service [array names required_services] {
 		if {[llength $required_services($service)] == 0} { continue }
@@ -290,16 +290,16 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 		if {[lsearch -exact $blackhole_supported_services $service] > -1} {
 			set cased_name [lindex $known_services [lsearch -exact -nocase $known_services $service]]
 
-			hrd append blackhole_config   "+ $service"
-			hrd append blackhole_provides "+ service $cased_name"
+			hid append blackhole_config   "+ $service"
+			hid append blackhole_provides "+ service $cased_name"
 
 			foreach service_node $required_services($service) {
 				node with-attribute $service_node "label" label {
-					hrd append routes "+ service $cased_name | label_last: $label | + child black_hole"
+					hid append routes "+ service $cased_name | label_last: $label | + child black_hole"
 
 					log "routing '$service label: \"$label\"' requirement to black-hole component"
 				} default {
-					hrd append routes "+ service $cased_name | + child black_hole"
+					hid append routes "+ service $cased_name | + child black_hole"
 
 					log "routing '$service' requirement to black-hole component"
 				}
@@ -307,14 +307,14 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 
 		} else {
 			foreach service_node $required_services($service) {
-				log "runtime-declared '[hrd first [hrd format $service_node]]' requirement is not supported" }
+				log "runtime-declared '[hid first [hid format $service_node]]' requirement is not supported" }
 		}
 	}
 
-	if {![hrd empty $blackhole_config]} {
-		hrd append start_nodes "+ start black_hole | caps: 100 | ram: 2M" \
-		                       "  + provides" [hrd indent 2 $blackhole_provides] \
-		                       "  + config"   [hrd indent 2 $blackhole_config] \
+	if {![hid empty $blackhole_config]} {
+		hid append start_nodes "+ start black_hole | caps: 100 | ram: 2M" \
+		                       "  + provides" [hid indent 2 $blackhole_provides] \
+		                       "  + config"   [hid indent 2 $blackhole_config] \
 		                       "  + route" \
 		                       "    + service PD    | + parent" \
 		                       "    + service CPU   | + parent" \
@@ -328,39 +328,39 @@ proc generate_runtime_config { runtime_file &runtime_archives &rom_modules } {
 	}
 
 	set inline_config {}
-	if {[hrd empty $config_route]} {
+	if {[hid empty $config_route]} {
 		set inline_config $config
 	} else {
-		set routes [hrd create $config_route $routes]
+		set routes [hid create $config_route $routes]
 	}
 
-	set parent_provides [hrd create "+ parent-provides" \
+	set parent_provides [hid create "+ parent-provides" \
 	                                "  + service ROM" \
 	                                "  + service PD" \
 	                                "  + service CPU" \
 	                                "  + service LOG"]
 
 	foreach s [parent_services] {
-		hrd append parent_provides "  + service $s"
+		hid append parent_provides "  + service $s"
 	}
 
-	hrd append routes "+ service ROM | [rom_route]" \
+	hid append routes "+ service ROM | [rom_route]" \
 	                  "+ service PD  | [pd_route]" \
 	                  "+ service CPU | [cpu_route]" \
 	                  "+ service LOG | [log_route]"
 
-	if {![hrd empty $provides]} {
-		set provides [hrd create "+ provides" [hrd indent 2 $provides]] }
+	if {![hid empty $provides]} {
+		set provides [hid create "+ provides" [hid indent 2 $provides]] }
 
-	hrd append start_nodes "+ start $args(run_pkg) | caps: $caps | ram: $ram" \
+	hid append start_nodes "+ start $args(run_pkg) | caps: $caps | ram: $ram" \
 	                       "  + binary $binary" \
 	                       $provides \
-	                       "  + route" [hrd indent 2 $routes] \
-	                       [hrd indent 1 [hrd format $inline_config]]
+	                       "  + route" [hid indent 2 $routes] \
+	                       [hid indent 1 [hid format $inline_config]]
 
-	install_config [hrd create "+ config" \
-	                           [hrd indent 1 $parent_provides] \
-	                           [hrd indent 1 $start_nodes]]
+	install_config [hid create "+ config" \
+	                           [hid indent 1 $parent_provides] \
+	                           [hid indent 1 $start_nodes]]
 	                      
 	lappend runtime_archives {*}[base_archives]
 

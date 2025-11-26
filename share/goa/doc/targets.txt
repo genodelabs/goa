@@ -185,16 +185,16 @@ The file must implement the following procedures:
   executed.
 
 :cpu_route:
-  Returns the route to the CPU service in HRD syntax (typically "+ parent").
+  Returns the route to the CPU service in HID syntax (typically "+ parent").
 
 :log_route:
-  Returns the route to the LOG service in HRD syntax (typically "+ parent").
+  Returns the route to the LOG service in HID syntax (typically "+ parent").
 
 :pd_route:
-  Returns the route to the PD service in HRD syntax (typically "+ parent").
+  Returns the route to the PD service in HID syntax (typically "+ parent").
 
 :rom_route:
-  Returns the route to the ROM service in HRD syntax (typically "+ parent").
+  Returns the route to the ROM service in HID syntax (typically "+ parent").
 
 
 SEE ALSO

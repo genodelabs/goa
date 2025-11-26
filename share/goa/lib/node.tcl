@@ -1,7 +1,7 @@
 #
 # Utility functions for node/attribute evaluation
 # 
-# Data format follows the same TCL-encoding used by the hrd tool.
+# Data format follows the same TCL-encoding used by the hid tool.
 # 
 
 namespace eval node {
@@ -13,21 +13,21 @@ namespace eval node {
 	namespace export attr-tag attr-value
 	namespace export for-each-node for-all-nodes with-attribute default
 
-	# a node is a list with 7 elements
+	# a node is a list with 8 elements
 	proc empty-node { } {
-		return {} {} {} {} {} {} {} }
+		return {} {} {} {} {} {} {} {} }
 
 	proc type       { data } { return [lindex $data 0] }
-	proc enabled    { data } { return [lindex $data 2] }
-	proc attributes { data } { return [lindex $data 4] }
-	proc children   { data } { return [lindex $data 5] }
+	proc enabled    { data } { return [expr {[string trim [lindex $data 3]] != "x"}] }
+	proc attributes { data } { return [lindex $data 5] }
+	proc children   { data } { return [lindex $data 6] }
 
 	proc attr-tag   { data } { return [lindex $data 1] }
 	proc attr-value { data } { return [lindex $data 2] }
 
 	proc valid { data } {
-		# TCL-encoded HRD node is a list with 7 elements
-		if {[llength $data] == 7} {
+		# TCL-encoded HID node is a list with 8 elements
+		if {[llength $data] == 8} {
 
 			# node type must not contain spaces
 			if {[llength [node type $data]] != 1} {
@@ -35,12 +35,12 @@ namespace eval node {
 
 			# attributes have length 3
 			foreach attr [node attributes $data] {
-				if {[llength $attr] != 3} {
+				if {[llength $attr] != 5} {
 					return false } }
 
 			# children must be nodes as well
 			foreach child [node children $data] {
-				if {[llength $child] != 7} {
+				if {[llength $child] != 8} {
 					return false } }
 
 			return true

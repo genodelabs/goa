@@ -1,7 +1,7 @@
 #
-# XML/HRD query procedures
+# XML/HID query procedures
 #
-# For all procedures, input data can be a file, a node object or an HRD object.
+# For all procedures, input data can be a file, a node object or an HID object.
 # 
 
 namespace eval query {
@@ -13,7 +13,7 @@ namespace eval query {
 
 	proc validate-syntax { data } {
 		try {
-			hrd tool $data format
+			hid tool $data format
 		} trap CHILDSTATUS { } {
 			exit_with_error "invalid syntax in $data"
 		} on error { msg } { error $msg $::errorInfo }
@@ -25,7 +25,7 @@ namespace eval query {
 	# returns list of attributes (may be empty)
 	proc attributes { data path } {
 		try {
-			return [split [hrd tool $data get $path] "\n"]
+			return [split [hid tool $data get $path] "\n"]
 		} trap CHILDSTATUS { msg } {
 			exit_with_error "unable to get '$path' from $data:\n $msg"
 		} on error { msg } { error $msg $::errorInfo }
@@ -61,7 +61,7 @@ namespace eval query {
 	# returns node object or errorcode NODE_MISSING
 	proc node { data path } {
 		try {
-			set query  [split [hrd tool $data --output-tcl subnodes $path] "\n"]
+			set query  [split [hid tool $data --output-tcl subnodes $path] "\n"]
 			if {[llength $query] == 0} {
 				return -code error -errorcode NODE_MISSING "No node '$path' in $data" } 
 

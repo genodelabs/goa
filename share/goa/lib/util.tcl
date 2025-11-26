@@ -825,14 +825,14 @@ proc mirror_source_dir_to_build_dir { } {
 # Install Genode config into run directory
 #
 proc install_config { data } {
-	global config::run_dir config::hrd
+	global config::run_dir config::hid
 
 	set fh [open [file join $run_dir config] "WRONLY CREAT TRUNC"]
 
-	if {$hrd} {
-		puts $fh [hrd as_string [hrd format $data]]
+	if {$hid} {
+		puts $fh [hid as_string [hid format $data]]
 	} else {
-		puts $fh [join [hrd format-xml $data] "\n"]
+		puts $fh [join [hid format-xml $data] "\n"]
 	}
 
 	close $fh

@@ -510,21 +510,21 @@ namespace eval goa {
 	# Supplement index file pkg paths with user and version information
 	#
 	proc augment_index_versions { src_file dst_file } {
-		global config::hrd
+		global config::hid
 
 		proc _process_sub_index { node } {
 			global config::depot_user
 
-			set index_hrd "+ index"
+			set index_hid "+ index"
 			node with-attribute $node "name" name {
-				append index_hrd " $name"
+				append index_hid " $name"
 			} default { }
 
 			node with-attribute $node "arch" arch {
-				append index_hrd " | arch: $arch"
+				append index_hid " | arch: $arch"
 			} default { }
 
-			set result [hrd create $index_hrd]
+			set result [hid create $index_hid]
 			node for-all-nodes $node node_type subnode {
 				switch -exact $node_type {
 					api -
@@ -547,16 +547,16 @@ namespace eval goa {
 								append tmp " | arch: $arch"
 							} default { }
 
-							hrd append result $tmp
+							hid append result $tmp
 						} default { }
 					}
 					supports {
 						node with-attribute $subnode "arch" arch {
-							hrd append result "  + supports | arch: $arch"
+							hid append result "  + supports | arch: $arch"
 						} default { }
 					}
 					index {
-						hrd append result [hrd indent 1 [_process_sub_index $subnode]]
+						hid append result [hid indent 1 [_process_sub_index $subnode]]
 					}
 				}
 			}
@@ -566,10 +566,10 @@ namespace eval goa {
 		set data [_process_sub_index [query node $src_file "index"]]
 
 		set fd [open $dst_file "w"]
-		if {$hrd} {
-			puts $fd [hrd as_string [hrd format $data]]
+		if {$hid} {
+			puts $fd [hid as_string [hid format $data]]
 		} else {
-			puts $fd [join [hrd format-xml $data] "\n"]
+			puts $fd [join [hid format-xml $data] "\n"]
 		}
 		close $fd
 	}

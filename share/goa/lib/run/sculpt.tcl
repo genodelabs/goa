@@ -159,13 +159,13 @@ proc bind_required_services { &services } {
 	# make sure to declare variables locally
 	variable start_nodes routes archives modules
 
-	set routes      [hrd create]
-	set start_nodes [hrd create]
+	set routes      [hid create]
+	set start_nodes [hid create]
 	set archives    { }
 	set modules     { }
 
 	if { $debug } {
-		hrd append start_nodes "+ monitor | max_response: 2K" \
+		hid append start_nodes "+ monitor | max_response: 2K" \
 		                       "  + policy | label_prefix: $args(run_pkg)" \
 		                       "           | wait: no" \
 		                       "           | stop: no" \
@@ -173,7 +173,7 @@ proc bind_required_services { &services } {
 	}
 
 	if {[info exists target_opt($target-kernel)]} {
-		hrd append routes "+ service ROM | label_last: ld.lib.so" \
+		hid append routes "+ service ROM | label_last: ld.lib.so" \
 		                  "  + parent | label: ld.lib.so.local" \
 		                  "+ service ROM | unscoped_label: ld.lib.so" \
 		                  "  + parent | label: ld.lib.so.local"
@@ -187,7 +187,7 @@ proc bind_required_services { &services } {
 			variable label
 			node with-attribute $fs_node "label" label {
 				if {$label == "fonts"} {
-					hrd append routes "+ service File_system | label_prefix: fonts ->" \
+					hid append routes "+ service File_system | label_prefix: fonts ->" \
 					                  "  + child fonts_fs"
 				} else {
 					set unknown_fs_label 1
@@ -212,7 +212,7 @@ proc bind_required_services { &services } {
 			variable label
 			node with-attribute $rom_node "label" label {
 				if {[lsearch -exact $known_roms $label] > -1} {
-					hrd append routes "+ service ROM | label: $label" \
+					hid append routes "+ service ROM | label: $label" \
 					                  "  + parent | label: $label"
 				} else {
 					set unknown_rom_label 1
@@ -224,7 +224,7 @@ proc bind_required_services { &services } {
 		}
 
 		if {$unknown_rom_label} {
-			hrd append routes "+ service ROM | + parent" }
+			hid append routes "+ service ROM | + parent" }
 
 		unset services(rom)
 	}
@@ -239,7 +239,7 @@ proc bind_required_services { &services } {
 			variable label
 			node with-attribute $report_node "label" label {
 				if {[lsearch -exact $known_reports $label] > -1} {
-					hrd append routes "+ service Report | label: $label" \
+					hid append routes "+ service Report | label: $label" \
 					                  "  + parent | label: $label"
 					_instantiate_fonts_fs start_nodes archives modules
 				} else {
@@ -262,7 +262,7 @@ proc bind_required_services { &services } {
 	foreach name [parent_services] {
 		set name_lc [string tolower $name]
 		if {[info exists services($name_lc)]} {
-			hrd append routes "+ service $name | + parent"
+			hid append routes "+ service $name | + parent"
 			unset services($name_lc)
 		}
 	}
@@ -278,7 +278,7 @@ proc _instantiate_fonts_fs { &start_nodes &archives &modules } {
 
 	global config::run_as
 
-	hrd append start_nodes "+ start fonts_fs | caps: 100 | ram: 2M" \
+	hid append start_nodes "+ start fonts_fs | caps: 100 | ram: 2M" \
 	                       "  + binary vfs" \
 	                       "  + provides | + service File_system" \
 	                       "  + route" \

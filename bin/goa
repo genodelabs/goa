@@ -99,7 +99,7 @@ if {$perform(add-depot-user)} {
 }
 
 source [file join $tool_dir lib node.tcl]
-source [file join $tool_dir lib hrd.tcl]
+source [file join $tool_dir lib hid.tcl]
 source [file join $tool_dir lib query.tcl]
 source [file join $tool_dir lib actions versions.tcl]
 source [file join $tool_dir lib actions depot.tcl]

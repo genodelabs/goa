@@ -1,12 +1,12 @@
 #
-# HRD utility functions (hrd-tool, formatting and generation)
+# HID utility functions (hid-tool, formatting and generation)
 #
-# Note: HRD data is stored as a list starting with the keyword "HRD". Each
-#       element represents a single line of HRD.
-# Note: The HRD tool also accepts node objects (see node.tcl).
+# Note: HID data is stored as a list starting with the keyword "HID". Each
+#       element represents a single line of HID.
+# Note: The HID tool also accepts node objects (see node.tcl).
 # 
 
-namespace eval hrd {
+namespace eval hid {
 
 	namespace ensemble create
 	namespace export tool
@@ -23,10 +23,10 @@ namespace eval hrd {
 		if {[regexp {^\<.*} $line]} {
 			return "xml" }
 
-		return "hrd"
+		return "hid"
 	}
 
-	# helper for printing HRD and Node data
+	# helper for printing HID and Node data
 	proc as_string { input } {
 		if {[node valid $input]} {
 			return $input
@@ -35,18 +35,18 @@ namespace eval hrd {
 			return [join [_raw $input] "\n"]
 		}
 
-		exit_with_error "Input data must be valid HRD or Node '$input'."
+		exit_with_error "Input data must be valid HID or Node '$input'."
 	}
 
 	#####################################
-	# HRD tool execution and formatting #
+	# HID tool execution and formatting #
 	#####################################
 
-	# executes hrd tool on 'input' (file path or input data)
+	# executes hid tool on 'input' (file path or input data)
 	proc tool { input args } {
 		global tool_dir
 
-		set cmd [file join $tool_dir hrd]
+		set cmd [file join $tool_dir hid]
 
 		if {[file exists $input]} {
 			if {[_detect_format $input] == "xml"} {
@@ -79,68 +79,68 @@ namespace eval hrd {
 		} on error { msg } { error $msg $::errorInfo }
 	}
 
-	# format 'input' into HRD and strip '-' terminator
+	# format 'input' into HID and strip '-' terminator
 	proc format { input } {
 		if {$input == [node empty-node] || [empty $input]} {
-			return [hrd create] }
+			return [hid create] }
 
 		try {
-			return [list HRD {*}[lrange [split [tool $input format] "\n"] 0 end-1]]
+			return [list HID {*}[lrange [split [tool $input format] "\n"] 0 end-1]]
 
 		} trap CHILDSTATUS { msg } {
-			exit_with_error "unable to format '[as_string $input]' to HRD:\n $msg"
+			exit_with_error "unable to format '[as_string $input]' to HID:\n $msg"
 		} on error { msg } { error $msg $::errorInfo }
 	}
 
 	#######################
-	# HRD data generation #
+	# HID data generation #
 	#######################
 
 	# add "+" to the first line if not present
-	proc _make_child { &hrd } {
-		upvar ${&hrd} hrd
+	proc _make_child { &hid } {
+		upvar ${&hid} hid
 
-		_fail_invalid $hrd "_make_child failed"
+		_fail_invalid $hid "_make_child failed"
 
-		if {[empty $hrd]} { return }
+		if {[empty $hid]} { return }
 
-		set first [lindex $hrd 1]
+		set first [lindex $hid 1]
 		if {![regexp {^\s*\+} $first]} {
-			set hrd [lmap line $hrd {
-				if {$line == "HRD"} {
+			set hid [lmap line $hid {
+				if {$line == "HID"} {
 					set line }
 				string cat "  " $line
 			}]
-			lset hrd 1 [string cat "+ " $first]
+			lset hid 1 [string cat "+ " $first]
 		}
 	}
 
-	# exit if 'arg' is not an HRD object
+	# exit if 'arg' is not an HID object
 	proc _fail_invalid { arg msg } {
-		if {![hrd valid $arg]} {
-			exit_with_error "$msg: Argument '$arg' is invalid HRD data" }
+		if {![hid valid $arg]} {
+			exit_with_error "$msg: Argument '$arg' is invalid HID data" }
 	}
 
-	# return list without the leading HRD keyword
-	proc _raw { hrd } {
-		return [lrange $hrd 1 end] }
+	# return list without the leading HID keyword
+	proc _raw { hid } {
+		return [lrange $hid 1 end] }
 
 	##
-	# Check whether 'data' is an HRD object
+	# Check whether 'data' is an HID object
 	# 
 	proc valid { data } {
-		if {[lindex $data 0] == "HRD"} {
+		if {[lindex $data 0] == "HID"} {
 			return true }
 
 		return false
 	}
 
 	##
-	# Check whether 'data' is either an empty list or an empty HRD object
+	# Check whether 'data' is either an empty list or an empty HID object
 	# 
 	proc empty { data } {
 		set first [lindex $data 0]
-		if {$first == "HRD"} {
+		if {$first == "HID"} {
 			set first [lindex $data 1] }
 
 		if {[llength $first] == 0} {
@@ -153,51 +153,51 @@ namespace eval hrd {
 	##
 	# Return first line
 	#
-	proc first { hrd } {
-		_fail_invalid $hrd "HRD first failed"
-		return [lindex $hrd 1]
+	proc first { hid } {
+		_fail_invalid $hid "HID first failed"
+		return [lindex $hid 1]
 	}
 
 	##
-	# create HRD object
+	# create HID object
 	# 
 	proc create { args } {
-		set result [list HRD]
-		hrd append result {*}$args
+		set result [list HID]
+		hid append result {*}$args
 		return $result
 	}
 
 	##
-	# append data to HRD object
+	# append data to HID object
 	# 
-	proc append { &hrd args } {
-		upvar ${&hrd} hrd
+	proc append { &hid args } {
+		upvar ${&hid} hid
 
-		_fail_invalid $hrd "HRD append failed"
+		_fail_invalid $hid "HID append failed"
 
 		foreach arg $args {
 			if {[empty $arg]} { continue }
 
 			if {[valid $arg]} {
 				_make_child arg
-				lappend hrd {*}[_raw $arg]
+				lappend hid {*}[_raw $arg]
 			} else {
-				lappend hrd $arg
+				lappend hid $arg
 			}
 		}
 	}
 
 	##
-	# Indent HRD data by 'level' indentation levels
+	# Indent HID data by 'level' indentation levels
 	# 
-	proc indent { level hrd } {
-		_fail_invalid $hrd "HRD indent failed"
+	proc indent { level hid } {
+		_fail_invalid $hid "HID indent failed"
 
-		_make_child hrd
+		_make_child hid
 
 		set indentation [string repeat "  " $level]
-		set data [hrd create]
-		foreach line [_raw $hrd] {
+		set data [hid create]
+		foreach line [_raw $hid] {
 			lappend data [string cat $indentation $line]
 		}
 

@@ -339,9 +339,9 @@ if {$perform(build)} {
 	# override 'debug' variable via optional command-line switch
 	if {[consume_optional_cmdline_switch "--debug"]}          { set config::debug 1 }
 
-	# hrd variable is evaluated during export and run
-	if {[consume_optional_cmdline_switch "--hrd"]}            { set config::hrd 1 }
-	if {[consume_optional_cmdline_switch "--no-hrd"]}         { set config::hrd 0 }
+	# hid variable is evaluated during export and run
+	if {[consume_optional_cmdline_switch "--hid"]}            { set config::hid 1 }
+	if {[consume_optional_cmdline_switch "--no-hid"]}         { set config::hid 0 }
 
 	if {[consume_optional_cmdline_switch "--update-index"]}   { set config::update_index 1 }
 
