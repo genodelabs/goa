@@ -22,8 +22,8 @@ namespace eval node {
 	proc attributes { data } { return [lindex $data 5] }
 	proc children   { data } { return [lindex $data 6] }
 
-	proc attr-tag   { data } { return [lindex $data 1] }
-	proc attr-value { data } { return [lindex $data 2] }
+	proc attr-tag   { data } { return [lindex $data 2] }
+	proc attr-value { data } { return [lindex $data 4] }
 
 	proc valid { data } {
 		# TCL-encoded HID node is a list with 8 elements
