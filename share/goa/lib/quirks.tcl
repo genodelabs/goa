@@ -151,6 +151,17 @@ if {[using_api profile]} {
 	lappend ldlibs_so  "-l:$name"
 }
 
+# Genode's format library
+
+if {[using_api format]} {
+	set name "format.lib.a"
+	set extra_dir [file join [api_archive_dir format] src include base internal]
+
+	prepare_abi_static $name [list {*}$include_dirs {*}$extra_dir] [file join [api_archive_dir format] src lib format console.cc]
+	lappend ldlibs_exe "-l:$name"
+	lappend ldlibs_so  "-l:$name"
+}
+
 global cxxflags
 if {[using_api gui_session]} {
 
