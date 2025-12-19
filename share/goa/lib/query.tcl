@@ -61,16 +61,18 @@ namespace eval query {
 	# returns node object or errorcode NODE_MISSING
 	proc node { data path } {
 		try {
-			set query  [split [hid tool $data --output-tcl subnodes $path] "\n"]
-			if {[llength $query] == 0} {
+			set result [hid tool $data --output-tcl subnodes $path]
+			if {[llength $result] == 0} {
 				return -code error -errorcode NODE_MISSING "No node '$path' in $data" } 
 
-			set result [lindex $query 0]
+			# only return the first matching subnode
+			set result [::node first-node $result]
+
 			if {![::node enabled $result]} {
 				exit_with_error "subnode '$path' from $data is disabled"
 			}
 			return $result
-			
+
 		} trap CHILDSTATUS { msg } {
 			exit_with_error "unable to get subnodes '$path' from $data:\n $msg"
 

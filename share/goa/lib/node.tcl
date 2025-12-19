@@ -8,7 +8,7 @@ namespace eval node {
 
 	namespace ensemble create
 
-	namespace export empty-node valid
+	namespace export empty-node valid first-node
 	namespace export type enabled attributes children
 	namespace export attr-tag attr-value
 	namespace export for-each-node for-all-nodes with-attribute default
@@ -23,7 +23,16 @@ namespace eval node {
 	proc children   { data } { return [lindex $data 6] }
 
 	proc attr-tag   { data } { return [lindex $data 2] }
-	proc attr-value { data } { return [lindex $data 4] }
+	proc attr-value { data } { return [string trim [lindex $data 4]] }
+
+	proc first-node { data } {
+		# TCL-encoded HID node has 8 elements
+		if {[llength $data] >= 8 && [expr [llength $data] % 8] == 0} {
+			return [lrange $data 0 7]
+		} else {
+			exit_with_error "TCL data does not appear to be valid HID nodes: $data"
+		}
+	}
 
 	proc valid { data } {
 		# TCL-encoded HID node is a list with 8 elements
