@@ -61,9 +61,16 @@ namespace eval hid {
 			set input "-"
 		}
 
-		# diag "Executing: " {*}$cmd {*}$args $input
+		# open as pipe to catch stderr separately
+		set f [open "| [list {*}$cmd {*}$args $input]"]
+		set output [read $f]
+		try {
+			close $f
+		} trap NONE { msg } {
+			# written to stderr but exited with 0
+		}
 
-		exec {*}$cmd {*}$args $input
+		return $output
 	}
 
 	# format 'input' to XML
