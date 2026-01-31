@@ -948,3 +948,57 @@ proc for_each_pkg { &pkg pkg_expr body } {
 	foreach pkg $pkgs {
 		uplevel 1 $body }
 }
+
+proc migrate_to_codeberg { } {
+	global gaol
+
+	try {
+		set result [goa_git remote -v | grep -e github\.com\[:/\]genodelabs]
+
+		set remotes ""
+		foreach remote [lsort -unique [lmap line [split $result \n] { lindex $line 0 }]] {
+			try {
+				exec {*}$gaol --system-usr --with-network curl \
+					-s -f https://codeberg.org/genodelabs/goa
+				lappend remotes $remote
+			} trap CHILDSTATUS { } { }
+		}
+		
+	} trap CHILDSTATUS { } { return
+	} on error { msg }     { error $msg $::errorInfo }
+
+	if {[llength $remotes] == 0} { return }
+
+	puts "\nThe following git remotes refer to repositories that"
+	puts "migrated from GitHub to Codeberg. Furthermore, the 'master'"
+	puts "branch has been renamed to 'main'. Note that the"
+	puts "repositories at GitHub will no longer receive updates:\n"
+	foreach remote $remotes {
+		puts "  $remote [goa_git remote get-url $remote]" }
+
+	if {![user_confirmation "\nUpdate URLs and rename master branch" 1]} { return }
+
+	set updated_remotes ""
+	foreach remote $remotes {
+		catch {
+			goa_git remote set-url $remote \
+						ssh://git@codeberg.org/genodelabs/goa.git \
+						git@github.com 2> /dev/null
+			lappend updated_remotes $remote
+		}
+		catch {
+			goa_git remote set-url $remote \
+						https://codeberg.org/genodelabs/goa.git \
+						https://github.com/genodelabs/goa.git 2> /dev/null
+			lappend updated_remotes $remote
+		}
+	}
+
+	log "Updated URL of git remotes: [join $updated_remotes ,]"
+
+	goa_git branch -m master main
+	goa_git branch --unset-upstream main
+	foreach remote $updated_remotes {
+		goa_git branch -rd $remote/master
+	}
+}
