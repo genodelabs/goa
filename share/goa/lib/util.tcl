@@ -925,6 +925,7 @@ proc user_confirmation { msg default_yes } {
 		set options "\[y/N]"
 	}
 
+	stty erase ^H
 	set timeout -1
 	send_user "$msg $options: "
 	set choice [expect_user {
