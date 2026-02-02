@@ -929,10 +929,12 @@ proc user_confirmation { msg default_yes } {
 	set timeout -1
 	send_user "$msg $options: "
 	set choice [expect_user {
-		-nocase n { expr 0 }
-		-nocase y { expr 1 }
-		-re "\n"  { expr $default_yes }
+		-re {[nN]\n} { expr 0 }
+		-re {[yY]\n} { expr 1 }
+		-re "\n"     { expr $default_yes }
 	}]
+
+	return $choice
 }
 
 
