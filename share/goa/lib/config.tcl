@@ -43,6 +43,7 @@ namespace eval ::config {
 	variable abi_dir                  ""
 	variable build_dir                ""
 	variable run_dir                  ""
+	variable hsd_dir                  ""
 	variable bin_dir                  ""
 	variable dbg_dir                  ""
 	variable install_dir              ""
@@ -436,6 +437,7 @@ namespace eval ::config {
 		set_if_undefined bin_dir           [file join $var_dir bin   $arch]
 		set_if_undefined dbg_dir           [file join $var_dir dbg   $arch]
 		set_if_undefined run_dir           [file join $var_dir run]
+		set_if_undefined hsd_dir           [file join $var_dir hsd]
 		set_if_undefined api_dir           [file join $var_dir api]
 		set_if_undefined install_dir       [file join $var_dir install]
 	}
