@@ -345,12 +345,12 @@ proc _instantiate_nitpicker { &start_nodes &archives &modules } {
 	                       "                | managing_system: yes" \
 	                       "  + binary init" \
 	                       "  + route" \
-	                       "     + service ROM | label: config" \
-	                       "       + parent | label: drivers.config" \
-	                       "     + service Timer   | + child timer" \
-	                       "     + service Capture | + child nitpicker" \
-	                       "     + service Event   | + child nitpicker" \
-	                       "     + any-service | + parent" \
+	                       "    + service ROM | label: config" \
+	                       "      + parent | label: drivers.config" \
+	                       "    + service Timer   | + child timer" \
+	                       "    + service Capture | + child nitpicker" \
+	                       "    + service Event   | + child nitpicker" \
+	                       "    + any-service | + parent" \
 	                       "+ start report_rom | caps: 100 | ram: 1M" \
 	                       "  + provides" \
 	                       "    + service Report" \
@@ -500,7 +500,7 @@ proc _instantiate_network { tap_name subnet_id &start_nodes &archives &modules &
 	                       "      + icmp | dst: 0.0.0.0/0 | domain: uplink" \
 	                       [hid indent 2 $extra_domains] \
 	                       "  + route" \
-	                       "    + service Timer | + child name: timer" \
+	                       "    + service Timer | + child timer" \
 	                       "    + any-service | + parent"
 
 	lappend modules linux_nic nic_router
