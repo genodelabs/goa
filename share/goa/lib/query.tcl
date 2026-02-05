@@ -13,9 +13,9 @@ namespace eval query {
 
 	proc validate-syntax { data } {
 		try {
-			hid tool $data format
-		} trap CHILDSTATUS { } {
-			exit_with_error "invalid syntax in $data"
+			hid tool $data check
+		} trap CHILDSTATUS { msg } {
+			exit_with_error "invalid syntax in $data:\n $msg"
 		} on error { msg } { error $msg $::errorInfo }
 	}
 
