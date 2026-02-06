@@ -63,7 +63,7 @@ namespace eval hid {
 
 		# open as pipe to catch stderr separately
 		set f [open "| [list {*}$cmd {*}$args $input]"]
-		set output [read $f]
+		set output [string trimright [read $f]]
 		try {
 			close $f
 		} trap NONE { msg } {
