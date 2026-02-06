@@ -702,7 +702,7 @@ namespace eval goa {
 
 	proc export-pkg { pkg &exported_archives { dst_dir "" }} {
 
-		global args config::arch config::project_dir
+		global args tool_dir config::arch config::project_dir
 		upvar  ${&exported_archives} exported_archives
 
 		set pkg_dir [file join pkg $pkg]
@@ -710,6 +710,16 @@ namespace eval goa {
 		set readme_file [file join $pkg_dir README]
 		if {![file exists $readme_file]} {
 			exit_with_error "missing README file at $readme_file" }
+
+		# check runtime file against hsd
+		set runtime_file [file join $pkg_dir runtime]
+		if {[file exists $runtime_file]} {
+			try {
+				hid tool $runtime_file check --hsd-dir [file join $tool_dir hsd] --schema runtime
+			} trap CHILDSTATUS { msg } {
+				exit_with_error "Schema validation failed for $runtime_file:\n$msg"
+			} on error { msg } { error $msg $::errorInfo }
+		}
 
 		set runtime_archives [versioned_runtime_archives $pkg]
 

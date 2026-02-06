@@ -98,8 +98,14 @@ namespace eval goa {
 		if {![file exists $runtime_file]} {
 			exit_with_error "missing runtime configuration at: $runtime_file" }
 	
-		# check syntax of runtime config and config file at raw/
-		query validate-syntax  $runtime_file
+		# check runtime file against hsd
+		try {
+			hid tool $runtime_file check --hsd-dir [file join $tool_dir hsd] --schema runtime
+		} trap CHILDSTATUS { msg } {
+			exit_with_error "Schema validation failed for $runtime_file:\n$msg"
+		} on error { msg } { error $msg $::errorInfo }
+
+		# check syntax config files at raw/ against
 		foreach config_file [glob -nocomplain [file join raw *.config]] {
 			query validate-syntax $config_file }
 		
